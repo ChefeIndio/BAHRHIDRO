@@ -1,0 +1,39 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "BahrHidro.Teste/1.0.0": {
+        "dependencies": {
+          "BahrHidro.Core": "1.0.0"
+        },
+        "runtime": {
+          "BahrHidro.Teste.dll": {}
+        }
+      },
+      "BahrHidro.Core/1.0.0": {
+        "runtime": {
+          "BahrHidro.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "BahrHidro.Teste/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BahrHidro.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

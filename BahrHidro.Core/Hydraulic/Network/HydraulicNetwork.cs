@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -43,6 +42,24 @@ namespace BahrHidro.Core.Hydraulic.Network
         }
 
         /// <summary>
+        /// Atualiza os dados de um nó existente mantendo seu identificador.
+        /// </summary>
+        public void UpdateNode(HydraulicNode updatedNode)
+        {
+            ArgumentNullException.ThrowIfNull(updatedNode);
+
+            updatedNode.Validate();
+
+            int index = _nodes.FindIndex(n => n.Id == updatedNode.Id);
+
+            if (index < 0)
+                throw new InvalidOperationException(
+                    "O nó informado não foi encontrado na rede.");
+
+            _nodes[index] = updatedNode;
+        }
+
+        /// <summary>
         /// Adiciona um trecho entre dois nós existentes.
         /// </summary>
         public void AddSegment(HydraulicPipeSegment segment)
@@ -66,6 +83,34 @@ namespace BahrHidro.Core.Hydraulic.Network
                     "Os nós inicial e final precisam existir na rede.");
 
             _segments.Add(segment);
+        }
+
+        /// <summary>
+        /// Atualiza os dados de um trecho existente mantendo seu identificador.
+        /// </summary>
+        public void UpdateSegment(HydraulicPipeSegment updatedSegment)
+        {
+            ArgumentNullException.ThrowIfNull(updatedSegment);
+
+            updatedSegment.Validate();
+
+            bool startNodeExists =
+                _nodes.Any(n => n.Id == updatedSegment.StartNodeId);
+
+            bool endNodeExists =
+                _nodes.Any(n => n.Id == updatedSegment.EndNodeId);
+
+            if (!startNodeExists || !endNodeExists)
+                throw new InvalidOperationException(
+                    "Os nós inicial e final precisam existir na rede.");
+
+            int index = _segments.FindIndex(s => s.Id == updatedSegment.Id);
+
+            if (index < 0)
+                throw new InvalidOperationException(
+                    "O trecho informado não foi encontrado na rede.");
+
+            _segments[index] = updatedSegment;
         }
 
         /// <summary>

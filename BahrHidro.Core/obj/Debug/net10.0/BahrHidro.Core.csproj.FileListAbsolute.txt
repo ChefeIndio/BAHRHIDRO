@@ -1,0 +1,12 @@
+/workspaces/BAHRHIDRO/BahrHidro.Core/bin/Debug/net10.0/BahrHidro.Core.deps.json
+/workspaces/BAHRHIDRO/BahrHidro.Core/bin/Debug/net10.0/BahrHidro.Core.dll
+/workspaces/BAHRHIDRO/BahrHidro.Core/bin/Debug/net10.0/BahrHidro.Core.pdb
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.GeneratedMSBuildEditorConfig.editorconfig
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.AssemblyInfoInputs.cache
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.AssemblyInfo.cs
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.csproj.CoreCompileInputs.cache
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.sourcelink.json
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.dll
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/refint/BahrHidro.Core.dll
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.pdb
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/ref/BahrHidro.Core.dll
