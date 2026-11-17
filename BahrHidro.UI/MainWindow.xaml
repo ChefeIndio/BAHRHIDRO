@@ -1,0 +1,478 @@
+﻿<Window x:Class="BahrHidro.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bahr Hidro | Dimensionamento"
+        Height="780" Width="1100"
+        MinHeight="700" MinWidth="950"
+        WindowStartupLocation="CenterScreen"
+        Background="#F1F5F9">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Background="#172554"
+                CornerRadius="12"
+                Padding="22">
+            <StackPanel>
+                <TextBlock Text="BAHR HIDRO"
+                           Foreground="White"
+                           FontSize="30"
+                           FontWeight="Bold"/>
+                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO | ÁGUA FRIA"
+                           Foreground="#BFDBFE"
+                           FontSize="13"/>
+            </StackPanel>
+        </Border>
+
+        <TabControl Grid.Row="1"
+                    Margin="0,18,0,12"
+                    Background="#F1F5F9"
+                    BorderThickness="0"
+                    FontSize="13">
+
+            <!-- ABA 1: DIMENSIONAMENTO -->
+            <TabItem Header="DIMENSIONAMENTO">
+                <Grid Margin="4,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="1.1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Background="White"
+                            CornerRadius="12"
+                            Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="PARÂMETROS DO TRECHO"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="#172554"/>
+
+                            <TextBlock Text="Vazão de projeto (L/s)"
+                                       Margin="0,28,0,7"
+                                       FontWeight="SemiBold"/>
+
+                            <TextBox x:Name="VazaoTextBox"
+                                     Text="0,30"
+                                     FontSize="20"
+                                     Padding="10"/>
+
+                            <TextBlock Text="Velocidade limite (m/s)"
+                                       Margin="0,22,0,7"
+                                       FontWeight="SemiBold"/>
+
+                            <TextBox x:Name="VelocidadeTextBox"
+                                     Text="2,00"
+                                     FontSize="20"
+                                     Padding="10"/>
+
+                            <Button Content="DIMENSIONAR"
+                                    Click="Calcular_Click"
+                                    Height="48"
+                                    Margin="0,28,0,0"
+                                    Background="#2563EB"
+                                    Foreground="White"
+                                    FontWeight="Bold"
+                                    BorderThickness="0"
+                                    Cursor="Hand"/>
+
+                            <Button x:Name="AbrirCatalogoButton"
+                                    Content="CATÁLOGO DE TUBULAÇÕES"
+                                    Click="AbrirCatalogo_Click"
+                                    Height="44"
+                                    Margin="0,12,0,0"
+                                    Background="#172554"
+                                    Foreground="White"
+                                    FontWeight="Bold"
+                                    BorderThickness="0"
+                                    Cursor="Hand"/>
+
+                            <TextBlock Text="Seleção baseada nos produtos cadastrados no catálogo."
+                                       Foreground="#64748B"
+                                       TextWrapping="Wrap"
+                                       Margin="0,20,0,0"
+                                       FontSize="11"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            Background="White"
+                            CornerRadius="12"
+                            Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="RESULTADO DO DIMENSIONAMENTO"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="#172554"/>
+
+                            <TextBlock Text="Diâmetro interno mínimo"
+                                       Foreground="#64748B"
+                                       Margin="0,22,0,3"/>
+
+                            <TextBlock x:Name="DiametroMinimoText"
+                                       Text="--"
+                                       FontSize="25"
+                                       FontWeight="Bold"
+                                       Foreground="#2563EB"/>
+
+                            <Separator Margin="0,14"/>
+
+                            <TextBlock Text="Diâmetro selecionado"
+                                       Foreground="#64748B"/>
+
+                            <TextBlock x:Name="DiametroSelecionadoText"
+                                       Text="--"
+                                       FontSize="30"
+                                       FontWeight="Bold"
+                                       Foreground="#059669"
+                                       Margin="0,3,0,0"/>
+
+                            <TextBlock x:Name="DescricaoTuboText"
+                                       Text="Aguardando cálculo"
+                                       Foreground="#64748B"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"/>
+
+                            <Separator Margin="0,14"/>
+
+                            <TextBlock Text="Velocidade real"
+                                       Foreground="#64748B"/>
+
+                            <TextBlock x:Name="VelocidadeRealText"
+                                       Text="--"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       Margin="0,3,0,0"/>
+
+                            <TextBlock Text="Verificação do limite"
+                                       Foreground="#64748B"
+                                       Margin="0,14,0,4"/>
+
+                            <TextBlock x:Name="StatusText"
+                                       Text="Aguardando dimensionamento"
+                                       FontWeight="Bold"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ABA 2: ANÁLISE HIDRÁULICA -->
+            <TabItem Header="ANÁLISE HIDRÁULICA">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="4,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.9*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="1.1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                Background="White"
+                                CornerRadius="12"
+                                Padding="24">
+                            <StackPanel>
+                                <TextBlock Text="PARÂMETROS HIDRÁULICOS"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="#172554"/>
+
+                                <TextBlock Text="Comprimento da tubulação (m)"
+                                           Margin="0,22,0,6"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBox x:Name="ComprimentoTextBox"
+                                         Text="20,00"
+                                         FontSize="18"
+                                         Padding="9"/>
+
+                                <TextBlock Text="Rugosidade absoluta (mm)"
+                                           Margin="0,16,0,6"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBox x:Name="RugosidadeTextBox"
+                                         Text="0,001"
+                                         FontSize="18"
+                                         Padding="9"/>
+
+                                <TextBlock Text="Coeficiente de perdas localizadas (K)"
+                                           Margin="0,16,0,6"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBox x:Name="CoeficienteKTextBox"
+                                         Text="0"
+                                         FontSize="18"
+                                         Padding="9"/>
+
+                                <TextBlock Text="Viscosidade cinemática (m²/s)"
+                                           Margin="0,16,0,6"
+                                           FontWeight="SemiBold"/>
+
+                                <TextBox x:Name="ViscosidadeTextBox"
+                                         Text="0,000001004"
+                                         FontSize="18"
+                                         Padding="9"/>
+
+                                <Button Content="ANALISAR TRECHO"
+                                        Click="AnalisarTrecho_Click"
+                                        Height="48"
+                                        Margin="0,24,0,0"
+                                        Background="#2563EB"
+                                        Foreground="White"
+                                        FontWeight="Bold"
+                                        BorderThickness="0"
+                                        Cursor="Hand"/>
+
+                                <TextBlock Text="Primeiro dimensione o trecho na aba anterior para selecionar o produto do catálogo."
+                                           Foreground="#64748B"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           Margin="0,18,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="2"
+                                Background="White"
+                                CornerRadius="12"
+                                Padding="24">
+                            <StackPanel>
+                                <TextBlock Text="RESULTADOS DA ANÁLISE"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="#172554"/>
+
+                                <TextBlock Text="Velocidade real"
+                                           Foreground="#64748B"
+                                           Margin="0,18,0,2"/>
+
+                                <TextBlock x:Name="AnaliseVelocidadeText"
+                                           Text="--"
+                                           FontSize="22"
+                                           FontWeight="Bold"/>
+
+                                <Separator Margin="0,10"/>
+
+                                <TextBlock Text="Número de Reynolds"
+                                           Foreground="#64748B"/>
+
+                                <TextBlock x:Name="ReynoldsText"
+                                           Text="--"
+                                           FontSize="20"
+                                           FontWeight="Bold"/>
+
+                                <TextBlock Text="Regime de escoamento"
+                                           Foreground="#64748B"
+                                           Margin="0,12,0,2"/>
+
+                                <TextBlock x:Name="RegimeText"
+                                           Text="--"
+                                           FontWeight="Bold"/>
+
+                                <Separator Margin="0,10"/>
+
+                                <TextBlock Text="Fator de atrito"
+                                           Foreground="#64748B"/>
+
+                                <TextBlock x:Name="FatorAtritoText"
+                                           Text="--"
+                                           FontSize="20"
+                                           FontWeight="Bold"/>
+
+                                <Separator Margin="0,10"/>
+
+                                <TextBlock Text="Perda distribuída"
+                                           Foreground="#64748B"/>
+
+                                <TextBlock x:Name="PerdaDistribuidaText"
+                                           Text="--"
+                                           FontSize="18"
+                                           FontWeight="Bold"/>
+
+                                <TextBlock Text="Perda localizada"
+                                           Foreground="#64748B"
+                                           Margin="0,10,0,2"/>
+
+                                <TextBlock x:Name="PerdaLocalizadaText"
+                                           Text="--"
+                                           FontSize="18"
+                                           FontWeight="Bold"/>
+
+                                <Separator Margin="0,12"/>
+
+                                <TextBlock Text="PERDA TOTAL"
+                                           Foreground="#64748B"
+                                           FontWeight="Bold"/>
+
+                                <TextBlock x:Name="PerdaTotalText"
+                                           Text="--"
+                                           FontSize="27"
+                                           FontWeight="Bold"
+                                           Foreground="#059669"/>
+
+                                <TextBlock Text="Resultados em metros de coluna d'água (m.c.a.)."
+                                           Foreground="#64748B"
+                                           FontSize="11"
+                                           Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ABA 3: REDE HIDRÁULICA -->
+            <TabItem Header="REDE HIDRÁULICA">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Grid Margin="4,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Background="White"
+                                CornerRadius="12"
+                                Padding="24"
+                                Margin="0,0,0,14">
+                            <StackPanel>
+                                <TextBlock Text="MODELAGEM DA REDE"
+                                           FontSize="20"
+                                           FontWeight="Bold"
+                                           Foreground="#172554"/>
+
+                                <TextBlock Text="Construção da rede de distribuição de água fria"
+                                           FontSize="13"
+                                           Foreground="#64748B"
+                                           Margin="0,5,0,18"/>
+
+                                <Border Background="#EFF6FF"
+                                        CornerRadius="8"
+                                        Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="PRÓXIMO MÓDULO"
+                                                   Foreground="#1D4ED8"
+                                                   FontWeight="Bold"
+                                                   FontSize="12"/>
+
+                                        <TextBlock Text="Editor de redes hidráulicas ramificadas"
+                                                   FontSize="18"
+                                                   FontWeight="Bold"
+                                                   Foreground="#172554"
+                                                   Margin="0,8,0,6"/>
+
+                                        <TextBlock Text="Nesta área construiremos a rede a partir de um reservatório, nós de distribuição, tubulações e pontos de consumo. O sistema utilizará as rotinas hidráulicas que já desenvolvemos no núcleo do Bahr Hidro."
+                                                   Foreground="#475569"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="13"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    Background="White"
+                                    CornerRadius="12"
+                                    Padding="20">
+                                <StackPanel>
+                                    <TextBlock Text="ELEMENTOS DA REDE"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="#172554"/>
+
+                                    <TextBlock Text="Reservatórios"
+                                               Margin="0,18,0,4"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Text="Cadastro e definição da cota de alimentação."
+                                               Foreground="#64748B"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"/>
+
+                                    <Separator Margin="0,12"/>
+
+                                    <TextBlock Text="Nós hidráulicos"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Text="Pontos de conexão, derivações e consumo."
+                                               Foreground="#64748B"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"/>
+
+                                    <Separator Margin="0,12"/>
+
+                                    <TextBlock Text="Tubulações"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Text="Trechos, comprimentos, diâmetros e conexões."
+                                               Foreground="#64748B"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2"
+                                    Background="White"
+                                    CornerRadius="12"
+                                    Padding="20">
+                                <StackPanel>
+                                    <TextBlock Text="ANÁLISE DA REDE"
+                                               FontSize="16"
+                                               FontWeight="Bold"
+                                               Foreground="#172554"/>
+
+                                    <TextBlock Text="Distribuição de vazões"
+                                               Margin="0,18,0,4"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Text="Cálculo das vazões nos trechos ramificados."
+                                               Foreground="#64748B"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"/>
+
+                                    <Separator Margin="0,12"/>
+
+                                    <TextBlock Text="Balanço dos nós"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Text="Verificação da continuidade hidráulica."
+                                               Foreground="#64748B"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"/>
+
+                                    <Separator Margin="0,12"/>
+
+                                    <TextBlock Text="Perdas de carga"
+                                               FontWeight="SemiBold"/>
+
+                                    <TextBlock Text="Análise hidráulica dos trechos da rede."
+                                               Foreground="#64748B"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <TextBlock Grid.Row="2"
+                   Text="BAHR HIDRO"
+                   Foreground="#64748B"
+                   FontSize="11"
+                   FontWeight="SemiBold"
+                   HorizontalAlignment="Center"/>
+    </Grid>
+</Window>
