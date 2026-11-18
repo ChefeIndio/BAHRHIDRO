@@ -363,7 +363,7 @@ namespace BahrHidro.Revit {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/BahrHidro.Revit;V1.0.0.0;component/revitmainwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/BahrHidro.Revit;component/revitmainwindow.xaml", System.UriKind.Relative);
             
             #line 1 "../../../RevitMainWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
