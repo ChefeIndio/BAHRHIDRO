@@ -5,6 +5,10 @@ using BahrHidro.Core.Hydraulic.Network;
 
 namespace BahrHidro.UI
 {
+    public sealed record RevitNetworkImportData(
+        HydraulicNetwork Network,
+        Dictionary<Guid, double> OriginalDiametersMm);
+
     public sealed record RevitRoofData(
         string RoofName,
         double AreaM2,
@@ -20,7 +24,7 @@ namespace BahrHidro.UI
 
     public interface IRevitBimBridge
     {
-        void ImportNetworkFromRevit(Window ownerWindow, Action<HydraulicNetwork> onNetworkImported);
+        void ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported);
         int ApplyDiametersToRevit(NetworkCalculationResult result);
         (string ProjectName, string ClientName, string Address, string Author) GetProjectInfo();
         void SaveProjectInfo(string projectName, string clientName, string address, string author);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Plumbing;
 using BahrHidro.Core.Hydraulic.Network;
@@ -10,6 +11,7 @@ namespace BahrHidro.Revit
     {
         public HydraulicNetwork Network { get; } = new HydraulicNetwork("Rede BIM Revit");
         public Dictionary<Guid, List<Pipe>> PipesBySegmentId { get; } = new();
+        public Dictionary<Guid, double> OriginalDiametersMmBySegmentId { get; } = new();
     }
 
     public static class RevitNetworkExtractor
@@ -258,8 +260,25 @@ namespace BahrHidro.Revit
                 TotalLossCoefficientK = totalK
             };
 
+            double originalDiameterMm = 0;
+            if (pipes.Count > 0)
+            {
+                var diametros = new List<double>();
+                foreach (var p in pipes)
+                {
+                    Parameter? dParam = p.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM);
+                    if (dParam != null && dParam.HasValue)
+                    {
+                        diametros.Add(UnitUtils.ConvertFromInternalUnits(dParam.AsDouble(), UnitTypeId.Millimeters));
+                    }
+                }
+                if (diametros.Count > 0)
+                    originalDiameterMm = Math.Round(diametros.Average(), 2);
+            }
+
             result.Network.AddSegment(segment);
             result.PipesBySegmentId[segmentId] = new List<Pipe>(pipes);
+            result.OriginalDiametersMmBySegmentId[segmentId] = originalDiameterMm;
         }
 
         private static ConnectorSet? GetConnectors(Element element)

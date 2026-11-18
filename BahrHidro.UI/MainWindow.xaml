@@ -240,7 +240,39 @@
                                 </DockPanel>
                             </Border>
 
-                            <!-- RESULTADOS HIDRÁULICOS -->
+                            <!-- RESUMO DE ALTERAÇÕES E AUDITORIA DE TUBULAÇÕES -->
+                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,14">
+                                <DockPanel>
+                                    <CheckBox x:Name="ChkSomenteTrocados" DockPanel.Dock="Right" Content="Mostrar apenas tubos trocados"
+                                              FontSize="12" FontWeight="SemiBold" Foreground="#1E3A8A" VerticalAlignment="Center"
+                                              Checked="ChkSomenteTrocados_Changed" Unchecked="ChkSomenteTrocados_Changed"/>
+                                    <StackPanel>
+                                        <TextBlock Text="RELATÓRIO DE SUBSTITUIÇÃO E DIMENSIONAMENTO DOS TUBOS" FontSize="11" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,2"/>
+                                        <TextBlock x:Name="ResumoTrocasTubosText" Text="Calcule a rede para visualizar quais tubos foram alterados, o motivo técnico e o impacto hidráulico." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- TABELA PRINCIPAL: COMPARATIVO DE TUBOS TROCADOS E MOTIVOS -->
+                            <StackPanel Margin="0,0,0,14">
+                                <TextBlock Text="Resultados por Trecho — Comparativo (De → Para), Impacto Hidráulico e Motivo Técnico (clique em um trecho para ajustar manualmente)"
+                                           FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                                <DataGrid x:Name="ResultadosTrechosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White"
+                                          SelectionMode="Single" SelectionChanged="ResultadosTrechosDataGrid_SelectionChanged">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="68"/>
+                                        <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="155"/>
+                                        <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="62"/>
+                                        <DataGridTextColumn Header="Ø Antigo" Binding="{Binding OriginalDiameterDisplay}" Width="72"/>
+                                        <DataGridTextColumn Header="Ø Novo" Binding="{Binding DiameterDisplay}" Width="72"/>
+                                        <DataGridTextColumn Header="Alteração" Binding="{Binding ChangeStatusDisplay}" Width="110"/>
+                                        <DataGridTextColumn Header="O que mudou (V e ΔH)" Binding="{Binding ImpactDisplay}" Width="210"/>
+                                        <DataGridTextColumn Header="Por que foi trocado (Motivo Técnico)" Binding="{Binding ReasonDisplay}" Width="*"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <!-- PAINEL INTERATIVO DE AJUSTE MANUAL DO TRECHO SELECIONADO + PRESSÕES NOS NÓS -->
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.15*"/>
@@ -248,24 +280,43 @@
                                     <ColumnDefinition Width="0.85*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Resultados Hidráulicos por Trecho" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
-                                    <DataGrid x:Name="ResultadosTrechosDataGrid" Height="220" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="80"/>
-                                            <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
-                                            <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="65"/>
-                                            <DataGridTextColumn Header="Ø Int (mm)" Binding="{Binding DiameterDisplay}" Width="75"/>
-                                            <DataGridTextColumn Header="V (m/s)" Binding="{Binding VelocityDisplay}" Width="65"/>
-                                            <DataGridTextColumn Header="Re" Binding="{Binding ReynoldsDisplay}" Width="65"/>
-                                            <DataGridTextColumn Header="ΔH (mca)" Binding="{Binding HeadLossDisplay}" Width="75"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
-                                </StackPanel>
+                                <!-- Card de Inspeção e Edição Manual -->
+                                <Border Grid.Column="0" Background="#FFFBEB" BorderBrush="#FDE68A" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock x:Name="DetalheTrechoBadgeText" DockPanel.Dock="Right" Text="Nenhum trecho selecionado" FontSize="11" FontWeight="Bold" Foreground="#B45309" VerticalAlignment="Center"/>
+                                            <TextBlock Text="Inspeção e Ajuste Manual do Trecho Selecionado" FontSize="14" FontWeight="Bold" Foreground="#78350F"/>
+                                        </DockPanel>
 
+                                        <TextBlock x:Name="DetalheTrechoTituloText" Text="Clique em qualquer linha da tabela acima para inspecionar a troca e alterar o diâmetro manualmente."
+                                                   FontSize="12" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,6"/>
+
+                                        <TextBlock x:Name="DetalheTrechoComparativoText" Text="Comparativo Antes → Depois: --"
+                                                   FontSize="12" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,4"/>
+
+                                        <TextBlock x:Name="DetalheTrechoMotivoText" Text="Motivo Técnico: --"
+                                                   FontSize="12" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,10"/>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="10"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox x:Name="TrechoManualDiametroComboBox" Grid.Column="0" Height="32" DisplayMemberPath="Label" SelectedValuePath="DiameterMm"/>
+                                            <Button x:Name="BtnAplicarManualTrecho" Grid.Column="2" Content="Aplicar Manual e Recalcular" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" IsEnabled="False" Click="AplicarDiametroManualTrecho_Click"/>
+                                            <Button x:Name="BtnVoltarAutoTrecho" Grid.Column="4" Content="Voltar Auto" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" IsEnabled="False" Click="RestaurarDiametroAutoTrecho_Click"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Pressões Disponíveis nos Nós -->
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Pressões Disponíveis nos Nós" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
-                                    <DataGrid x:Name="ResultadosNosDataGrid" Height="220" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                    <DataGrid x:Name="ResultadosNosDataGrid" Height="175" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Nó" Binding="{Binding Name}" Width="*"/>
                                             <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="85"/>

@@ -55,7 +55,7 @@ namespace BahrHidro.Revit
             }
         }
 
-        public void ImportNetworkFromRevit(Window ownerWindow, Action<HydraulicNetwork> onNetworkImported)
+        public void ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported)
         {
             try
             {
@@ -68,7 +68,7 @@ namespace BahrHidro.Revit
                 Element startElement = _doc.GetElement(pickedRef);
                 _ultimaExtracao = RevitNetworkExtractor.ExtractFromStartElement(_doc, startElement);
 
-                onNetworkImported(_ultimaExtracao.Network);
+                onNetworkImported(new RevitNetworkImportData(_ultimaExtracao.Network, _ultimaExtracao.OriginalDiametersMmBySegmentId));
             }
             catch (Autodesk.Revit.Exceptions.OperationCanceledException)
             {

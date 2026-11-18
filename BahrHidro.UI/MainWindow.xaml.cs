@@ -26,6 +26,10 @@ namespace BahrHidro.UI
         private HydraulicNetwork _network = new HydraulicNetwork("Rede Hidráulica");
         private IRevitBimBridge? _revitBridge;
         private NetworkCalculationResult? _ultimoResultadoDaRede;
+        private Dictionary<Guid, double> _diametrosOriginaisRevit = new();
+        private readonly HashSet<Guid> _trechosManuais = new();
+        private List<ResultadoTrechoGridItem> _todosResultadosTrechos = new();
+        private Guid? _trechoSelecionadoParaEdicaoId;
 
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
 
@@ -250,28 +254,138 @@ namespace BahrHidro.UI
                     .Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm))
                     .ToList();
 
+                AtualizarComboDiametrosManuais(produtosNoCatalogo);
+
                 var res = HydraulicNetworkSolver.Solve(_network, viscosidade, opcoesDiametro, 3.0);
                 _ultimoResultadoDaRede = res;
 
-                StatusCalculoAguaFriaText.Text = $"Calculado com sucesso ({res.Segments.Count} trechos).";
+                int qtdTrocados = 0, qtdAumentados = 0, qtdReduzidos = 0, qtdMantidos = 0;
+                var listaAuditoria = new List<ResultadoTrechoGridItem>();
+
+                foreach (var s in res.Segments)
+                {
+                    var segObj = _network.FindSegment(s.SegmentId);
+                    double origMm = _diametrosOriginaisRevit.TryGetValue(s.SegmentId, out double o) ? o : 0;
+                    double novoMm = s.SelectedDiameterMm;
+                    bool ehManual = _trechosManuais.Contains(s.SegmentId);
+
+                    double origVel = 0, origDh = 0;
+                    if (origMm > 0 && s.FlowLitersPerSecond > 0 && segObj != null)
+                    {
+                        var calcOrig = HydraulicSegmentCalculator.Calculate(
+                            s.FlowLitersPerSecond,
+                            segObj.LengthMeters,
+                            origMm,
+                            segObj.AbsoluteRoughnessMm,
+                            viscosidade,
+                            segObj.TotalLossCoefficientK);
+                        origVel = calcOrig.VelocityMetersPerSecond;
+                        origDh = calcOrig.TotalHeadLossMeters;
+                    }
+
+                    string statusTroca;
+                    string motivo;
+                    string impacto;
+
+                    bool foiAlterado = origMm > 0 && novoMm > 0 && Math.Abs(novoMm - origMm) > 0.5;
+                    if (foiAlterado)
+                    {
+                        qtdTrocados++;
+                        if (novoMm > origMm) qtdAumentados++;
+                        else qtdReduzidos++;
+                    }
+                    else
+                    {
+                        qtdMantidos++;
+                    }
+
+                    if (ehManual)
+                        statusTroca = foiAlterado ? $"Manual ({origMm:F0}→{novoMm:F0})" : $"Manual ({novoMm:F0} mm)";
+                    else if (origMm <= 0)
+                        statusTroca = $"Auto ({novoMm:F1} mm)";
+                    else if (novoMm > origMm + 0.5)
+                        statusTroca = $"Aumentado (↑)";
+                    else if (novoMm < origMm - 0.5)
+                        statusTroca = $"Reduzido (↓)";
+                    else
+                        statusTroca = "Mantido (=)";
+
+                    if (ehManual)
+                    {
+                        motivo = $"Definido manualmente pelo projetista (Ø {novoMm:F2} mm).";
+                    }
+                    else if (s.FlowLitersPerSecond <= 0)
+                    {
+                        motivo = "Sem vazão a jusante; mantida bitola mínima do catálogo.";
+                    }
+                    else if (origMm <= 0)
+                    {
+                        motivo = $"Menor bitola comercial para Q = {s.FlowLitersPerSecond:F3} L/s com V ≤ 3,0 m/s (NBR 5626).";
+                    }
+                    else if (novoMm > origMm + 0.5)
+                    {
+                        motivo = $"Velocidade no Ø antigo ({origMm:F1} mm) seria {origVel:F2} m/s (> 3,0 m/s NBR 5626 para Q = {s.FlowLitersPerSecond:F3} L/s).";
+                    }
+                    else if (novoMm < origMm - 0.5)
+                    {
+                        motivo = $"Otimização: Ø antigo ({origMm:F1} mm) superdimensionado (V = {origVel:F2} m/s); nova bitola atende com V = {s.VelocityMetersPerSecond:F2} m/s.";
+                    }
+                    else
+                    {
+                        motivo = $"Ø original ({origMm:F1} mm) já atende Q = {s.FlowLitersPerSecond:F3} L/s com V = {s.VelocityMetersPerSecond:F2} m/s ≤ 3,0 m/s.";
+                    }
+
+                    if (origMm > 0 && s.FlowLitersPerSecond > 0 && foiAlterado)
+                    {
+                        impacto = $"V: {origVel:F2}→{s.VelocityMetersPerSecond:F2} m/s | ΔH: {origDh:F3}→{s.TotalHeadLossMeters:F3} mca";
+                    }
+                    else
+                    {
+                        impacto = $"V = {s.VelocityMetersPerSecond:F2} m/s | ΔH = {s.TotalHeadLossMeters:F3} mca";
+                    }
+
+                    listaAuditoria.Add(new ResultadoTrechoGridItem
+                    {
+                        SegmentId = s.SegmentId,
+                        Name = s.SegmentName,
+                        ConnectionDisplay = s.Connection,
+                        FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr),
+                        OriginalDiameterDisplay = origMm > 0 ? $"{origMm.ToString("F1", PtBr)} mm" : "--",
+                        DiameterDisplay = novoMm > 0 ? $"{novoMm.ToString("F1", PtBr)} mm" : "--",
+                        SelectedDiameterMm = novoMm,
+                        OriginalDiameterMm = origMm,
+                        WasChanged = foiAlterado,
+                        IsManual = ehManual,
+                        ChangeStatusDisplay = statusTroca,
+                        ImpactDisplay = impacto,
+                        ReasonDisplay = motivo,
+                        VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr),
+                        ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr),
+                        HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr)
+                    });
+                }
+
+                _todosResultadosTrechos = listaAuditoria;
+                AplicarFiltroTrechosTrocados();
+                AtualizarListaTrechos();
+
+                ResumoTrocasTubosText.Text = $"Total analisado: {res.Segments.Count} trecho(s) — {qtdTrocados} trocado(s) ({qtdAumentados} aumentado(s), {qtdReduzidos} reduzido(s)) | {qtdMantidos} mantido(s).";
+
+                StatusCalculoAguaFriaText.Text = $"Calculado: {qtdTrocados} tubo(s) trocado(s) de {res.Segments.Count} trechos.";
                 StatusCalculoAguaFriaText.Foreground = Brushes.ForestGreen;
 
                 if (MemStatusRedeText != null)
                 {
-                    MemStatusRedeText.Text = $"Calculado: {res.Segments.Count} trecho(s) e {res.Nodes.Count} nó(s) prontos para exportação.";
+                    MemStatusRedeText.Text = $"Calculado: {res.Segments.Count} trecho(s) ({qtdTrocados} bitola(s) ajustada(s)) prontos para exportação.";
                     MemStatusRedeText.Foreground = Brushes.ForestGreen;
                 }
 
-                ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem
+                if (_trechoSelecionadoParaEdicaoId.HasValue)
                 {
-                    Name = s.SegmentName,
-                    ConnectionDisplay = s.Connection,
-                    FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr),
-                    DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--",
-                    VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr),
-                    ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr),
-                    HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr)
-                }).ToList();
+                    var itemReSelecionado = _todosResultadosTrechos.FirstOrDefault(x => x.SegmentId == _trechoSelecionadoParaEdicaoId.Value);
+                    if (itemReSelecionado != null)
+                        ExibirDetalheTrechoSelecionado(itemReSelecionado);
+                }
 
                 ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem
                 {
@@ -500,10 +614,22 @@ namespace BahrHidro.UI
             if (_revitBridge == null) return;
             try
             {
-                _revitBridge.ImportNetworkFromRevit(this, importedNetwork =>
+                _revitBridge.ImportNetworkFromRevit(this, importData =>
                 {
-                    _network = importedNetwork;
+                    _network = importData.Network;
+                    _diametrosOriginaisRevit = importData.OriginalDiametersMm ?? new Dictionary<Guid, double>();
+                    _trechosManuais.Clear();
+                    _trechoSelecionadoParaEdicaoId = null;
                     _ultimoResultadoDaRede = null;
+                    _todosResultadosTrechos.Clear();
+                    ResultadosTrechosDataGrid.ItemsSource = null;
+                    ResultadosNosDataGrid.ItemsSource = null;
+                    ResumoTrocasTubosText.Text = "Rede importada do Revit! Clique em 'Calcular Rede Hidráulica' para comparar e dimensionar os tubos.";
+                    DetalheTrechoTituloText.Text = "Clique em qualquer linha da tabela acima para inspecionar a troca e alterar o diâmetro manualmente.";
+                    DetalheTrechoComparativoText.Text = "Comparativo Antes → Depois: --";
+                    DetalheTrechoMotivoText.Text = "Motivo Técnico: --";
+                    BtnAplicarManualTrecho.IsEnabled = false;
+                    BtnVoltarAutoTrecho.IsEnabled = false;
                     AtualizarListaNos();
                     AtualizarListaTrechos();
                     InicioRedeStatusText.Text = $"Rede carregada: {_network.Nodes.Count} nós e {_network.Segments.Count} trechos.";
@@ -803,8 +929,130 @@ namespace BahrHidro.UI
 
         private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; public string WeightDisplay { get; init; } = ""; }
         private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; }
-        private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
+        private sealed class ManualDiameterOption { public string Label { get; init; } = ""; public double? DiameterMm { get; init; } }
+        private sealed class ResultadoTrechoGridItem
+        {
+            public Guid SegmentId { get; init; }
+            public string Name { get; init; } = "";
+            public string ConnectionDisplay { get; init; } = "";
+            public string FlowDisplay { get; init; } = "";
+            public string OriginalDiameterDisplay { get; init; } = "";
+            public string DiameterDisplay { get; init; } = "";
+            public double SelectedDiameterMm { get; init; }
+            public double OriginalDiameterMm { get; init; }
+            public bool WasChanged { get; init; }
+            public bool IsManual { get; init; }
+            public string ChangeStatusDisplay { get; init; } = "";
+            public string ImpactDisplay { get; init; } = "";
+            public string ReasonDisplay { get; init; } = "";
+            public string VelocityDisplay { get; init; } = "";
+            public string ReynoldsDisplay { get; init; } = "";
+            public string HeadLossDisplay { get; init; } = "";
+        }
         private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; }
         private class SewerFixtureViewModel { public string Name { get; set; } = ""; public int Uhc { get; set; } public int MinDiameter { get; set; } public string UhcDisplay => $"{Uhc} UHC"; public int Quantity { get; set; } = 0; }
-    }
+    
+        private void AtualizarComboDiametrosManuais(List<PipeProduct> produtos)
+        {
+            var valorAtual = TrechoManualDiametroComboBox.SelectedValue;
+            var opcoes = new List<ManualDiameterOption>
+            {
+                new() { Label = "Automático (Dimensionar pela ABNT NBR 5626)", DiameterMm = null }
+            };
+
+            foreach (var p in produtos.OrderBy(x => x.InternalDiameterMm))
+            {
+                opcoes.Add(new ManualDiameterOption
+                {
+                    Label = $"{p.NominalDesignation} — Ø Interno: {p.InternalDiameterMm:F2} mm ({p.Manufacturer})",
+                    DiameterMm = (double)p.InternalDiameterMm
+                });
+            }
+
+            TrechoManualDiametroComboBox.ItemsSource = opcoes;
+            TrechoManualDiametroComboBox.SelectedValue = valorAtual;
+            if (TrechoManualDiametroComboBox.SelectedIndex < 0)
+                TrechoManualDiametroComboBox.SelectedIndex = 0;
+        }
+
+        private void ChkSomenteTrocados_Changed(object sender, RoutedEventArgs e) => AplicarFiltroTrechosTrocados();
+
+        private void AplicarFiltroTrechosTrocados()
+        {
+            if (ResultadosTrechosDataGrid == null) return;
+            if (ChkSomenteTrocados?.IsChecked == true)
+                ResultadosTrechosDataGrid.ItemsSource = _todosResultadosTrechos.Where(x => x.WasChanged || x.IsManual).ToList();
+            else
+                ResultadosTrechosDataGrid.ItemsSource = _todosResultadosTrechos.ToList();
+        }
+
+        private void ResultadosTrechosDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ResultadosTrechosDataGrid.SelectedItem is ResultadoTrechoGridItem item)
+            {
+                _trechoSelecionadoParaEdicaoId = item.SegmentId;
+                ExibirDetalheTrechoSelecionado(item);
+            }
+        }
+
+        private void ExibirDetalheTrechoSelecionado(ResultadoTrechoGridItem item)
+        {
+            DetalheTrechoBadgeText.Text = item.IsManual ? "MODO MANUAL ATIVO" : item.ChangeStatusDisplay.ToUpperInvariant();
+            DetalheTrechoTituloText.Text = $"Trecho {item.Name} ({item.ConnectionDisplay}) — Vazão Q = {item.FlowDisplay} L/s";
+            DetalheTrechoComparativoText.Text = $"Ø Antigo (Revit): {item.OriginalDiameterDisplay}  →  Ø Atual: {item.DiameterDisplay}  |  {item.ImpactDisplay}";
+            DetalheTrechoMotivoText.Text = $"Motivo: {item.ReasonDisplay}";
+
+            BtnAplicarManualTrecho.IsEnabled = true;
+            BtnVoltarAutoTrecho.IsEnabled = item.IsManual;
+
+            if (item.IsManual && item.SelectedDiameterMm > 0)
+            {
+                var itensCombo = TrechoManualDiametroComboBox.ItemsSource as IEnumerable<ManualDiameterOption>;
+                var match = itensCombo?.FirstOrDefault(o => o.DiameterMm.HasValue && Math.Abs(o.DiameterMm.Value - item.SelectedDiameterMm) < 0.05);
+                if (match != null)
+                    TrechoManualDiametroComboBox.SelectedItem = match;
+            }
+            else
+            {
+                TrechoManualDiametroComboBox.SelectedIndex = 0;
+            }
+        }
+
+        private void AplicarDiametroManualTrecho_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_trechoSelecionadoParaEdicaoId.HasValue) return;
+            var seg = _network.FindSegment(_trechoSelecionadoParaEdicaoId.Value);
+            if (seg == null) return;
+
+            double? novoDiametro = (TrechoManualDiametroComboBox.SelectedItem as ManualDiameterOption)?.DiameterMm;
+
+            var segAtualizado = new HydraulicPipeSegment
+            {
+                Id = seg.Id,
+                Name = seg.Name,
+                StartNodeId = seg.StartNodeId,
+                EndNodeId = seg.EndNodeId,
+                LengthMeters = seg.LengthMeters,
+                InternalDiameterMm = novoDiametro,
+                AbsoluteRoughnessMm = seg.AbsoluteRoughnessMm,
+                TotalLossCoefficientK = seg.TotalLossCoefficientK,
+                FlowLitersPerSecond = seg.FlowLitersPerSecond
+            };
+
+            _network.UpdateSegment(segAtualizado);
+            if (novoDiametro.HasValue)
+                _trechosManuais.Add(seg.Id);
+            else
+                _trechosManuais.Remove(seg.Id);
+
+            CalcularRede_Click(sender, e);
+        }
+
+        private void RestaurarDiametroAutoTrecho_Click(object sender, RoutedEventArgs e)
+        {
+            TrechoManualDiametroComboBox.SelectedIndex = 0;
+            AplicarDiametroManualTrecho_Click(sender, e);
+        }
+
+}
 }
