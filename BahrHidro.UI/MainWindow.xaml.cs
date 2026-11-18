@@ -34,12 +34,6 @@ namespace BahrHidro.UI
         
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
 
-        // VARIÁVEIS PARA O CAD 2D
-        private enum ModoDesenho { Selecionar, DesenharNo, ConectarTrecho }
-        private ModoDesenho _modoAtual = ModoDesenho.Selecionar;
-        private Ellipse? _noInicialParaTrecho = null;
-        private readonly Dictionary<Ellipse, Guid> _mapaNosVisuais = new();
-
         public MainWindow()
         {
             InitializeComponent();
@@ -74,6 +68,33 @@ namespace BahrHidro.UI
         {
             _revitBridge = revitBridge;
             RevitBimToolbar.Visibility = Visibility.Visible;
+            SalvarDadosRevitButton.Visibility = Visibility.Visible;
+
+            var info = _revitBridge.GetProjectInfo();
+            MemObraTextBox.Text = info.ProjectName;
+            MemClienteTextBox.Text = info.ClientName;
+            MemEnderecoTextBox.Text = info.Address;
+            MemEngenheiroTextBox.Text = info.Author;
+        }
+
+        private void NavegadorTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (e.NewValue is TreeViewItem item && item.Tag is string painelTag)
+            {
+                SelecionarPainel(painelTag);
+            }
+        }
+
+        private void SelecionarPainel(string tag)
+        {
+            if (PanelAguaFria == null) return;
+
+            PanelAguaFria.Visibility = tag == "AguaFria" ? Visibility.Visible : Visibility.Collapsed;
+            PanelAguaQuente.Visibility = tag == "AguaQuente" ? Visibility.Visible : Visibility.Collapsed;
+            PanelReservatorios.Visibility = tag == "Reservatorios" ? Visibility.Visible : Visibility.Collapsed;
+            PanelEsgoto.Visibility = tag == "Esgoto" ? Visibility.Visible : Visibility.Collapsed;
+            PanelPluvial.Visibility = tag == "Pluvial" ? Visibility.Visible : Visibility.Collapsed;
+            PanelMemorial.Visibility = tag == "Memorial" ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void CarregarPerfisEdificacao()
@@ -121,68 +142,6 @@ namespace BahrHidro.UI
         {
             var janelaCatalogo = new PipeCatalogWindow { Owner = this };
             janelaCatalogo.ShowDialog();
-        }
-
-        private async void Calcular_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!double.TryParse(VazaoTextBox.Text, NumberStyles.Float, PtBr, out double vazao) || vazao <= 0) return;
-                if (!double.TryParse(VelocidadeTextBox.Text, NumberStyles.Float, PtBr, out double velocidadeLimite) || velocidadeLimite <= 0) return;
-
-                double diametroMinimo = PipeSizing.CalculateMinimumDiameter(vazao, velocidadeLimite);
-                DiametroMinimoText.Text = $"{diametroMinimo:F2} mm";
-
-                var selecao = await _diameterSelector.SelectAsync(vazao, velocidadeLimite);
-                if (selecao == null)
-                {
-                    DiametroSelecionadoText.Text = "Nao disponivel";
-                    StatusText.Text = "CATALOGO INSUFICIENTE";
-                    StatusText.Foreground = Brushes.DarkOrange;
-                    return;
-                }
-
-                DiametroSelecionadoText.Text = $"{selecao.Product.InternalDiameterMm:F2} mm";
-                DescricaoTuboText.Text = $"{selecao.Product.Manufacturer} | {selecao.Product.ProductLine} | {selecao.Product.NominalDesignation}";
-                VelocidadeRealText.Text = $"{selecao.ActualVelocityMetersPerSecond:F3} m/s";
-
-                bool atende = selecao.ActualVelocityMetersPerSecond <= velocidadeLimite;
-                StatusText.Text = atende ? "ATENDE AO LIMITE DE VELOCIDADE" : "NAO ATENDE AO LIMITE DE VELOCIDADE";
-                StatusText.Foreground = atende ? Brushes.ForestGreen : Brushes.DarkRed;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private async void AnalisarTrecho_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!double.TryParse(VazaoTextBox.Text, NumberStyles.Float, PtBr, out double vazao) || vazao <= 0) return;
-                if (!double.TryParse(VelocidadeTextBox.Text, NumberStyles.Float, PtBr, out double velocidadeLimite) || velocidadeLimite <= 0) return;
-                if (!double.TryParse(ComprimentoTextBox.Text, NumberStyles.Float, PtBr, out double comprimento) || comprimento <= 0) return;
-                if (!double.TryParse(RugosidadeTextBox.Text, NumberStyles.Float, PtBr, out double rugosidade) || rugosidade < 0) return;
-                if (!double.TryParse(CoeficienteKTextBox.Text, NumberStyles.Float, PtBr, out double coeficienteK) || coeficienteK < 0) return;
-                if (!double.TryParse(ViscosidadeTextBox.Text, NumberStyles.Float, PtBr, out double viscosidade) || viscosidade <= 0) return;
-
-                var selecao = await _diameterSelector.SelectAsync(vazao, velocidadeLimite);
-                if (selecao == null) return;
-
-                HydraulicSegmentResult resultado = HydraulicSegmentCalculator.Calculate(vazao, comprimento, (double)selecao.Product.InternalDiameterMm, rugosidade, viscosidade, coeficienteK);
-                AnaliseVelocidadeText.Text = $"{resultado.VelocityMetersPerSecond:F3} m/s";
-                ReynoldsText.Text = $"{resultado.ReynoldsNumber:F0}";
-                RegimeText.Text = resultado.Regime.ToString();
-                FatorAtritoText.Text = $"{resultado.FrictionFactor:F5}";
-                PerdaDistribuidaText.Text = $"{resultado.HeadLossMeters:F4} m.c.a.";
-                PerdaLocalizadaText.Text = $"{resultado.LocalLossMeters:F4} m.c.a.";
-                PerdaTotalText.Text = $"{resultado.TotalHeadLossMeters:F4} m.c.a.";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
 
         private void NoTipoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) { if (NoDemandaTextBox != null) AtualizarEstadoTipoNo(); }
@@ -352,6 +311,11 @@ namespace BahrHidro.UI
                 _ultimoResultadoDaRede = res;
                 ExportarMemorialButton.IsEnabled = true;
                 DimensionarBombaButton.IsEnabled = true;
+                if (MemStatusRedeText != null)
+                {
+                    MemStatusRedeText.Text = $"Pronto para exportar: {res.Segments.Count} trecho(s) e {res.Nodes.Count} nó(s) calculados.";
+                    MemStatusRedeText.Foreground = Brushes.ForestGreen;
+                }
                 
                 ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--", VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
                 ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem { Name = n.NodeName, TypeLabel = FormatarTipoNo(n.NodeType), ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr), PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr), IsLowPressure = n.AvailablePressureMca < 1.0 && n.NodeType != HydraulicNodeType.Reservoir }).ToList();
@@ -477,97 +441,6 @@ namespace BahrHidro.UI
         }
 
         // =====================================================================
-        // CAD 2D (DESENHO DE REDES)
-        // =====================================================================
-        private void ModoDesenho_Changed(object sender, RoutedEventArgs e)
-        {
-            if (RbSelecionar?.IsChecked == true) _modoAtual = ModoDesenho.Selecionar;
-            else if (RbNo?.IsChecked == true) _modoAtual = ModoDesenho.DesenharNo;
-            else if (RbTrecho?.IsChecked == true) _modoAtual = ModoDesenho.ConectarTrecho;
-            
-            if (_noInicialParaTrecho != null)
-            {
-                _noInicialParaTrecho.Fill = Brushes.SteelBlue;
-                _noInicialParaTrecho = null;
-            }
-            
-            if (_modoAtual == ModoDesenho.DesenharNo) InstrucaoCanvasText.Text = "Clique em qualquer lugar da tela branca para adicionar um novo Nó.";
-            else if (_modoAtual == ModoDesenho.ConectarTrecho) InstrucaoCanvasText.Text = "Clique num Nó existente (A) e depois clique noutro Nó (B) para traçar um Trecho de tubo entre eles.";
-            else InstrucaoCanvasText.Text = "Clique nos elementos desenhados para ver as suas propriedades na Aba 3.";
-        }
-
-        private void RedeCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            Point clique = e.GetPosition(RedeCanvas);
-
-            if (_modoAtual == ModoDesenho.DesenharNo)
-            {
-                var visualNo = new Ellipse { Width = 20, Height = 20, Fill = Brushes.SteelBlue, Stroke = Brushes.DarkBlue, StrokeThickness = 2, Cursor = Cursors.Hand };
-                Canvas.SetLeft(visualNo, clique.X - 10);
-                Canvas.SetTop(visualNo, clique.Y - 10);
-                RedeCanvas.Children.Add(visualNo);
-
-                var novoId = Guid.NewGuid();
-                var node = new HydraulicNode { Id = novoId, Name = $"Nó {_network.Nodes.Count + 1}", Type = HydraulicNodeType.Junction, ElevationMeters = 0, DemandLitersPerSecond = 0, RelativeWeight = 0 };
-                
-                _network.AddNode(node);
-                _mapaNosVisuais[visualNo] = novoId;
-                AtualizarListaNos();
-            }
-            else if (_modoAtual == ModoDesenho.ConectarTrecho)
-            {
-                if (e.OriginalSource is Ellipse noClicado)
-                {
-                    if (_noInicialParaTrecho == null)
-                    {
-                        _noInicialParaTrecho = noClicado;
-                        _noInicialParaTrecho.Fill = Brushes.DarkOrange; 
-                    }
-                    else
-                    {
-                        if (_noInicialParaTrecho != noClicado)
-                        {
-                            Guid idMontante = _mapaNosVisuais[_noInicialParaTrecho];
-                            Guid idJusante = _mapaNosVisuais[noClicado];
-
-                            var tubo = new Line
-                            {
-                                X1 = Canvas.GetLeft(_noInicialParaTrecho) + 10,
-                                Y1 = Canvas.GetTop(_noInicialParaTrecho) + 10,
-                                X2 = Canvas.GetLeft(noClicado) + 10,
-                                Y2 = Canvas.GetTop(noClicado) + 10,
-                                Stroke = Brushes.Gray,
-                                StrokeThickness = 4,
-                                Cursor = Cursors.Hand
-                            };
-                            RedeCanvas.Children.Insert(0, tubo);
-
-                            var pipe = new HydraulicPipeSegment { Id = Guid.NewGuid(), Name = $"T-{_network.Segments.Count + 1}", StartNodeId = idMontante, EndNodeId = idJusante, LengthMeters = 5.0, InternalDiameterMm = null, AbsoluteRoughnessMm = 0.001 };
-                            _network.AddSegment(pipe);
-                            AtualizarListaTrechos();
-                        }
-                        _noInicialParaTrecho.Fill = Brushes.SteelBlue;
-                        _noInicialParaTrecho = null;
-                    }
-                }
-            }
-            else if (_modoAtual == ModoDesenho.Selecionar)
-            {
-                if (e.OriginalSource is Ellipse noParaEditar)
-                {
-                    Guid id = _mapaNosVisuais[noParaEditar];
-                    var item = NosDataGrid.Items.OfType<NodeGridItem>().FirstOrDefault(n => n.Id == id);
-                    if (item != null)
-                    {
-                        NosDataGrid.SelectedItem = item;
-                        CarregarNoSelecionadoParaEdicao();
-                        MessageBox.Show($"Selecionou o nó: {item.Name}.\n\nVá até a Aba 'REDE DE ÁGUA' para editar as suas propriedades (cota, pressão, etc).", "Bahr Hidro - CAD", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
         // UTILITÁRIOS GERAIS
         // =====================================================================
         private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };
@@ -592,8 +465,13 @@ namespace BahrHidro.UI
                     _editingSegmentId = null;
                     AtualizarListaNos();
                     AtualizarListaTrechos();
-                    if (MainTabControl != null)
-                        MainTabControl.SelectedIndex = 2;
+                    if (NavAguaFria != null) NavAguaFria.IsSelected = true;
+                    SelecionarPainel("AguaFria");
+                    if (MemStatusRedeText != null)
+                    {
+                        MemStatusRedeText.Text = $"Rede importada ({_network.Segments.Count} trechos). Clique em 'Calcular Rede Hidráulica' antes de exportar.";
+                        MemStatusRedeText.Foreground = Brushes.DarkOrange;
+                    }
                 });
             }
             catch (Exception ex)
@@ -607,9 +485,9 @@ namespace BahrHidro.UI
             if (_revitBridge == null) return;
             if (_ultimoResultadoDaRede == null)
             {
-                MessageBox.Show("Clique em 'Calcular Rede' na aba '3. REDE DE ÁGUA' antes de aplicar os diâmetros no Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
-                if (MainTabControl != null)
-                    MainTabControl.SelectedIndex = 2;
+                MessageBox.Show("Clique em 'Calcular Rede Hidráulica' em 'Água Fria (Rede BIM 3D)' antes de aplicar os diâmetros no Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (NavAguaFria != null) NavAguaFria.IsSelected = true;
+                SelecionarPainel("AguaFria");
                 return;
             }
 
@@ -622,6 +500,41 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show($"Erro ao aplicar diâmetros no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void SalvarDadosRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string autorCompleto = string.IsNullOrWhiteSpace(MemCreaTextBox.Text)
+                    ? MemEngenheiroTextBox.Text.Trim()
+                    : $"{MemEngenheiroTextBox.Text.Trim()} ({MemCreaTextBox.Text.Trim()})";
+
+                _revitBridge.SaveProjectInfo(
+                    MemObraTextBox.Text.Trim(),
+                    MemClienteTextBox.Text.Trim(),
+                    MemEnderecoTextBox.Text.Trim(),
+                    autorCompleto);
+
+                MessageBox.Show("Dados salvos com sucesso nas propriedades do projeto Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao salvar dados no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ExportarMemorialAba_Click(object sender, RoutedEventArgs e)
+        {
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria (Rede BIM 3D)' antes de gerar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                if (NavAguaFria != null) NavAguaFria.IsSelected = true;
+                SelecionarPainel("AguaFria");
+                return;
+            }
+            ExportarMemorial_Click(sender, e);
         }
 
 }
