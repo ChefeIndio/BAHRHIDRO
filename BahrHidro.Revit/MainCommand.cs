@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Plumbing;
@@ -31,7 +32,7 @@ namespace BahrHidro.Revit
 
                 Element startElement = doc.GetElement(pickedRef);
 
-                // 2. Carrega o catálogo local configurado na interface BahrHidro.UI
+                // 2. Carrega o catálogo em thread separada com Task.Run (evita travar o Revit)
                 string catalogPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "BahrHidro",
@@ -45,7 +46,7 @@ namespace BahrHidro.Revit
 
                 var repository = new PipeCatalogRepository(catalogPath);
                 var catalogService = new PipeCatalogService(repository);
-                var produtos = catalogService.GetAllAsync().GetAwaiter().GetResult();
+                var produtos = Task.Run(() => catalogService.GetAllAsync()).GetAwaiter().GetResult();
 
                 var opcoesDiametro = produtos
                     .Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm))

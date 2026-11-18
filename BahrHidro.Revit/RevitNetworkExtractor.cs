@@ -14,6 +14,8 @@ namespace BahrHidro.Revit
 
     public static class RevitNetworkExtractor
     {
+        private const int MaxElementsLimit = 800;
+
         public static RevitNetworkExtractionResult ExtractFromStartElement(Document doc, Element startElement)
         {
             var result = new RevitNetworkExtractionResult();
@@ -39,10 +41,11 @@ namespace BahrHidro.Revit
 
             foreach (Connector conn in startConnectors)
             {
-                if (!conn.IsConnected) continue;
+                if (!IsValidPipingConnector(conn)) continue;
 
                 foreach (Connector refConn in conn.AllRefs)
                 {
+                    if (!IsValidPipingConnector(refConn)) continue;
                     if (refConn.Owner.Id.Value == startElement.Id.Value || visitedElementIds.Contains(refConn.Owner.Id.Value))
                         continue;
 
@@ -74,18 +77,22 @@ namespace BahrHidro.Revit
 
             while (element != null && entry != null)
             {
+                if (visitedIds.Count >= MaxElementsLimit)
+                    break;
+
                 visitedIds.Add(element.Id.Value);
                 ConnectorSet? connectors = GetConnectors(element);
                 if (connectors == null) break;
 
-                // Identifica todas as saídas conectadas diferentes do conector de entrada
+                // Identifica apenas saídas hidráulicas físicas conectadas
                 var outgoingConnectors = new List<Connector>();
                 foreach (Connector c in connectors)
                 {
-                    if (c.Id == entry.Id || !c.IsConnected) continue;
+                    if (c.Id == entry.Id || !IsValidPipingConnector(c)) continue;
 
                     foreach (Connector refConn in c.AllRefs)
                     {
+                        if (!IsValidPipingConnector(refConn)) continue;
                         if (refConn.Owner.Id.Value != element.Id.Value && !visitedIds.Contains(refConn.Owner.Id.Value))
                         {
                             outgoingConnectors.Add(c);
@@ -101,6 +108,25 @@ namespace BahrHidro.Revit
                     if (lengthParam != null)
                     {
                         accumulatedLengthM += UnitUtils.ConvertFromInternalUnits(lengthParam.AsDouble(), UnitTypeId.Meters);
+                    }
+
+                    // Caso o tubo tenha derivação direta (Tap) com 2 ou mais saídas
+                    if (outgoingConnectors.Count >= 2)
+                    {
+                        var tapNode = new HydraulicNode
+                        {
+                            Id = Guid.NewGuid(),
+                            Name = $"DER-{pipe.Id.Value}",
+                            Type = HydraulicNodeType.Junction,
+                            ElevationMeters = GetElevationMeters(pipe, connectors),
+                            DemandLitersPerSecond = 0,
+                            RelativeWeight = 0
+                        };
+
+                        result.Network.AddNode(tapNode);
+                        RegisterSegment(result, upstreamNodeId, tapNode.Id, accumulatedLengthM, accumulatedK, segmentPipes);
+                        TraceMultipleBranches(pipe.Id.Value, outgoingConnectors, tapNode.Id, result, visitedIds);
+                        return;
                     }
                 }
                 else if (element is FamilyInstance fi)
@@ -138,17 +164,7 @@ namespace BahrHidro.Revit
 
                         result.Network.AddNode(junctionNode);
                         RegisterSegment(result, upstreamNodeId, junctionNode.Id, accumulatedLengthM, accumulatedK, segmentPipes);
-
-                        foreach (Connector outConn in outgoingConnectors)
-                        {
-                            foreach (Connector nextRef in outConn.AllRefs)
-                            {
-                                if (nextRef.Owner.Id.Value != fi.Id.Value && !visitedIds.Contains(nextRef.Owner.Id.Value))
-                                {
-                                    TraceBranch(nextRef.Owner, nextRef, junctionNode.Id, result, visitedIds);
-                                }
-                            }
-                        }
+                        TraceMultipleBranches(fi.Id.Value, outgoingConnectors, junctionNode.Id, result, visitedIds);
                         return;
                     }
 
@@ -162,6 +178,7 @@ namespace BahrHidro.Revit
                     Connector? nextEntry = null;
                     foreach (Connector refConn in outgoingConnectors[0].AllRefs)
                     {
+                        if (!IsValidPipingConnector(refConn)) continue;
                         if (refConn.Owner.Id.Value != element.Id.Value && !visitedIds.Contains(refConn.Owner.Id.Value))
                         {
                             nextEntry = refConn;
@@ -191,6 +208,34 @@ namespace BahrHidro.Revit
                     break;
                 }
             }
+        }
+
+        private static void TraceMultipleBranches(
+            long ownerId,
+            List<Connector> outgoingConnectors,
+            Guid junctionNodeId,
+            RevitNetworkExtractionResult result,
+            HashSet<long> visitedIds)
+        {
+            foreach (Connector outConn in outgoingConnectors)
+            {
+                foreach (Connector nextRef in outConn.AllRefs)
+                {
+                    if (!IsValidPipingConnector(nextRef)) continue;
+                    if (nextRef.Owner.Id.Value != ownerId && !visitedIds.Contains(nextRef.Owner.Id.Value))
+                    {
+                        TraceBranch(nextRef.Owner, nextRef, junctionNodeId, result, visitedIds);
+                    }
+                }
+            }
+        }
+
+        private static bool IsValidPipingConnector(Connector conn)
+        {
+            if (conn == null || !conn.IsConnected) return false;
+            if (conn.Domain != Domain.DomainPiping) return false;
+            if (conn.ConnectorType == ConnectorType.Logical) return false;
+            return true;
         }
 
         private static void RegisterSegment(
@@ -229,7 +274,8 @@ namespace BahrHidro.Revit
         {
             foreach (Connector c in connectors)
             {
-                return UnitUtils.ConvertFromInternalUnits(c.Origin.Z, UnitTypeId.Meters);
+                if (c.Domain == Domain.DomainPiping && c.ConnectorType != ConnectorType.Logical)
+                    return UnitUtils.ConvertFromInternalUnits(c.Origin.Z, UnitTypeId.Meters);
             }
 
             BoundingBoxXYZ? bb = element.get_BoundingBox(null);
