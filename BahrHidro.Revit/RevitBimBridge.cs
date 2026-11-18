@@ -21,6 +21,35 @@ namespace BahrHidro.Revit
             _doc = uidoc.Document;
         }
 
+        public (string ProjectName, string ClientName, string Address, string Author) GetProjectInfo()
+        {
+            var info = _doc.ProjectInformation;
+            if (info == null) return ("", "", "", "");
+            return (
+                info.Name ?? "",
+                info.ClientName ?? "",
+                info.Address ?? "",
+                info.Author ?? ""
+            );
+        }
+
+        public void SaveProjectInfo(string projectName, string clientName, string address, string author)
+        {
+            using (Transaction tx = new Transaction(_doc, "Bahr Hidro - Atualizar Dados do Projeto"))
+            {
+                tx.Start();
+                var info = _doc.ProjectInformation;
+                if (info != null)
+                {
+                    info.Name = projectName;
+                    info.ClientName = clientName;
+                    info.Address = address;
+                    info.Author = author;
+                }
+                tx.Commit();
+            }
+        }
+
         public void ImportNetworkFromRevit(Window ownerWindow, Action<HydraulicNetwork> onNetworkImported)
         {
             try
