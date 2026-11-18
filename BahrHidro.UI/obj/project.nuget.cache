@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "YXNEKOY3o6M=",
+  "dgSpecHash": "A6jtjA86nzE=",
   "success": true,
   "projectFilePath": "/workspaces/BAHRHIDRO/BahrHidro.UI/BahrHidro.UI.csproj",
   "expectedPackageFiles": [
@@ -11,7 +11,11 @@
     "/home/codespace/.nuget/packages/excelnumberformat/1.1.0/excelnumberformat.1.1.0.nupkg.sha512",
     "/home/codespace/.nuget/packages/rbush.signed/4.0.0/rbush.signed.4.0.0.nupkg.sha512",
     "/home/codespace/.nuget/packages/sixlabors.fonts/1.0.0/sixlabors.fonts.1.0.0.nupkg.sha512",
-    "/home/codespace/.nuget/packages/microsoft.windowsdesktop.app.ref/10.0.14/microsoft.windowsdesktop.app.ref.10.0.14.nupkg.sha512"
+    "/home/codespace/.nuget/packages/system.io.packaging/8.0.1/system.io.packaging.8.0.1.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.netcore.app.ref/8.0.33/microsoft.netcore.app.ref.8.0.33.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.33/microsoft.windowsdesktop.app.ref.8.0.33.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.33/microsoft.aspnetcore.app.ref.8.0.33.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.netcore.app.host.linux-x64/8.0.33/microsoft.netcore.app.host.linux-x64.8.0.33.nupkg.sha512"
   ],
   "logs": []
 }

@@ -10,6 +10,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using BahrHidro.Core;
 using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
@@ -426,52 +427,4 @@ namespace BahrHidro.Revit
                 var regiao = CmbRegiao.SelectedItem as RainwaterRegion;
                 var input = new RainwaterInput
                 {
-                    RegionName = regiao != null && !regiao.IsCustom ? $"{regiao.City} - {regiao.State}" : "Personalizada",
-                    IntensityMmPerHour = ParseDouble(TxtIntensidade.Text, "Intensidade"),
-                    ReturnPeriod = ObterPeriodoRetorno(),
-                    RoofWidthMeters = ParseDouble(TxtLarguraTelhado.Text, "Comprimento b"),
-                    RoofProjectionMeters = ParseDouble(TxtProjecaoTelhado.Text, "Projeção a"),
-                    RoofHeightMeters = ParseDouble(TxtAlturaTelhado.Text, "Altura h"),
-                    InterceptingWallAreaM2 = ParseDouble(TxtParede.Text, "Parede"),
-                    Shape = (CmbFormatoCalha.SelectedItem as ComboBoxItem)?.Tag?.ToString() == "Semicircular"
-                        ? GutterShape.Semicircular : GutterShape.Rectangular,
-                    Material = Enum.Parse<GutterMaterial>((CmbMaterialCalha.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "PvcOrMetal"),
-                    GutterSlopePercent = ParseDouble(TxtDeclividade.Text, "Declividade"),
-                    DownspoutCount = (int)Math.Max(1, ParseDouble(TxtQtdDescidas.Text, "Nº Descidas"))
-                };
-
-                var res = RainwaterCalculator.Calculate(input);
-
-                LblPluvArea.Text = $"Área de Contribuição: {res.ContributionAreaM2.ToString("F2", _pt)} m²";
-                LblPluvVazao.Text = $"Vazão de Projeto: {res.DesignFlowLitersPerMinute.ToString("F2", _pt)} L/min ({res.DesignFlowLitersPerSecond.ToString("F2", _pt)} L/s)";
-                LblPluvCalha.Text = $"Calha Comercial: {res.SelectedGutterDescription}";
-                LblPluvCapCalha.Text = $"Capacidade: {res.GutterMaxCapacityLitersPerMinute.ToString("F2", _pt)} L/min (Ocupação: {res.GutterOccupancyPercentage.ToString("F1", _pt)}%)";
-                LblPluvCondutor.Text = $"Condutor Vertical: {res.DownspoutCount}× PVC DN {res.RequiredDownspoutDiameterMm} mm";
-                LblPluvCapCondutor.Text = $"Por descida: {res.FlowPerDownspoutLitersPerMinute.ToString("F2", _pt)} / {res.DownspoutMaxCapacityLitersPerMinute.ToString("F2", _pt)} L/min";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Verifique os valores pluviais:\n{ex.Message}", "Águas Pluviais", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private RainwaterReturnPeriod ObterPeriodoRetorno()
-        {
-            string tag = (CmbPeriodoRetorno.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "5";
-            return tag switch
-            {
-                "1" => RainwaterReturnPeriod.OneYear,
-                "25" => RainwaterReturnPeriod.TwentyFiveYears,
-                _ => RainwaterReturnPeriod.FiveYears
-            };
-        }
-
-        private static double ParseDouble(string text, string fieldName)
-        {
-            string normalized = (text ?? "").Trim().Replace(",", ".");
-            if (!double.TryParse(normalized, NumberStyles.Any, CultureInfo.InvariantCulture, out double value))
-                throw new ArgumentException($"Valor inválido em '{fieldName}'.");
-            return value;
-        }
-    }
-}
+                    RegionName = regiao != null && !
