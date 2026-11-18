@@ -1,6 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
 using System.Windows;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
@@ -67,7 +72,6 @@ namespace BahrHidro.Revit
             }
             catch (Autodesk.Revit.Exceptions.OperationCanceledException)
             {
-                // Usuário cancelou com ESC
             }
             finally
             {
@@ -108,6 +112,180 @@ namespace BahrHidro.Revit
             }
 
             return tubosAtualizados;
+        }
+
+        public Dictionary<string, int> ImportSewerFixturesFromRevit(Window ownerWindow)
+        {
+            var contagem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                ownerWindow.Hide();
+
+                IList<Reference> refs = _uidoc.Selection.PickObjects(
+                    ObjectType.Element,
+                    new CategorySelectionFilter(BuiltInCategory.OST_PlumbingFixtures),
+                    "Selecione os aparelhos sanitários do ramal de esgoto e clique em 'Concluir' na barra superior:");
+
+                foreach (Reference r in refs)
+                {
+                    Element elem = _doc.GetElement(r);
+                    if (elem == null) continue;
+
+                    string familia = (elem as FamilyInstance)?.Symbol?.FamilyName ?? "";
+                    string tipo = elem.Name ?? "";
+                    string categoria = MapearAparelhoEsgoto($"{familia} {tipo}");
+
+                    if (!string.IsNullOrEmpty(categoria))
+                    {
+                        contagem[categoria] = contagem.TryGetValue(categoria, out int atual) ? atual + 1 : 1;
+                    }
+                }
+            }
+            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+            {
+            }
+            finally
+            {
+                ownerWindow.ShowDialog();
+            }
+
+            return contagem;
+        }
+
+        public RevitRoofData? CaptureRoofFromRevit(Window ownerWindow)
+        {
+            try
+            {
+                ownerWindow.Hide();
+
+                Reference pickedRef = _uidoc.Selection.PickObject(
+                    ObjectType.Element,
+                    new CategorySelectionFilter(BuiltInCategory.OST_Roofs),
+                    "Selecione o telhado / cobertura no modelo 3D:");
+
+                Element roof = _doc.GetElement(pickedRef);
+                if (roof == null) return null;
+
+                double areaM2 = 0;
+                Parameter? areaParam = roof.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED);
+                if (areaParam != null && areaParam.HasValue)
+                {
+                    areaM2 = UnitUtils.ConvertFromInternalUnits(areaParam.AsDouble(), UnitTypeId.SquareMeters);
+                }
+
+                double widthM = 10.0;
+                double projM = 6.0;
+                double heightM = 1.0;
+
+                BoundingBoxXYZ? bb = roof.get_BoundingBox(null);
+                if (bb != null)
+                {
+                    double dx = UnitUtils.ConvertFromInternalUnits(bb.Max.X - bb.Min.X, UnitTypeId.Meters);
+                    double dy = UnitUtils.ConvertFromInternalUnits(bb.Max.Y - bb.Min.Y, UnitTypeId.Meters);
+                    double dz = UnitUtils.ConvertFromInternalUnits(bb.Max.Z - bb.Min.Z, UnitTypeId.Meters);
+
+                    widthM = Math.Max(0.5, Math.Max(dx, dy));
+                    double menorLado = Math.Max(0.5, Math.Min(dx, dy));
+                    projM = areaM2 > 0 ? Math.Round(areaM2 / widthM, 2) : menorLado;
+                    heightM = Math.Max(0.0, Math.Round(dz, 2));
+                }
+
+                if (areaM2 <= 0) areaM2 = widthM * projM;
+
+                return new RevitRoofData(roof.Name, areaM2, Math.Round(widthM, 2), projM, heightM);
+            }
+            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+            {
+                return null;
+            }
+            finally
+            {
+                ownerWindow.ShowDialog();
+            }
+        }
+
+        public RevitPopulationEstimate EstimateBuildingPopulation()
+        {
+            var rooms = new FilteredElementCollector(_doc)
+                .OfCategory(BuiltInCategory.OST_Rooms)
+                .WhereElementIsNotElementType()
+                .OfType<Room>()
+                .Where(r => r.Area > 0)
+                .ToList();
+
+            if (rooms.Count == 0)
+            {
+                return new RevitPopulationEstimate(
+                    5, 0, 0,
+                    "Nenhum ambiente (Room) inserido no modelo Revit. Mantida estimativa padrão de 5 pessoas.");
+            }
+
+            int dormitorios = 0;
+            foreach (Room room in rooms)
+            {
+                string nomeNorm = RemoverAcentos(room.Name ?? "").ToLowerInvariant();
+                if (nomeNorm.Contains("quarto") ||
+                    nomeNorm.Contains("dormitorio") ||
+                    nomeNorm.Contains("suite") ||
+                    nomeNorm.Contains("bedroom"))
+                {
+                    dormitorios++;
+                }
+            }
+
+            int pessoas = dormitorios > 0 ? dormitorios * 2 : Math.Max(2, rooms.Count);
+            string resumo = dormitorios > 0
+                ? $"Encontrados {dormitorios} dormitório(s)/suíte(s) em {rooms.Count} ambiente(s) do projeto.\nPopulação estimada (NBR 5626 — 2 pessoas/dormitório): {pessoas} pessoas."
+                : $"Encontrados {rooms.Count} ambiente(s) no modelo (sem dormitórios nomeados).\nPopulação estimada: {pessoas} pessoas.";
+
+            return new RevitPopulationEstimate(pessoas, dormitorios, rooms.Count, resumo);
+        }
+
+        private static string MapearAparelhoEsgoto(string nomeBruto)
+        {
+            string n = RemoverAcentos(nomeBruto).ToLowerInvariant();
+
+            if (n.Contains("bacia") || n.Contains("vaso") || n.Contains("sanitaria") || n.Contains("toilet") || n.Contains("closet") || n.Contains("wc"))
+                return "Bacia Sanitária (Sanita)";
+            if (n.Contains("lavatorio") || n.Contains("cuba") || n.Contains("lavabo") || n.Contains("vanity"))
+                return "Lavatório (Pia de WC)";
+            if (n.Contains("cozinha") || n.Contains("kitchen") || n.Contains("gourmet") || n.Contains("pia"))
+                return "Pia de Cozinha";
+            if (n.Contains("chuveiro") || n.Contains("ducha") || n.Contains("shower"))
+                return "Chuveiro";
+            if (n.Contains("banheira") || n.Contains("tub") || n.Contains("hidro"))
+                return "Banheira";
+            if (n.Contains("maquina") || n.Contains("lavadora") || n.Contains("washing") || n.Contains("laundry"))
+                return "Máquina de Lavar Roupa";
+            if (n.Contains("tanque") || n.Contains("utility"))
+                return "Tanque de Lavar Roupa";
+            if (n.Contains("ralo") || n.Contains("sifonad") || n.Contains("drain"))
+                return "Ralo Sifonado";
+            if (n.Contains("mictorio") || n.Contains("urinal"))
+                return "Mictório (Válvula)";
+
+            return "";
+        }
+
+        private static string RemoverAcentos(string texto)
+        {
+            var normalized = texto.Normalize(NormalizationForm.FormD);
+            var sb = new StringBuilder(normalized.Length);
+            foreach (char c in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                    sb.Append(c);
+            }
+            return sb.ToString().Normalize(NormalizationForm.FormC);
+        }
+
+        private sealed class CategorySelectionFilter : ISelectionFilter
+        {
+            private readonly BuiltInCategory _category;
+            public CategorySelectionFilter(BuiltInCategory category) => _category = category;
+            public bool AllowElement(Element elem) => elem?.Category != null && elem.Category.Id.Value == (long)_category;
+            public bool AllowReference(Reference reference, XYZ position) => false;
         }
     }
 }

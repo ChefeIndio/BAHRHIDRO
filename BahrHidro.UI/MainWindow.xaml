@@ -336,7 +336,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <DockPanel Margin="0,0,0,4"><Button x:Name="BtnPopBoilerRevit" DockPanel.Dock="Right" Content="Ler Revit" Background="#0284C7" Foreground="White" FontSize="11" FontWeight="SemiBold" Padding="8,2" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="EstimarPopulacaoRevit_Click"/><TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
                                         <TextBox x:Name="BoilerOcupantesTextBox" Text="4"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
@@ -391,7 +391,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock Text="População Estimada (pessoas)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <DockPanel Margin="0,0,0,4"><Button x:Name="BtnPopCaixaRevit" DockPanel.Dock="Right" Content="Ler Revit" Background="#0284C7" Foreground="White" FontSize="11" FontWeight="SemiBold" Padding="8,2" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="EstimarPopulacaoRevit_Click"/><TextBlock Text="População Estimada (pessoas)" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
                                         <TextBox x:Name="CaixaPopulacaoTextBox" Text="5"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="2">
@@ -459,7 +459,7 @@
 
                     <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16">
                         <DockPanel>
-                            <TextBlock DockPanel.Dock="Top" Text="Aparelhos Sanitários (UHC — NBR 8160)" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12"><Button x:Name="BtnImportarEsgotoRevit" DockPanel.Dock="Right" Content="Importar Aparelhos do Revit 3D" Background="#0284C7" Foreground="White" FontWeight="SemiBold" FontSize="12" Padding="10,5" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="ImportarEsgotoRevit_Click"/><TextBlock Text="Aparelhos Sanitários (UHC — NBR 8160)" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/></DockPanel>
                             <Button DockPanel.Dock="Bottom" Content="Dimensionar Ramal de Esgoto" Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" Click="CalcularEsgoto_Click"/>
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <ItemsControl x:Name="SewerItemsControl">
@@ -517,7 +517,7 @@
 
                 <!-- 5. ÁGUAS PLUVIAIS -->
                 <Grid x:Name="PanelPluvial" Visibility="Collapsed">
-                    <local:RainwaterView />
+                    <local:RainwaterView x:Name="RainwaterViewControl" />
                 </Grid>
 
                 <!-- 6. MEMORIAL DE CÁLCULO & PROJETO -->

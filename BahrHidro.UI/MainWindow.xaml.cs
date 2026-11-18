@@ -69,6 +69,10 @@ namespace BahrHidro.UI
             _revitBridge = revitBridge;
             RevitBimToolbar.Visibility = Visibility.Visible;
             SalvarDadosRevitButton.Visibility = Visibility.Visible;
+            BtnPopBoilerRevit.Visibility = Visibility.Visible;
+            BtnPopCaixaRevit.Visibility = Visibility.Visible;
+            BtnImportarEsgotoRevit.Visibility = Visibility.Visible;
+            RainwaterViewControl?.SetRevitBridge(revitBridge, this);
 
             var info = _revitBridge.GetProjectInfo();
             MemObraTextBox.Text = info.ProjectName;
@@ -304,6 +308,11 @@ namespace BahrHidro.UI
             {
                 if (!TryParsePtBrDouble(RedeViscosidadeTextBox.Text, out double viscosidade)) return;
                 var produtosNoCatalogo = await _catalogService.GetAllAsync();
+                if (produtosNoCatalogo.Count <= 1)
+                {
+                    await GarantirCatalogoPadraoNbrAsync();
+                    produtosNoCatalogo = await _catalogService.GetAllAsync();
+                }
                 var opcoesDiametro = produtosNoCatalogo.Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm)).ToList();
 
                 var res = HydraulicNetworkSolver.Solve(_network, viscosidade, opcoesDiametro, 3.0);
@@ -535,6 +544,86 @@ namespace BahrHidro.UI
                 return;
             }
             ExportarMemorial_Click(sender, e);
+        }
+
+
+        private async System.Threading.Tasks.Task GarantirCatalogoPadraoNbrAsync()
+        {
+            var padroes = new (string dn, decimal ext, decimal esp)[]
+            {
+                ("DN 20 (1/2\")", 20.0m, 1.5m),
+                ("DN 25 (3/4\")", 25.0m, 1.7m),
+                ("DN 32 (1\")", 32.0m, 2.1m),
+                ("DN 40 (1 1/4\")", 40.0m, 2.4m),
+                ("DN 50 (1 1/2\")", 50.0m, 3.0m),
+                ("DN 60 (2\")", 60.0m, 3.3m),
+                ("DN 75 (2 1/2\")", 75.0m, 4.2m),
+                ("DN 85 (3\")", 85.0m, 4.7m),
+                ("DN 110 (4\")", 110.0m, 6.1m)
+            };
+
+            foreach (var (dn, ext, esp) in padroes)
+            {
+                try
+                {
+                    await _catalogService.AddAsync(new PipeProduct
+                    {
+                        Manufacturer = "Tigre / Amanco (NBR 5648)",
+                        ProductLine = "PVC Soldável",
+                        Material = PipeMaterial.PvcSoldavel,
+                        NominalDesignation = dn,
+                        OuterDiameterMm = ext,
+                        WallThicknessMm = esp,
+                        PressureClass = "PN 7,5",
+                        MaximumOperatingPressureBar = 7.5m,
+                        StandardReference = "ABNT NBR 5648",
+                        SourceDescription = "Catálogo Padrão Automático"
+                    });
+                }
+                catch { }
+            }
+        }
+
+        private void ImportarEsgotoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var mapeados = _revitBridge.ImportSewerFixturesFromRevit(this);
+                if (mapeados.Count == 0) return;
+
+                foreach (var item in _sewerFixtures)
+                {
+                    item.Quantity = mapeados.TryGetValue(item.Name, out int qtd) ? qtd : 0;
+                }
+
+                SewerItemsControl.ItemsSource = null;
+                SewerItemsControl.ItemsSource = _sewerFixtures;
+                CalcularEsgoto_Click(sender, e);
+
+                int totalPecas = mapeados.Values.Sum();
+                MessageBox.Show($"{totalPecas} aparelho(s) sanitário(s) importado(s) do Revit 3D e dimensionados!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao importar aparelhos de esgoto do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void EstimarPopulacaoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var est = _revitBridge.EstimateBuildingPopulation();
+                CaixaPopulacaoTextBox.Text = est.EstimatedPeople.ToString();
+                BoilerOcupantesTextBox.Text = est.EstimatedPeople.ToString();
+                MessageBox.Show(est.Summary, "Bahr Hidro BIM - Ambientes Revit", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao ler ambientes do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
 }

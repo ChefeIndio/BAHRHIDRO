@@ -11,6 +11,8 @@ namespace BahrHidro.UI
     public partial class RainwaterView : UserControl
     {
         public static RainwaterResult? UltimoResultado { get; private set; }
+        private IRevitBimBridge? _revitBridge;
+        private Window? _ownerWindow;
 
         public RainwaterView()
         {
@@ -22,6 +24,36 @@ namespace BahrHidro.UI
             var padrao = regioes.FirstOrDefault(r => r.City == "Ponta Grossa") ?? regioes.First();
             CmbRegiao.SelectedItem = padrao;
             AtualizarIntensidadePelaSelecao();
+        }
+
+        public void SetRevitBridge(IRevitBimBridge bridge, Window ownerWindow)
+        {
+            _revitBridge = bridge;
+            _ownerWindow = ownerWindow;
+            if (BtnCapturarTelhadoRevit != null)
+                BtnCapturarTelhadoRevit.Visibility = Visibility.Visible;
+        }
+
+        private void BtnCapturarTelhadoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null || _ownerWindow == null) return;
+            try
+            {
+                var roof = _revitBridge.CaptureRoofFromRevit(_ownerWindow);
+                if (roof == null) return;
+
+                var pt = CultureInfo.GetCultureInfo("pt-BR");
+                TxtLarguraTelhado.Text = roof.WidthMeters.ToString("F2", pt);
+                TxtProjecaoTelhado.Text = roof.ProjectionMeters.ToString("F2", pt);
+                TxtAlturaTelhado.Text = roof.HeightMeters.ToString("F2", pt);
+
+                BtnCalcularPluvial_Click(sender, e);
+                MessageBox.Show($"Telhado '{roof.RoofName}' capturado com sucesso!\nÁrea real medida: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao capturar telhado no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void CmbRegiao_SelectionChanged(object sender, SelectionChangedEventArgs e)
