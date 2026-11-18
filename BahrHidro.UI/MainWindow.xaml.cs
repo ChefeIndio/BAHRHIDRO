@@ -11,7 +11,7 @@ using BahrHidro.Core;
 using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
-using BahrHidro.Core.Hydraulic.HotWater; // <-- Novo módulo
+using BahrHidro.Core.Hydraulic.HotWater;
 
 namespace BahrHidro.UI
 {
@@ -40,7 +40,7 @@ namespace BahrHidro.UI
         }
 
         // =====================================================================
-        // ABA 1: DIMENSIONAMENTO
+        // ABA 1: DIMENSIONAMENTO E ABA 2: ANÁLISE (INALTRERADAS)
         // =====================================================================
         private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
         {
@@ -81,9 +81,6 @@ namespace BahrHidro.UI
             }
         }
 
-        // =====================================================================
-        // ABA 2: ANÁLISE HIDRÁULICA
-        // =====================================================================
         private async void AnalisarTrecho_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -120,8 +117,16 @@ namespace BahrHidro.UI
         private void AtualizarEstadoTipoNo()
         {
             HydraulicNodeType tipo = ObterTipoNoSelecionado();
-            if (tipo == HydraulicNodeType.Reservoir) { NoDemandaTextBox.Text = "0,00"; NoDemandaTextBox.IsEnabled = false; }
-            else { NoDemandaTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoDemandaTextBox.Text)) NoDemandaTextBox.Text = "0,00"; }
+            if (tipo == HydraulicNodeType.Reservoir) 
+            { 
+                NoDemandaTextBox.Text = "0,00"; NoDemandaTextBox.IsEnabled = false; 
+                NoPesoTextBox.Text = "0,00"; NoPesoTextBox.IsEnabled = false;
+            }
+            else 
+            { 
+                NoDemandaTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoDemandaTextBox.Text)) NoDemandaTextBox.Text = "0,00"; 
+                NoPesoTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoPesoTextBox.Text)) NoPesoTextBox.Text = "0,00";
+            }
         }
         private HydraulicNodeType ObterTipoNoSelecionado() => (NoTipoComboBox.SelectedItem is ComboBoxItem item && Enum.TryParse(item.Tag as string, out HydraulicNodeType parsed)) ? parsed : HydraulicNodeType.Junction;
 
@@ -138,14 +143,25 @@ namespace BahrHidro.UI
                 if (string.IsNullOrWhiteSpace(nome)) return;
                 if (!TryParsePtBrDouble(NoCotaTextBox.Text, out double cota)) return;
                 HydraulicNodeType tipo = ObterTipoNoSelecionado();
-                double demanda = 0;
-                if (tipo != HydraulicNodeType.Reservoir) if (!TryParsePtBrDouble(NoDemandaTextBox.Text, out demanda) || demanda < 0) return;
+                double demanda = 0; double peso = 0;
+                
+                if (tipo != HydraulicNodeType.Reservoir) 
+                {
+                    if (!TryParsePtBrDouble(NoDemandaTextBox.Text, out demanda) || demanda < 0) return;
+                    if (!TryParsePtBrDouble(NoPesoTextBox.Text, out peso) || peso < 0) return;
+                }
 
-                if (_editingNodeId.HasValue) _network.UpdateNode(new HydraulicNode { Id = _editingNodeId.Value, Name = nome, Type = tipo, ElevationMeters = cota, DemandLitersPerSecond = demanda });
-                else _network.AddNode(new HydraulicNode { Name = nome, Type = tipo, ElevationMeters = cota, DemandLitersPerSecond = demanda });
+                var novoNo = new HydraulicNode { Id = _editingNodeId ?? Guid.NewGuid(), Name = nome, Type = tipo, ElevationMeters = cota, DemandLitersPerSecond = demanda, RelativeWeight = peso };
+
+                if (_editingNodeId.HasValue) _network.UpdateNode(novoNo);
+                else _network.AddNode(novoNo);
+                
                 LimparFormularioNo(); AtualizarListaNos();
             }
-            catch { }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Não foi possível salvar o elemento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private void EditarNo_Click(object sender, RoutedEventArgs e) => CarregarNoSelecionadoParaEdicao();
@@ -161,6 +177,7 @@ namespace BahrHidro.UI
             NoNomeTextBox.Text = node.Name;
             NoCotaTextBox.Text = node.ElevationMeters.ToString("F2", PtBr);
             NoDemandaTextBox.Text = node.DemandLitersPerSecond.ToString("F3", PtBr);
+            NoPesoTextBox.Text = node.RelativeWeight.ToString("F2", PtBr);
             NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
             NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
             NoModoEdicaoText.Text = $"Modo: Editando '{node.Name}'";
@@ -175,7 +192,7 @@ namespace BahrHidro.UI
         private void CancelarEdicaoNo_Click(object sender, RoutedEventArgs e) => LimparFormularioNo();
         private void LimparFormularioNo()
         {
-            _editingNodeId = null; NoNomeTextBox.Text = ""; NoCotaTextBox.Text = "0,00"; NoDemandaTextBox.Text = "0,00";
+            _editingNodeId = null; NoNomeTextBox.Text = ""; NoCotaTextBox.Text = "0,00"; NoDemandaTextBox.Text = "0,00"; NoPesoTextBox.Text = "0,00";
             AtualizarEstadoTipoNo();
             NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF"));
             NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8"));
@@ -183,7 +200,7 @@ namespace BahrHidro.UI
         }
         private void AtualizarListaNos()
         {
-            var itens = _network.Nodes.Select(n => new NodeGridItem { Id = n.Id, Name = n.Name, Type = n.Type, TypeLabel = FormatarTipoNo(n.Type), ElevationMeters = n.ElevationMeters, ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), DemandLitersPerSecond = n.DemandLitersPerSecond, DemandDisplay = n.DemandLitersPerSecond.ToString("F3", PtBr) }).ToList();
+            var itens = _network.Nodes.Select(n => new NodeGridItem { Id = n.Id, Name = n.Name, Type = n.Type, TypeLabel = FormatarTipoNo(n.Type), ElevationMeters = n.ElevationMeters, ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), DemandLitersPerSecond = n.DemandLitersPerSecond, DemandDisplay = n.DemandLitersPerSecond.ToString("F3", PtBr), WeightDisplay = n.RelativeWeight.ToString("F2", PtBr) }).ToList();
             NosDataGrid.ItemsSource = itens;
             ResumoRedeText.Text = $"Total: {_network.Nodes.Count} elementos";
             AtualizarCombosNosTrecho(itens); AtualizarListaTrechos();
@@ -259,55 +276,27 @@ namespace BahrHidro.UI
         }
 
         // =====================================================================
-        // ABA 4: ÁGUA QUENTE / BOILER (NOVO CÓDIGO)
+        // ABA 4: ÁGUA QUENTE / BOILER
         // =====================================================================
         private void CalcularBoiler_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // 1. Validar e capturar o número de ocupantes
-                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0)
-                {
-                    MessageBox.Show("Informe um número válido de ocupantes (maior que zero).", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
+                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0) return;
+                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao)) return;
+                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil)) return;
 
-                // 2. Validar e capturar a pressão disponível (em m.c.a)
-                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao))
-                {
-                    MessageBox.Show("Informe uma pressão disponível válida em m.c.a.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // 3. Descobrir qual perfil de edificação foi selecionado no ComboBox
-                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || 
-                    itemSelecionado.Tag is not string tagString ||
-                    !Enum.TryParse(tagString, out BuildingProfile perfil))
-                {
-                    MessageBox.Show("Selecione um perfil de edificação válido.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // 4. Executar o cálculo matemático do Core
                 var resultado = BoilerCalculator.Calculate(perfil, ocupantes, pressao);
 
-                // 5. Exibir os resultados na tela
                 BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L";
                 BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L";
                 BoilerTipoText.Text = resultado.RecommendedPressureType;
 
-                // 6. Colorir o texto do equipamento de acordo com a pressão
-                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA"))
-                    BoilerTipoText.Foreground = Brushes.DarkRed;
-                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO"))
-                    BoilerTipoText.Foreground = Brushes.DarkOrange;
-                else
-                    BoilerTipoText.Foreground = Brushes.ForestGreen;
+                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA")) BoilerTipoText.Foreground = Brushes.DarkRed;
+                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO")) BoilerTipoText.Foreground = Brushes.DarkOrange;
+                else BoilerTipoText.Foreground = Brushes.ForestGreen;
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ocorreu um erro ao dimensionar o Boiler:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}"); }
         }
 
         // =====================================================================
@@ -316,7 +305,7 @@ namespace BahrHidro.UI
         private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };
         private static bool TryParsePtBrDouble(string? text, out double value) { if (string.IsNullOrWhiteSpace(text)) { value = 0; return false; } return double.TryParse(text.Trim().Replace('.', ','), NumberStyles.Float, PtBr, out value); }
 
-        private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; }
+        private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; public string WeightDisplay { get; init; } = ""; }
         private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; }
         private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
         private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }

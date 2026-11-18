@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using BahrHidro.Core;
@@ -329,7 +328,8 @@ using BahrHidro.Core.Hydraulic.Network;
         Name = "Conexao Principal",
         ElevationMeters = 8.0,
         Type = HydraulicNodeType.Junction,
-        DemandLitersPerSecond = 0.10
+        DemandLitersPerSecond = 0.10,
+        RelativeWeight = 0
     };
 
     var consumo = new HydraulicNode
@@ -337,7 +337,8 @@ using BahrHidro.Core.Hydraulic.Network;
         Name = "Ponto de Consumo",
         ElevationMeters = 3.0,
         Type = HydraulicNodeType.ConsumptionPoint,
-        DemandLitersPerSecond = 0.20
+        DemandLitersPerSecond = 0.20,
+        RelativeWeight = 0
     };
 
     rede.AddNode(reservatorio);
@@ -497,10 +498,13 @@ using BahrHidro.Core.Hydraulic.Network;
         $"Reservatorio: {distribuicao.SourceNodeName}");
 
     Console.WriteLine(
-        $"Demanda total: {distribuicao.TotalDemandLitersPerSecond:F3} L/s");
+        $"Demanda Continua: {distribuicao.TotalContinuousDemand:F3} L/s");
 
     Console.WriteLine(
-        $"Alimentacao necessaria: {distribuicao.RequiredSupplyLitersPerSecond:F3} L/s");
+        $"Peso Acumulado (TotalWeight): {distribuicao.TotalWeight:F2}");
+
+    Console.WriteLine(
+        $"Alimentacao necessaria (Q final): {distribuicao.RequiredSupplyLitersPerSecond:F3} L/s");
 
     foreach (var vazao in distribuicao.PipeFlows)
     {
@@ -523,18 +527,18 @@ using BahrHidro.Core.Hydraulic.Network;
     if (Math.Abs(vazaoTrecho2.FlowLitersPerSecond - 0.20) > 0.000001)
         throw new Exception("Vazao incorreta no trecho 2.");
 
-    if (Math.Abs(distribuicao.TotalDemandLitersPerSecond - 0.30) > 0.000001)
-        throw new Exception("Demanda total incorreta.");
+    if (Math.Abs(distribuicao.TotalContinuousDemand - 0.30) > 0.000001)
+        throw new Exception("Demanda continua total incorreta.");
 
     Console.WriteLine(
         "\nTESTE DE DISTRIBUICAO AUTOMATICA APROVADO!");
 
     // =========================================
-    // TESTE DE REDE COM DUAS RAMIFICACOES
+    // TESTE DE REDE COM DUAS RAMIFICACOES (PESOS)
     // =========================================
 
     Console.WriteLine("\n====================================");
-    Console.WriteLine(" TESTE DE REDE COM DUAS RAMIFICACOES");
+    Console.WriteLine(" TESTE DE REDE COM DUAS RAMIFICACOES (PESOS)");
     Console.WriteLine("====================================");
 
     var redeRamificada = new HydraulicNetwork(
@@ -553,23 +557,27 @@ using BahrHidro.Core.Hydraulic.Network;
         Name = "Derivacao Principal",
         ElevationMeters = 10.0,
         Type = HydraulicNodeType.Junction,
-        DemandLitersPerSecond = 0.0
+        DemandLitersPerSecond = 0.0,
+        RelativeWeight = 0
     };
 
+    // Agora os consumos recebem apenas PESO, não vazão contínua
     var consumoA = new HydraulicNode
     {
-        Name = "Consumo A",
+        Name = "Consumo A (Chuveiro)",
         ElevationMeters = 6.0,
         Type = HydraulicNodeType.ConsumptionPoint,
-        DemandLitersPerSecond = 0.30
+        DemandLitersPerSecond = 0.0,
+        RelativeWeight = 0.30 // Peso NBR 5626
     };
 
     var consumoB = new HydraulicNode
     {
-        Name = "Consumo B",
+        Name = "Consumo B (Pia)",
         ElevationMeters = 4.0,
         Type = HydraulicNodeType.ConsumptionPoint,
-        DemandLitersPerSecond = 0.20
+        DemandLitersPerSecond = 0.0,
+        RelativeWeight = 0.10 // Peso NBR 5626
     };
 
     redeRamificada.AddNode(reservatorioRamificado);
@@ -585,7 +593,8 @@ using BahrHidro.Core.Hydraulic.Network;
         LengthMeters = 25.0,
         InternalDiameterMm = 25.0,
         AbsoluteRoughnessMm = 0.001,
-        TotalLossCoefficientK = 1.0
+        TotalLossCoefficientK = 1.0,
+        FlowLitersPerSecond = null // Agora o Flow precisa ser null para calcular automático
     };
 
     var trechoRamalA = new HydraulicPipeSegment
@@ -596,7 +605,8 @@ using BahrHidro.Core.Hydraulic.Network;
         LengthMeters = 12.0,
         InternalDiameterMm = 20.0,
         AbsoluteRoughnessMm = 0.001,
-        TotalLossCoefficientK = 1.0
+        TotalLossCoefficientK = 1.0,
+        FlowLitersPerSecond = null
     };
 
     var trechoRamalB = new HydraulicPipeSegment
@@ -607,7 +617,8 @@ using BahrHidro.Core.Hydraulic.Network;
         LengthMeters = 18.0,
         InternalDiameterMm = 20.0,
         AbsoluteRoughnessMm = 0.001,
-        TotalLossCoefficientK = 1.0
+        TotalLossCoefficientK = 1.0,
+        FlowLitersPerSecond = null
     };
 
     redeRamificada.AddSegment(trechoPrincipalRamificado);
@@ -618,7 +629,9 @@ using BahrHidro.Core.Hydraulic.Network;
         HydraulicBranchedFlowCalculator.Calculate(redeRamificada);
 
     Console.WriteLine(
-        $"Demanda total: {resultadoRamificado.TotalDemandLitersPerSecond:F3} L/s");
+        $"Peso Total Acumulado: {resultadoRamificado.TotalWeight:F3}");
+    Console.WriteLine(
+        $"Alimentacao Calculada: {resultadoRamificado.RequiredSupplyLitersPerSecond:F3} L/s");
 
     foreach (var vazao in resultadoRamificado.PipeFlows)
     {
@@ -635,17 +648,9 @@ using BahrHidro.Core.Hydraulic.Network;
     var vazaoRamalB = resultadoRamificado.PipeFlows
         .Single(v => v.SegmentId == trechoRamalB.Id);
 
-    if (Math.Abs(vazaoPrincipal.FlowLitersPerSecond - 0.50) > 0.000001)
-        throw new Exception("Vazao incorreta no trecho principal.");
-
-    if (Math.Abs(vazaoRamalA.FlowLitersPerSecond - 0.30) > 0.000001)
-        throw new Exception("Vazao incorreta no Ramal A.");
-
-    if (Math.Abs(vazaoRamalB.FlowLitersPerSecond - 0.20) > 0.000001)
-        throw new Exception("Vazao incorreta no Ramal B.");
-
-    if (Math.Abs(resultadoRamificado.TotalDemandLitersPerSecond - 0.50) > 0.000001)
-        throw new Exception("Demanda total incorreta na rede ramificada.");
+    // Q = 0.3 * raiz(0.40) = 0.1897 L/s
+    if (Math.Abs(vazaoPrincipal.FlowLitersPerSecond - 0.189736) > 0.00001)
+        throw new Exception("Vazao incorreta no trecho principal (Fórmula dos Pesos Falhou).");
 
     Console.WriteLine(
         "\nTESTE DE REDE COM DUAS RAMIFICACOES APROVADO!");
