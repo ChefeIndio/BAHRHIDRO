@@ -12,6 +12,7 @@ using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
 using BahrHidro.Core.Hydraulic.HotWater;
+using BahrHidro.Core.Reporting; // Importa o nosso novo Gerador de Relatórios
 
 namespace BahrHidro.UI
 {
@@ -24,6 +25,9 @@ namespace BahrHidro.UI
 
         private Guid? _editingNodeId;
         private Guid? _editingSegmentId;
+        
+        // Memória para guardar o resultado do último cálculo e permitir a exportação
+        private NetworkCalculationResult? _ultimoResultadoDaRede;
 
         public MainWindow()
         {
@@ -40,7 +44,7 @@ namespace BahrHidro.UI
         }
 
         // =====================================================================
-        // ABA 1: DIMENSIONAMENTO E ABA 2: ANÁLISE (INALTRERADAS)
+        // ABA 1: DIMENSIONAMENTO E ABA 2: ANÁLISE (INALTERADAS)
         // =====================================================================
         private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
         {
@@ -268,11 +272,54 @@ namespace BahrHidro.UI
             try
             {
                 if (!TryParsePtBrDouble(RedeViscosidadeTextBox.Text, out double viscosidade)) return;
+                
+                // O Core orquestra a rede inteira (pesos, perdas, pressões)
                 var res = HydraulicNetworkSolver.Solve(_network, viscosidade);
+                
+                // Guardamos o resultado em memória para permitir a exportação
+                _ultimoResultadoDaRede = res;
+                ExportarMemorialButton.IsEnabled = true;
+                
                 ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
                 ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem { Name = n.NodeName, TypeLabel = FormatarTipoNo(n.NodeType), ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr), PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr), IsLowPressure = n.AvailablePressureMca < 1.0 && n.NodeType != HydraulicNodeType.Reservoir }).ToList();
             }
             catch (Exception ex) { MessageBox.Show($"Erro:\n{ex.Message}"); }
+        }
+
+        // =====================================================================
+        // NOVO: EXPORTAÇÃO DE RELATÓRIO PARA EXCEL
+        // =====================================================================
+        private void ExportarMemorial_Click(object sender, RoutedEventArgs e)
+        {
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Por favor, calcule a rede antes de exportar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Abre a janela nativa do Windows para o utilizador escolher onde guardar
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = "Memorial_Hidraulico_BahrHidro",
+                DefaultExt = ".xlsx",
+                Filter = "Ficheiro Excel (.xlsx)|*.xlsx"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // Chama o nosso novo gerador no Core
+                    ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName);
+                    
+                    MessageBox.Show("Memorial de cálculo exportado com sucesso!\n\nVerifique o ficheiro Excel no local escolhido.", 
+                                    "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ocorreu um erro ao gerar o ficheiro Excel:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         // =====================================================================

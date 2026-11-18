@@ -26,3 +26,10 @@
 /workspaces/BAHRHIDRO/BahrHidro.UI/obj/Debug/net10.0-windows/BahrHidro.UI.pdb
 /workspaces/BAHRHIDRO/BahrHidro.UI/obj/Debug/net10.0-windows/BahrHidro.UI.genruntimeconfig.cache
 /workspaces/BAHRHIDRO/BahrHidro.UI/obj/Debug/net10.0-windows/ref/BahrHidro.UI.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/ClosedXML.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/ClosedXML.Parser.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/DocumentFormat.OpenXml.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/DocumentFormat.OpenXml.Framework.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/ExcelNumberFormat.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/RBush.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/SixLabors.Fonts.dll

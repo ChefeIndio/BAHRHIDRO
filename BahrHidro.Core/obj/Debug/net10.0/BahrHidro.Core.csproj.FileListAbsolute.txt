@@ -10,3 +10,4 @@
 /workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/refint/BahrHidro.Core.dll
 /workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.pdb
 /workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/ref/BahrHidro.Core.dll
+/workspaces/BAHRHIDRO/BahrHidro.Core/obj/Debug/net10.0/BahrHidro.Core.csproj.AssemblyReference.cache

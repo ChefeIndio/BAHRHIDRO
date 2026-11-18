@@ -17,3 +17,11 @@
 /workspaces/BAHRHIDRO/BahrHidro.Teste/obj/Debug/net10.0/BahrHidro.Teste.pdb
 /workspaces/BAHRHIDRO/BahrHidro.Teste/obj/Debug/net10.0/BahrHidro.Teste.genruntimeconfig.cache
 /workspaces/BAHRHIDRO/BahrHidro.Teste/obj/Debug/net10.0/ref/BahrHidro.Teste.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/ClosedXML.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/ClosedXML.Parser.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/DocumentFormat.OpenXml.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/DocumentFormat.OpenXml.Framework.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/ExcelNumberFormat.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/RBush.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/SixLabors.Fonts.dll
+/workspaces/BAHRHIDRO/BahrHidro.Teste/bin/Debug/net10.0/System.IO.Packaging.dll
