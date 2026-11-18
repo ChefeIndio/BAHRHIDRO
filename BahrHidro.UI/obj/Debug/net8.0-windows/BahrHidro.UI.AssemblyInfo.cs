@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BahrHidro.UI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82a9c53c2d9459cb2ba4973d25536109cf815ff0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6f208be8057b398f71d057b06993e9f141b2bfe8")]
 [assembly: System.Reflection.AssemblyProductAttribute("BahrHidro.UI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BahrHidro.UI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -118,6 +118,22 @@
         "runtime": {
           "bin/placeholder/BahrHidro.Core.dll": {}
         }
+      },
+      "BahrHidro.UI/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "BahrHidro.Core": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/BahrHidro.UI.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/BahrHidro.UI.dll": {}
+        },
+        "frameworkReferences": [
+          "Microsoft.WindowsDesktop.App.WPF"
+        ]
       }
     }
   },
@@ -292,11 +308,17 @@
       "type": "project",
       "path": "../BahrHidro.Core/BahrHidro.Core.csproj",
       "msbuildProject": "../BahrHidro.Core/BahrHidro.Core.csproj"
+    },
+    "BahrHidro.UI/1.0.0": {
+      "type": "project",
+      "path": "../BahrHidro.UI/BahrHidro.UI.csproj",
+      "msbuildProject": "../BahrHidro.UI/BahrHidro.UI.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0-windows": [
       "BahrHidro.Core >= 1.0.0",
+      "BahrHidro.UI >= 1.0.0",
       "Nice3point.Revit.Api.RevitAPI >= 2026.*",
       "Nice3point.Revit.Api.RevitAPIUI >= 2026.*"
     ]
@@ -329,6 +351,9 @@
           "projectReferences": {
             "/workspaces/BAHRHIDRO/BahrHidro.Core/BahrHidro.Core.csproj": {
               "projectPath": "/workspaces/BAHRHIDRO/BahrHidro.Core/BahrHidro.Core.csproj"
+            },
+            "/workspaces/BAHRHIDRO/BahrHidro.UI/BahrHidro.UI.csproj": {
+              "projectPath": "/workspaces/BAHRHIDRO/BahrHidro.UI/BahrHidro.UI.csproj"
             }
           }
         }

@@ -59,7 +59,7 @@ namespace BahrHidro.UI {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/BahrHidro.UI;V1.0.0.0;component/fittingswindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/BahrHidro.UI;component/fittingswindow.xaml", System.UriKind.Relative);
             
             #line 1 "../../../FittingsWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

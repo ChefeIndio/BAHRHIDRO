@@ -155,7 +155,7 @@ namespace BahrHidro.UI {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/BahrHidro.UI;V1.0.0.0;component/pipeproductform.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/BahrHidro.UI;component/pipeproductform.xaml", System.UriKind.Relative);
             
             #line 1 "../../../PipeProductForm.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

@@ -3,6 +3,7 @@ using System.Windows.Interop;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using BahrHidro.UI;
 
 namespace BahrHidro.Revit
 {
@@ -20,7 +21,8 @@ namespace BahrHidro.Revit
                     return Result.Cancelled;
                 }
 
-                var janela = new RevitMainWindow(uidoc);
+                var bridge = new RevitBimBridge(uidoc);
+                var janela = new MainWindow(bridge);
                 new WindowInteropHelper(janela)
                 {
                     Owner = commandData.Application.MainWindowHandle

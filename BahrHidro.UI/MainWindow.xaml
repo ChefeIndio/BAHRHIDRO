@@ -41,12 +41,18 @@
                     <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="20" FontWeight="Bold"/>
                     <TextBlock Text=" | Plataforma de Dimensionamento Hidráulico" Foreground="#94A3B8" FontSize="14" VerticalAlignment="Center" Margin="6,0,0,0"/>
                 </StackPanel>
-                <Button Content="Catálogo de Tubos" HorizontalAlignment="Right" Style="{StaticResource PrimaryButton}" Click="AbrirCatalogo_Click"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <StackPanel x:Name="RevitBimToolbar" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,12,0">
+                        <Button x:Name="ImportarRevitButton" Content="Importar Rede 3D (Revit)" Background="#0284C7" Foreground="White" FontWeight="SemiBold" Padding="12,8" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
+                        <Button x:Name="AplicarRevitButton" Content="Aplicar Diâmetros no Revit" Background="#15803D" Foreground="White" FontWeight="SemiBold" Padding="12,8" BorderThickness="0" Cursor="Hand" Click="AplicarRevit_Click"/>
+                    </StackPanel>
+                    <Button Content="Catálogo de Tubos" Style="{StaticResource PrimaryButton}" Click="AbrirCatalogo_Click"/>
+                </StackPanel>
             </Grid>
         </Border>
 
         <!-- ABAS PRINCIPAIS -->
-        <TabControl Margin="12" Background="White" BorderBrush="#CBD5E1">
+        <TabControl x:Name="MainTabControl" Margin="12" Background="White" BorderBrush="#CBD5E1">
 
             <!-- ABA 1: DIMENSIONAMENTO DE TUBULAÇÃO -->
             <TabItem Header="1. DIMENSIONAMENTO">

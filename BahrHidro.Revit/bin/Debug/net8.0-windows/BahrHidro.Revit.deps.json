@@ -8,7 +8,8 @@
     ".NETCoreApp,Version=v8.0": {
       "BahrHidro.Revit/1.0.0": {
         "dependencies": {
-          "BahrHidro.Core": "1.0.0"
+          "BahrHidro.Core": "1.0.0",
+          "BahrHidro.UI": "1.0.0"
         },
         "runtime": {
           "BahrHidro.Revit.dll": {}
@@ -101,6 +102,17 @@
             "fileVersion": "1.0.0.0"
           }
         }
+      },
+      "BahrHidro.UI/1.0.0": {
+        "dependencies": {
+          "BahrHidro.Core": "1.0.0"
+        },
+        "runtime": {
+          "BahrHidro.UI.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -167,6 +179,11 @@
       "hashPath": "system.io.packaging.8.0.1.nupkg.sha512"
     },
     "BahrHidro.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "BahrHidro.UI/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

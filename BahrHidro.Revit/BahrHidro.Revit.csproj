@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BahrHidro.Core\BahrHidro.Core.csproj" />
+    <ProjectReference Include="..\BahrHidro.UI\BahrHidro.UI.csproj" />
   </ItemGroup>
 
 </Project>

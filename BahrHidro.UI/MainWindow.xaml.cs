@@ -25,7 +25,8 @@ namespace BahrHidro.UI
 
         private readonly PipeCatalogDiameterSelector _diameterSelector;
         private readonly PipeCatalogService _catalogService; 
-        private readonly HydraulicNetwork _network = new HydraulicNetwork("Rede Hidráulica");
+        private HydraulicNetwork _network = new HydraulicNetwork("Rede Hidráulica");
+        private IRevitBimBridge? _revitBridge;
 
         private Guid? _editingNodeId;
         private Guid? _editingSegmentId;
@@ -67,6 +68,12 @@ namespace BahrHidro.UI
                 .Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm })
                 .ToList();
             SewerItemsControl.ItemsSource = _sewerFixtures;
+        }
+
+        public MainWindow(IRevitBimBridge revitBridge) : this()
+        {
+            _revitBridge = revitBridge;
+            RevitBimToolbar.Visibility = Visibility.Visible;
         }
 
         private void CarregarPerfisEdificacao()
@@ -571,5 +578,51 @@ namespace BahrHidro.UI
         private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
         private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }
         private class SewerFixtureViewModel { public string Name { get; set; } = ""; public int Uhc { get; set; } public int MinDiameter { get; set; } public string UhcDisplay => $"{Uhc} UHC"; public int Quantity { get; set; } = 0; }
-    }
+    
+        private void ImportarRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                _revitBridge.ImportNetworkFromRevit(this, importedNetwork =>
+                {
+                    _network = importedNetwork;
+                    _ultimoResultadoDaRede = null;
+                    _editingNodeId = null;
+                    _editingSegmentId = null;
+                    AtualizarListaNos();
+                    AtualizarListaTrechos();
+                    if (MainTabControl != null)
+                        MainTabControl.SelectedIndex = 2;
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void AplicarRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Clique em 'Calcular Rede' na aba '3. REDE DE ÁGUA' antes de aplicar os diâmetros no Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                if (MainTabControl != null)
+                    MainTabControl.SelectedIndex = 2;
+                return;
+            }
+
+            try
+            {
+                int atualizados = _revitBridge.ApplyDiametersToRevit(_ultimoResultadoDaRede);
+                MessageBox.Show($"{atualizados} tubo(s) atualizado(s) com sucesso no modelo 3D do Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao aplicar diâmetros no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+}
 }

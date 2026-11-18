@@ -22,7 +22,8 @@
 /workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/refint/BahrHidro.Revit.dll
 /workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/BahrHidro.Revit.pdb
 /workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/ref/BahrHidro.Revit.dll
-/workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/RevitMainWindow.baml
-/workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/RevitMainWindow.g.cs
-/workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/BahrHidro.Revit_MarkupCompile.cache
-/workspaces/BAHRHIDRO/BahrHidro.Revit/obj/Debug/net8.0-windows/BahrHidro.Revit.g.resources
+/workspaces/BAHRHIDRO/BahrHidro.Revit/bin/Debug/net8.0-windows/BahrHidro.UI.deps.json
+/workspaces/BAHRHIDRO/BahrHidro.Revit/bin/Debug/net8.0-windows/BahrHidro.UI.runtimeconfig.json
+/workspaces/BAHRHIDRO/BahrHidro.Revit/bin/Debug/net8.0-windows/BahrHidro.UI
+/workspaces/BAHRHIDRO/BahrHidro.Revit/bin/Debug/net8.0-windows/BahrHidro.UI.dll
+/workspaces/BAHRHIDRO/BahrHidro.Revit/bin/Debug/net8.0-windows/BahrHidro.UI.pdb

@@ -1,5 +1,5 @@
 ﻿BahrHidro.UI
-1.0.0.0
+
 
 winexe
 C#
@@ -12,9 +12,9 @@ TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR
 /workspaces/BAHRHIDRO/BahrHidro.UI/App.xaml
 51414440240
 
-10489645191
+9-1376001847
 206853475046
 FittingsWindow.xaml;MainWindow.xaml;PipeCatalogWindow.xaml;PipeProductForm.xaml;RainwaterView.xaml;
 
-True
+False
 
