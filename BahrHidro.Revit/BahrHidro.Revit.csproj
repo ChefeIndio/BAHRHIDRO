@@ -2,19 +2,21 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BahrHidro.Core\BahrHidro.Core.csproj" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="2026.*" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="2026.*" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Revit_All_Main_Versions_API_x64" Version="2026.0.0" ExcludeAssets="runtime" />
+    <ProjectReference Include="..\BahrHidro.Core\BahrHidro.Core.csproj" />
   </ItemGroup>
 
 </Project>

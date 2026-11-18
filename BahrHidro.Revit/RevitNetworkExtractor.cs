@@ -84,7 +84,6 @@ namespace BahrHidro.Revit
                 ConnectorSet? connectors = GetConnectors(element);
                 if (connectors == null) break;
 
-                // Identifica apenas saídas hidráulicas físicas conectadas
                 var outgoingConnectors = new List<Connector>();
                 foreach (Connector c in connectors)
                 {
@@ -110,7 +109,6 @@ namespace BahrHidro.Revit
                         accumulatedLengthM += UnitUtils.ConvertFromInternalUnits(lengthParam.AsDouble(), UnitTypeId.Meters);
                     }
 
-                    // Caso o tubo tenha derivação direta (Tap) com 2 ou mais saídas
                     if (outgoingConnectors.Count >= 2)
                     {
                         var tapNode = new HydraulicNode
@@ -131,7 +129,6 @@ namespace BahrHidro.Revit
                 }
                 else if (element is FamilyInstance fi)
                 {
-                    // Sem saídas: extremidade de consumo (aparelho sanitário ou ponto terminal)
                     if (outgoingConnectors.Count == 0)
                     {
                         var consumptionNode = new HydraulicNode
@@ -149,7 +146,6 @@ namespace BahrHidro.Revit
                         return;
                     }
 
-                    // 2 ou mais saídas: derivação (Tê ou Cruzeta)
                     if (outgoingConnectors.Count >= 2)
                     {
                         var junctionNode = new HydraulicNode
@@ -168,11 +164,9 @@ namespace BahrHidro.Revit
                         return;
                     }
 
-                    // 1 saída: conexão em série (joelho, curva, registro, redução)
                     accumulatedK += EstimateFittingK(fi);
                 }
 
-                // Avança para o próximo elemento em série
                 if (outgoingConnectors.Count == 1)
                 {
                     Connector? nextEntry = null;
@@ -192,7 +186,6 @@ namespace BahrHidro.Revit
                 }
                 else
                 {
-                    // Tubulação terminando sem peça conectada na ponta
                     var openEndNode = new HydraulicNode
                     {
                         Id = Guid.NewGuid(),
@@ -232,10 +225,16 @@ namespace BahrHidro.Revit
 
         private static bool IsValidPipingConnector(Connector conn)
         {
-            if (conn == null || !conn.IsConnected) return false;
+            if (conn == null) return false;
+
+            if (conn.ConnectorType != ConnectorType.End &&
+                conn.ConnectorType != ConnectorType.Curve &&
+                conn.ConnectorType != ConnectorType.Physical)
+                return false;
+
             if (conn.Domain != Domain.DomainPiping) return false;
-            if (conn.ConnectorType == ConnectorType.Logical) return false;
-            return true;
+
+            return conn.IsConnected;
         }
 
         private static void RegisterSegment(
@@ -254,7 +253,7 @@ namespace BahrHidro.Revit
                 StartNodeId = startNodeId,
                 EndNodeId = endNodeId,
                 LengthMeters = Math.Max(0.10, lengthMeters),
-                InternalDiameterMm = null, // Modo Auto (seleciona pelo catálogo)
+                InternalDiameterMm = null,
                 AbsoluteRoughnessMm = 0.001,
                 TotalLossCoefficientK = totalK
             };
@@ -274,8 +273,13 @@ namespace BahrHidro.Revit
         {
             foreach (Connector c in connectors)
             {
-                if (c.Domain == Domain.DomainPiping && c.ConnectorType != ConnectorType.Logical)
+                if ((c.ConnectorType == ConnectorType.End ||
+                     c.ConnectorType == ConnectorType.Curve ||
+                     c.ConnectorType == ConnectorType.Physical) &&
+                    c.Domain == Domain.DomainPiping)
+                {
                     return UnitUtils.ConvertFromInternalUnits(c.Origin.Z, UnitTypeId.Meters);
+                }
             }
 
             BoundingBoxXYZ? bb = element.get_BoundingBox(null);
