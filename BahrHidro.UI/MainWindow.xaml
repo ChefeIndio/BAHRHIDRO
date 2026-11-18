@@ -1,523 +1,675 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes; 
-using BahrHidro.Core;
-using BahrHidro.Core.Catalog;
-using BahrHidro.Core.Hydraulic;
-using BahrHidro.Core.Hydraulic.Network;
-using BahrHidro.Core.Hydraulic.HotWater;
-using BahrHidro.Core.Hydraulic.Reservoirs; 
-using BahrHidro.Core.Hydraulic.Sewer; 
-using BahrHidro.Core.Reporting; 
+﻿<Window x:Class="BahrHidro.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Bahr Hidro - Engenharia Hidráulica e BIM"
+        Height="780" Width="1220"
+        WindowStartupLocation="CenterScreen"
+        Background="#F1F5F9"
+        FontFamily="Segoe UI">
 
-namespace BahrHidro.UI
-{
-    public partial class MainWindow : Window
-    {
-        private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
+    <Window.Resources>
+        <Style TargetType="Button" x:Key="PrimaryButton">
+            <Setter Property="Background" Value="#1D4ED8"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="Button" x:Key="SecondaryButton">
+            <Setter Property="Background" Value="#E2E8F0"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="6,5"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
 
-        private readonly PipeCatalogDiameterSelector _diameterSelector;
-        private readonly PipeCatalogService _catalogService; 
-        private readonly HydraulicNetwork _network = new HydraulicNetwork("Rede Hidráulica");
+    <DockPanel>
+        <!-- CABEÇALHO SUPERIOR -->
+        <Border DockPanel.Dock="Top" Background="#0F172A" Padding="20,12">
+            <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                    <TextBlock Text=" | Plataforma de Dimensionamento Hidráulico" Foreground="#94A3B8" FontSize="14" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                </StackPanel>
+                <Button Content="Catálogo de Tubos" HorizontalAlignment="Right" Style="{StaticResource PrimaryButton}" Click="AbrirCatalogo_Click"/>
+            </Grid>
+        </Border>
 
-        private Guid? _editingNodeId;
-        private Guid? _editingSegmentId;
-        private NetworkCalculationResult? _ultimoResultadoDaRede;
-        
-        private readonly List<SewerFixtureViewModel> _sewerFixtures;
+        <!-- ABAS PRINCIPAIS -->
+        <TabControl Margin="12" Background="White" BorderBrush="#CBD5E1">
 
-        // VARIÁVEIS PARA O NOVO CAD 2D
-        private enum ModoDesenho { Selecionar, DesenharNo, ConectarTrecho }
-        private ModoDesenho _modoAtual = ModoDesenho.Selecionar;
-        private Ellipse? _noInicialParaTrecho = null; // Guarda o primeiro nó clicado ao fazer um tubo
-        
-        // Mapeamentos para o software saber que bolinha corresponde a que Nó na memória
-        private readonly Dictionary<Ellipse, Guid> _mapaNosVisuais = new();
+            <!-- ABA 1: DIMENSIONAMENTO DE TUBULAÇÃO -->
+            <TabItem Header="1. DIMENSIONAMENTO">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel MaxWidth="750" HorizontalAlignment="Left">
+                        <TextBlock Text="Dimensionamento Rápido de Tubulação" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
 
-        public MainWindow()
-        {
-            InitializeComponent();
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
 
-            // 1. Define o caminho da pasta no computador
-            string catalogDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro");
-            
-            // 2. Se a pasta não existir no Windows do utilizador, o software cria-a!
-            if (!System.IO.Directory.Exists(catalogDir)) 
-                System.IO.Directory.CreateDirectory(catalogDir);
-            
-            // 3. Se o ficheiro JSON não existir, cria um catálogo vazio
-            string catalogPath = System.IO.Path.Combine(catalogDir, "pipe-catalog.json");
-            if (!System.IO.File.Exists(catalogPath)) 
-                System.IO.File.WriteAllText(catalogPath, "[]");
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Vazão de Projeto (L/s)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="VazaoTextBox" Text="1,50"/>
+                                </StackPanel>
 
-            // 4. Agora é seguro carregar o repositório
-            var repository = new PipeCatalogRepository(catalogPath);
-            _catalogService = new PipeCatalogService(repository);
-            _diameterSelector = new PipeCatalogDiameterSelector(_catalogService);
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Velocidade Máxima (m/s)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="VelocidadeTextBox" Text="2,50"/>
+                                </StackPanel>
 
-            AtualizarEstadoTipoNo();
-            AtualizarListaNos();
-            AtualizarListaTrechos();
+                                <Button Grid.Column="4" Content="Dimensionar Tubo" VerticalAlignment="Bottom" Style="{StaticResource PrimaryButton}" Click="Calcular_Click"/>
+                            </Grid>
+                        </Border>
 
-            _sewerFixtures = SewerFixtureCatalog.GetStandardFixtures().Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm }).ToList();
-            SewerItemsControl.ItemsSource = _sewerFixtures;
-        }
+                        <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="Resultados da Seleção" FontSize="15" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="28"/>
+                                        <RowDefinition Height="32"/>
+                                    </Grid.RowDefinitions>
 
-        private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
-        {
-            var janelaCatalogo = new PipeCatalogWindow { Owner = this };
-            janelaCatalogo.ShowDialog();
-        }
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Diâmetro Mínimo Teórico:" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DiametroMinimoText" Text="--"/>
 
-        private async void Calcular_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!double.TryParse(VazaoTextBox.Text, NumberStyles.Float, PtBr, out double vazao) || vazao <= 0) return;
-                if (!double.TryParse(VelocidadeTextBox.Text, NumberStyles.Float, PtBr, out double velocidadeLimite) || velocidadeLimite <= 0) return;
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Diâmetro Interno Comercial:" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DiametroSelecionadoText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
 
-                double diametroMinimo = PipeSizing.CalculateMinimumDiameter(vazao, velocidadeLimite);
-                DiametroMinimoText.Text = $"{diametroMinimo:F2} mm";
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Especificação do Tubo:" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" x:Name="DescricaoTuboText" Text="--"/>
 
-                var selecao = await _diameterSelector.SelectAsync(vazao, velocidadeLimite);
-                if (selecao == null)
-                {
-                    DiametroSelecionadoText.Text = "Nao disponivel";
-                    StatusText.Text = "CATALOGO INSUFICIENTE";
-                    StatusText.Foreground = Brushes.DarkOrange;
-                    return;
-                }
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Velocidade Real:" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" x:Name="VelocidadeRealText" Text="--"/>
 
-                DiametroSelecionadoText.Text = $"{selecao.Product.InternalDiameterMm:F2} mm";
-                DescricaoTuboText.Text = $"{selecao.Product.Manufacturer} | {selecao.Product.ProductLine} | {selecao.Product.NominalDesignation}";
-                VelocidadeRealText.Text = $"{selecao.ActualVelocityMetersPerSecond:F3} m/s";
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Verificação Normativa:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" x:Name="StatusText" Text="AGUARDANDO CÁLCULO" FontWeight="Bold" VerticalAlignment="Center"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-                bool atende = selecao.ActualVelocityMetersPerSecond <= velocidadeLimite;
-                StatusText.Text = atende ? "ATENDE AO LIMITE DE VELOCIDADE" : "NAO ATENDE AO LIMITE DE VELOCIDADE";
-                StatusText.Foreground = atende ? Brushes.ForestGreen : Brushes.DarkRed;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+            <!-- ABA 2: ANÁLISE DE TRECHO ISOLADO -->
+            <TabItem Header="2. PERDA DE CARGA">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel MaxWidth="750" HorizontalAlignment="Left">
+                        <TextBlock Text="Análise Hidráulica de Trecho (Darcy-Weisbach)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
 
-        private async void AnalisarTrecho_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!double.TryParse(VazaoTextBox.Text, NumberStyles.Float, PtBr, out double vazao) || vazao <= 0) return;
-                if (!double.TryParse(VelocidadeTextBox.Text, NumberStyles.Float, PtBr, out double velocidadeLimite) || velocidadeLimite <= 0) return;
-                if (!double.TryParse(ComprimentoTextBox.Text, NumberStyles.Float, PtBr, out double comprimento) || comprimento <= 0) return;
-                if (!double.TryParse(RugosidadeTextBox.Text, NumberStyles.Float, PtBr, out double rugosidade) || rugosidade < 0) return;
-                if (!double.TryParse(CoeficienteKTextBox.Text, NumberStyles.Float, PtBr, out double coeficienteK) || coeficienteK < 0) return;
-                if (!double.TryParse(ViscosidadeTextBox.Text, NumberStyles.Float, PtBr, out double viscosidade) || viscosidade <= 0) return;
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="12"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="16"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
 
-                var selecao = await _diameterSelector.SelectAsync(vazao, velocidadeLimite);
-                if (selecao == null) return;
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Text="Comprimento do Trecho (m)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="ComprimentoTextBox" Text="15,00"/>
+                                </StackPanel>
 
-                HydraulicSegmentResult resultado = HydraulicSegmentCalculator.Calculate(vazao, comprimento, (double)selecao.Product.InternalDiameterMm, rugosidade, viscosidade, coeficienteK);
-                AnaliseVelocidadeText.Text = $"{resultado.VelocityMetersPerSecond:F3} m/s";
-                ReynoldsText.Text = $"{resultado.ReynoldsNumber:F0}";
-                RegimeText.Text = resultado.Regime.ToString();
-                FatorAtritoText.Text = $"{resultado.FrictionFactor:F5}";
-                PerdaDistribuidaText.Text = $"{resultado.HeadLossMeters:F4} m.c.a.";
-                PerdaLocalizadaText.Text = $"{resultado.LocalLossMeters:F4} m.c.a.";
-                PerdaTotalText.Text = $"{resultado.TotalHeadLossMeters:F4} m.c.a.";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
+                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                    <TextBlock Text="Rugosidade Absoluta (mm)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="RugosidadeTextBox" Text="0,0015"/>
+                                </StackPanel>
 
-        private void NoTipoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) { if (NoDemandaTextBox != null) AtualizarEstadoTipoNo(); }
-        private void AtualizarEstadoTipoNo()
-        {
-            HydraulicNodeType tipo = ObterTipoNoSelecionado();
-            if (tipo == HydraulicNodeType.Reservoir) 
-            { 
-                NoDemandaTextBox.Text = "0,00"; NoDemandaTextBox.IsEnabled = false; 
-                NoPesoTextBox.Text = "0,00"; NoPesoTextBox.IsEnabled = false;
-            }
-            else 
-            { 
-                NoDemandaTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoDemandaTextBox.Text)) NoDemandaTextBox.Text = "0,00"; 
-                NoPesoTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoPesoTextBox.Text)) NoPesoTextBox.Text = "0,00";
-            }
-        }
-        private HydraulicNodeType ObterTipoNoSelecionado() => (NoTipoComboBox.SelectedItem is ComboBoxItem item && Enum.TryParse(item.Tag as string, out HydraulicNodeType parsed)) ? parsed : HydraulicNodeType.Junction;
-        private void SelecionarTipoNoNoComboBox(HydraulicNodeType type) { foreach (var obj in NoTipoComboBox.Items) if (obj is ComboBoxItem item && string.Equals(item.Tag as string, type.ToString(), StringComparison.Ordinal)) { NoTipoComboBox.SelectedItem = item; break; } }
+                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                    <TextBlock Text="Coeficiente de Perda Localizada (K)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="CoeficienteKTextBox" Text="2,50"/>
+                                </StackPanel>
 
-        private void SalvarNo_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string nome = (NoNomeTextBox.Text ?? "").Trim();
-                if (string.IsNullOrWhiteSpace(nome)) return;
-                if (!TryParsePtBrDouble(NoCotaTextBox.Text, out double cota)) return;
-                HydraulicNodeType tipo = ObterTipoNoSelecionado();
-                double demanda = 0; double peso = 0;
-                
-                if (tipo != HydraulicNodeType.Reservoir) 
-                {
-                    if (!TryParsePtBrDouble(NoDemandaTextBox.Text, out demanda) || demanda < 0) return;
-                    if (!TryParsePtBrDouble(NoPesoTextBox.Text, out peso) || peso < 0) return;
-                }
+                                <StackPanel Grid.Row="2" Grid.Column="2">
+                                    <TextBlock Text="Viscosidade Cinemática (m²/s)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="ViscosidadeTextBox" Text="0,000001003"/>
+                                </StackPanel>
 
-                var novoNo = new HydraulicNode { Id = _editingNodeId ?? Guid.NewGuid(), Name = nome, Type = tipo, ElevationMeters = cota, DemandLitersPerSecond = demanda, RelativeWeight = peso };
-                if (_editingNodeId.HasValue) _network.UpdateNode(novoNo); else _network.AddNode(novoNo);
-                
-                LimparFormularioNo(); AtualizarListaNos();
-            }
-            catch (Exception ex) { MessageBox.Show($"Não foi possível salvar o elemento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
+                                <Button Grid.Row="4" Grid.Column="0" Content="Analisar Trecho" HorizontalAlignment="Left" Style="{StaticResource PrimaryButton}" Click="AnalisarTrecho_Click"/>
+                            </Grid>
+                        </Border>
 
-        private void EditarNo_Click(object sender, RoutedEventArgs e) => CarregarNoSelecionadoParaEdicao();
-        private void NosDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e) { if (NosDataGrid.SelectedItem is NodeGridItem) CarregarNoSelecionadoParaEdicao(); }
-        private void CarregarNoSelecionadoParaEdicao()
-        {
-            if (NosDataGrid.SelectedItem is not NodeGridItem item) return;
-            var node = _network.FindNode(item.Id);
-            if (node == null) return;
-            _editingNodeId = node.Id;
-            SelecionarTipoNoNoComboBox(node.Type); AtualizarEstadoTipoNo();
-            NoNomeTextBox.Text = node.Name; NoCotaTextBox.Text = node.ElevationMeters.ToString("F2", PtBr);
-            NoDemandaTextBox.Text = node.DemandLitersPerSecond.ToString("F3", PtBr); NoPesoTextBox.Text = node.RelativeWeight.ToString("F2", PtBr);
-            NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
-            NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
-            NoModoEdicaoText.Text = $"Modo: Editando '{node.Name}'";
-        }
-        private void ExcluirNo_Click(object sender, RoutedEventArgs e)
-        {
-            if (NosDataGrid.SelectedItem is not NodeGridItem item) return;
-            _network.RemoveNode(item.Id); if (_editingNodeId == item.Id) LimparFormularioNo(); AtualizarListaNos();
-        }
-        private void CancelarEdicaoNo_Click(object sender, RoutedEventArgs e) => LimparFormularioNo();
-        private void LimparFormularioNo()
-        {
-            _editingNodeId = null; NoNomeTextBox.Text = ""; NoCotaTextBox.Text = "0,00"; NoDemandaTextBox.Text = "0,00"; NoPesoTextBox.Text = "0,00";
-            AtualizarEstadoTipoNo();
-            NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF"));
-            NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8"));
-            NoModoEdicaoText.Text = "Modo: Novo elemento";
-        }
-        private void AtualizarListaNos()
-        {
-            var itens = _network.Nodes.Select(n => new NodeGridItem { Id = n.Id, Name = n.Name, Type = n.Type, TypeLabel = FormatarTipoNo(n.Type), ElevationMeters = n.ElevationMeters, ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), DemandLitersPerSecond = n.DemandLitersPerSecond, DemandDisplay = n.DemandLitersPerSecond.ToString("F3", PtBr), WeightDisplay = n.RelativeWeight.ToString("F2", PtBr) }).ToList();
-            NosDataGrid.ItemsSource = itens; ResumoRedeText.Text = $"Total: {_network.Nodes.Count} elementos";
-            AtualizarCombosNosTrecho(itens); AtualizarListaTrechos();
-        }
-        private void AtualizarCombosNosTrecho(List<NodeGridItem> itens)
-        {
-            Guid? s = TrechoNoInicialComboBox?.SelectedValue as Guid?; Guid? e = TrechoNoFinalComboBox?.SelectedValue as Guid?;
-            if (TrechoNoInicialComboBox != null) TrechoNoInicialComboBox.ItemsSource = itens;
-            if (TrechoNoFinalComboBox != null) TrechoNoFinalComboBox.ItemsSource = itens;
-            if (s.HasValue && itens.Any(i => i.Id == s.Value)) TrechoNoInicialComboBox.SelectedValue = s.Value;
-            if (e.HasValue && itens.Any(i => i.Id == e.Value)) TrechoNoFinalComboBox.SelectedValue = e.Value;
-        }
+                        <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="220"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
 
-        private void CalcularConexoes_Click(object sender, RoutedEventArgs e)
-        {
-            var janelaConexoes = new FittingsWindow { Owner = this };
-            if (janelaConexoes.ShowDialog() == true)
-            {
-                TrechoCoeficienteKTextBox.Text = janelaConexoes.TotalK.ToString("F2", PtBr);
-            }
-        }
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Velocidade de Escoamento:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="AnaliseVelocidadeText" Text="--"/>
 
-        private void SalvarTrecho_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string nome = (TrechoNomeTextBox.Text ?? "").Trim();
-                if (string.IsNullOrWhiteSpace(nome) || TrechoNoInicialComboBox.SelectedValue is not Guid start || TrechoNoFinalComboBox.SelectedValue is not Guid end || start == end) return;
-                
-                if (!TryParsePtBrDouble(TrechoComprimentoTextBox.Text, out double comp) || !TryParsePtBrDouble(TrechoRugosidadeTextBox.Text, out double rug) || !TryParsePtBrDouble(TrechoCoeficienteKTextBox.Text, out double k)) return;
-                
-                double? dia = null;
-                if (TrechoDiametroTextBox.Text.Trim().Equals("Auto", StringComparison.OrdinalIgnoreCase)) { dia = null; }
-                else if (TryParsePtBrDouble(TrechoDiametroTextBox.Text, out double parsedDia) && parsedDia > 0) { dia = parsedDia; }
-                else { MessageBox.Show("Informe um diâmetro válido ou escreva 'Auto'.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Número de Reynolds:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ReynoldsText" Text="--"/>
 
-                double? vazao = null; if (TryParsePtBrDouble(TrechoVazaoTextBox.Text, out double v) && v >= 0) vazao = v;
-                
-                var seg = new HydraulicPipeSegment { Id = _editingSegmentId ?? Guid.NewGuid(), Name = nome, StartNodeId = start, EndNodeId = end, LengthMeters = comp, InternalDiameterMm = dia, AbsoluteRoughnessMm = rug, TotalLossCoefficientK = k, FlowLitersPerSecond = vazao };
-                if (_editingSegmentId.HasValue) _network.UpdateSegment(seg); else _network.AddSegment(seg);
-                
-                LimparFormularioTrecho(); AtualizarListaTrechos();
-            }
-            catch { }
-        }
-        private void EditarTrecho_Click(object sender, RoutedEventArgs e) => CarregarTrechoSelecionadoParaEdicao();
-        private void TrechosDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e) { if (TrechosDataGrid.SelectedItem is SegmentGridItem) CarregarTrechoSelecionadoParaEdicao(); }
-        private void CarregarTrechoSelecionadoParaEdicao()
-        {
-            if (TrechosDataGrid.SelectedItem is not SegmentGridItem item) return;
-            var seg = _network.FindSegment(item.Id); if (seg == null) return;
-            _editingSegmentId = seg.Id; TrechoNomeTextBox.Text = seg.Name; TrechoNoInicialComboBox.SelectedValue = seg.StartNodeId; TrechoNoFinalComboBox.SelectedValue = seg.EndNodeId;
-            TrechoComprimentoTextBox.Text = seg.LengthMeters.ToString("F2", PtBr); 
-            TrechoDiametroTextBox.Text = seg.InternalDiameterMm.HasValue ? seg.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto";
-            TrechoRugosidadeTextBox.Text = seg.AbsoluteRoughnessMm.ToString("G", PtBr); TrechoCoeficienteKTextBox.Text = seg.TotalLossCoefficientK.ToString("F2", PtBr);
-            TrechoVazaoTextBox.Text = seg.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "";
-            TrechoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
-            TrechoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
-            TrechoModoEdicaoText.Text = $"Modo: Editando '{seg.Name}'";
-        }
-        private void ExcluirTrecho_Click(object sender, RoutedEventArgs e)
-        {
-            if (TrechosDataGrid.SelectedItem is not SegmentGridItem item) return;
-            _network.RemoveSegment(item.Id); if (_editingSegmentId == item.Id) LimparFormularioTrecho(); AtualizarListaTrechos();
-        }
-        private void CancelarEdicaoTrecho_Click(object sender, RoutedEventArgs e) => LimparFormularioTrecho();
-        private void LimparFormularioTrecho()
-        {
-            _editingSegmentId = null; TrechoNomeTextBox.Text = ""; TrechoNoInicialComboBox.SelectedIndex = -1; TrechoNoFinalComboBox.SelectedIndex = -1;
-            TrechoComprimentoTextBox.Text = "10,00"; TrechoDiametroTextBox.Text = "Auto"; TrechoRugosidadeTextBox.Text = "0,001"; TrechoCoeficienteKTextBox.Text = "0"; TrechoVazaoTextBox.Text = "";
-            TrechoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF"));
-            TrechoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8"));
-            TrechoModoEdicaoText.Text = "Modo: Novo trecho";
-        }
-        private void AtualizarListaTrechos()
-        {
-            if (TrechosDataGrid == null) return;
-            TrechosDataGrid.ItemsSource = _network.Segments.Select(s => new SegmentGridItem { Id = s.Id, Name = s.Name, ConnectionDisplay = $"{_network.FindNode(s.StartNodeId)?.Name ?? "?"} → {_network.FindNode(s.EndNodeId)?.Name ?? "?"}", LengthDisplay = s.LengthMeters.ToString("F2", PtBr), DiameterDisplay = s.InternalDiameterMm.HasValue ? s.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto", KDisplay = s.TotalLossCoefficientK.ToString("F2", PtBr), FlowDisplay = s.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "Auto" }).ToList();
-            ResumoTrechosText.Text = $"Total: {_network.Segments.Count} trecho(s)";
-        }
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Regime de Escoamento:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="RegimeText" Text="--"/>
 
-        private async void CalcularRede_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!TryParsePtBrDouble(RedeViscosidadeTextBox.Text, out double viscosidade)) return;
-                var produtosNoCatalogo = await _catalogService.GetAllAsync();
-                var opcoesDiametro = produtosNoCatalogo.Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm)).ToList();
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Fator de Atrito (f):" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="FatorAtritoText" Text="--"/>
 
-                var res = HydraulicNetworkSolver.Solve(_network, viscosidade, opcoesDiametro, 3.0);
-                
-                _ultimoResultadoDaRede = res;
-                ExportarMemorialButton.IsEnabled = true;
-                DimensionarBombaButton.IsEnabled = true;
-                
-                ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--", VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
-                ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem { Name = n.NodeName, TypeLabel = FormatarTipoNo(n.NodeType), ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr), PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr), IsLowPressure = n.AvailablePressureMca < 1.0 && n.NodeType != HydraulicNodeType.Reservoir }).ToList();
-            }
-            catch (Exception ex) { MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Perda Distribuída:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" x:Name="PerdaDistribuidaText" Text="--"/>
 
-        private void DimensionarBomba_Click(object sender, RoutedEventArgs e)
-        {
-            if (_ultimoResultadoDaRede == null) return;
-            try
-            {
-                var resultadoBomba = PumpCalculator.Calculate(_ultimoResultadoDaRede, 1.0, 0.60);
-                if (!resultadoBomba.RequiresPump) { MessageBox.Show("O sistema atende perfeitamente por gravidade!\n\nNão é necessária a instalação de bomba/pressurizador na rede.", "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Information); }
-                else
-                {
-                    string msg = $"Atenção! A rede necessita de PRESSURIZAÇÃO.\n\nNó mais crítico: {resultadoBomba.CriticalNodeName}\n(Pressão atual: {resultadoBomba.CriticalNodeCurrentPressure:F2} m.c.a)\n\nESPECIFICAÇÕES RECOMENDADAS PARA A BOMBA:\n- Vazão de Projeto: {resultadoBomba.TotalFlowLitersPerSecond:F2} L/s\n- Altura Manométrica (AMT): {resultadoBomba.RequiredAmtMca:F2} m.c.a.\n- Potência Estimada: {resultadoBomba.EstimatedPowerCv:F2} cv";
-                    MessageBox.Show(msg, "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Warning);
-                }
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o sistema de bombagem:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Perda Localizada:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="5" Grid.Column="1" x:Name="PerdaLocalizadaText" Text="--"/>
 
-        private void ExportarMemorial_Click(object sender, RoutedEventArgs e)
-        {
-            if (_ultimoResultadoDaRede == null) return;
-            var dialog = new Microsoft.Win32.SaveFileDialog { FileName = "Memorial_Hidraulico_BahrHidro", DefaultExt = ".xlsx", Filter = "Ficheiro Excel (.xlsx)|*.xlsx" };
-            if (dialog.ShowDialog() == true)
-            {
-                try { ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName); MessageBox.Show("Memorial exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information); }
-                catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao gerar o Excel:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-            }
-        }
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Perda de Carga Total:" FontWeight="Bold"/>
+                                <TextBlock Grid.Row="6" Grid.Column="1" x:Name="PerdaTotalText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
 
-        private void CalcularBoiler_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0) return;
-                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao)) return;
-                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil)) return;
-                var resultado = BoilerCalculator.Calculate(perfil, ocupantes, pressao);
-                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L"; BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L"; BoilerTipoText.Text = resultado.RecommendedPressureType;
-                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA")) BoilerTipoText.Foreground = Brushes.DarkRed;
-                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO")) BoilerTipoText.Foreground = Brushes.DarkOrange;
-                else BoilerTipoText.Foreground = Brushes.ForestGreen;
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}"); }
-        }
+            <!-- ABA 3: REDE DE ÁGUA FRIA (NÓS, TRECHOS E CÁLCULO) -->
+            <TabItem Header="3. REDE DE ÁGUA">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                    <StackPanel>
+                        <!-- SECÇÃO NÓS E TRECHOS -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-        private void CalcularCaixa_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0) return;
-                if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0) return;
-                if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio)) return;
-                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100) return;
-                if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil)) return;
+                            <!-- PAINEL ESQUERDO: NÓS -->
+                            <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <TextBlock Text="1. Nós e Reservatórios" FontSize="15" FontWeight="Bold" Foreground="#0F172A"/>
+                                        <Border x:Name="NoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="4" Padding="8,2" HorizontalAlignment="Right">
+                                            <TextBlock x:Name="NoModoEdicaoText" Text="Modo: Novo elemento" Foreground="#1D4ED8" FontSize="12" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </DockPanel>
 
-                var resultado = ReservoirCalculator.Calculate(perfil, populacao, dias, incendio, percentagem / 100.0);
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-                CaixaConsumoText.Text = $"{resultado.TotalDailyConsumptionLiters:F0} Litros";
-                CaixaVolumeTotalText.Text = $"{resultado.TotalRequiredVolumeLiters:F0} Litros";
-                CaixaSuperiorText.Text = $"{resultado.UpperReservoirVolumeLiters:F0} Litros";
-                CaixaCisternaText.Text = $"{resultado.LowerReservoirVolumeLiters:F0} Litros";
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="Tipo de Elemento" FontSize="12" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="NoTipoComboBox" SelectedIndex="1" SelectionChanged="NoTipoComboBox_SelectionChanged" Padding="5">
+                                                <ComboBoxItem Content="Reservatório" Tag="Reservoir"/>
+                                                <ComboBoxItem Content="Nó de Derivação" Tag="Junction"/>
+                                                <ComboBoxItem Content="Ponto de Consumo" Tag="ConsumptionPoint"/>
+                                            </ComboBox>
+                                        </StackPanel>
 
-        private void CalcularEsgoto_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                int totalUhc = 0; int maiorDiametroPeca = 0;
-                foreach (var item in _sewerFixtures)
-                {
-                    if (item.Quantity > 0)
-                    {
-                        totalUhc += (item.Uhc * item.Quantity);
-                        if (item.MinDiameter > maiorDiametroPeca) maiorDiametroPeca = item.MinDiameter;
-                    }
-                }
-                if (totalUhc == 0) { MessageBox.Show("Adicione pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
-                var resultado = SewerCalculator.CalculateBranch(totalUhc, maiorDiametroPeca);
-                EsgotoUhcText.Text = resultado.TotalUhc.ToString(); EsgotoTipoText.Text = resultado.ComponentType;
-                EsgotoDiametroText.Text = $"DN {resultado.RequiredDiameterMm}"; EsgotoInclinacaoText.Text = $"{resultado.MinimumSlopePercentage:F1} %";
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="Nome / Identificação" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="NoNomeTextBox"/>
+                                        </StackPanel>
 
-        // =====================================================================
-        // NOVO: INTELIGÊNCIA DO CANVAS 2D (DESENHO DE REDES)
-        // =====================================================================
-        private void ModoDesenho_Changed(object sender, RoutedEventArgs e)
-        {
-            if (RbSelecionar?.IsChecked == true) _modoAtual = ModoDesenho.Selecionar;
-            else if (RbNo?.IsChecked == true) _modoAtual = ModoDesenho.DesenharNo;
-            else if (RbTrecho?.IsChecked == true) _modoAtual = ModoDesenho.ConectarTrecho;
-            
-            // Reseta qualquer clique inacabado
-            if (_noInicialParaTrecho != null)
-            {
-                _noInicialParaTrecho.Fill = Brushes.SteelBlue; // Volta à cor normal
-                _noInicialParaTrecho = null;
-            }
-            
-            if (_modoAtual == ModoDesenho.DesenharNo) InstrucaoCanvasText.Text = "Clique em qualquer lugar da tela branca para adicionar um novo Nó.";
-            else if (_modoAtual == ModoDesenho.ConectarTrecho) InstrucaoCanvasText.Text = "Clique num Nó existente (A) e depois clique noutro Nó (B) para traçar um Trecho de tubo entre eles.";
-            else InstrucaoCanvasText.Text = "Clique nos elementos desenhados para ver as suas propriedades na Aba 3.";
-        }
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Cota Geométrica (m)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="NoCotaTextBox" Text="0,00"/>
+                                        </StackPanel>
 
-        private void RedeCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            Point clique = e.GetPosition(RedeCanvas);
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Demanda Direta (L/s)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="NoDemandaTextBox" Text="0,00"/>
+                                        </StackPanel>
 
-            // 1. MODO: DESENHAR NÓ
-            if (_modoAtual == ModoDesenho.DesenharNo)
-            {
-                // Cria a bolinha gráfica (Ellipse)
-                var visualNo = new Ellipse { Width = 20, Height = 20, Fill = Brushes.SteelBlue, Stroke = Brushes.DarkBlue, StrokeThickness = 2, Cursor = Cursors.Hand };
-                
-                // Posiciona onde o rato clicou (centrando a bolinha de 20x20)
-                Canvas.SetLeft(visualNo, clique.X - 10);
-                Canvas.SetTop(visualNo, clique.Y - 10);
-                RedeCanvas.Children.Add(visualNo);
+                                        <StackPanel Grid.Row="4" Grid.Column="0">
+                                            <TextBlock Text="Peso Relativo (ΣP)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="NoPesoTextBox" Text="0,00"/>
+                                        </StackPanel>
+                                    </Grid>
 
-                // Cria o Nó matemático na memória da rede
-                var novoId = Guid.NewGuid();
-                var node = new HydraulicNode { Id = novoId, Name = $"Nó {_network.Nodes.Count + 1}", Type = HydraulicNodeType.Junction, ElevationMeters = 0, DemandLitersPerSecond = 0, RelativeWeight = 0 };
-                
-                _network.AddNode(node);
-                _mapaNosVisuais[visualNo] = novoId; // Mapeia o visual para a matemática
-                
-                AtualizarListaNos(); // Atualiza a tabela na Aba 3 instantaneamente
-            }
-            
-            // 2. MODO: CONECTAR TRECHO
-            else if (_modoAtual == ModoDesenho.ConectarTrecho)
-            {
-                if (e.OriginalSource is Ellipse noClicado)
-                {
-                    if (_noInicialParaTrecho == null)
-                    {
-                        // Seleciona o primeiro nó (Montante) e pinta de Laranja
-                        _noInicialParaTrecho = noClicado;
-                        _noInicialParaTrecho.Fill = Brushes.DarkOrange; 
-                    }
-                    else
-                    {
-                        // Seleciona o segundo nó (Jusante)
-                        if (_noInicialParaTrecho != noClicado)
-                        {
-                            Guid idMontante = _mapaNosVisuais[_noInicialParaTrecho];
-                            Guid idJusante = _mapaNosVisuais[noClicado];
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <Button Content="Salvar Nó" Style="{StaticResource PrimaryButton}" Click="SalvarNo_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" Click="CancelarEdicaoNo_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Editar" Style="{StaticResource SecondaryButton}" Click="EditarNo_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Excluir" Style="{StaticResource SecondaryButton}" Click="ExcluirNo_Click"/>
+                                    </StackPanel>
 
-                            // Desenha o tubo (Line)
-                            var tubo = new Line
-                            {
-                                X1 = Canvas.GetLeft(_noInicialParaTrecho) + 10,
-                                Y1 = Canvas.GetTop(_noInicialParaTrecho) + 10,
-                                X2 = Canvas.GetLeft(noClicado) + 10,
-                                Y2 = Canvas.GetTop(noClicado) + 10,
-                                Stroke = Brushes.Gray,
-                                StrokeThickness = 4,
-                                Cursor = Cursors.Hand
-                            };
-                            
-                            // Insere a linha antes das bolinhas, para ficar por trás
-                            RedeCanvas.Children.Insert(0, tubo);
+                                    <DataGrid x:Name="NosDataGrid" Height="160" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="NosDataGrid_MouseDoubleClick" Background="White">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="*"/>
+                                            <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="95"/>
+                                            <DataGridTextColumn Header="Cota (m)" Binding="{Binding ElevationDisplay}" Width="70"/>
+                                            <DataGridTextColumn Header="Vazão" Binding="{Binding DemandDisplay}" Width="65"/>
+                                            <DataGridTextColumn Header="Peso" Binding="{Binding WeightDisplay}" Width="60"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <TextBlock x:Name="ResumoRedeText" Text="Total: 0 elementos" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
 
-                            // Cria o Trecho matemático na memória da rede
-                            var pipe = new HydraulicPipeSegment { Id = Guid.NewGuid(), Name = $"T-{_network.Segments.Count + 1}", StartNodeId = idMontante, EndNodeId = idJusante, LengthMeters = 5.0, InternalDiameterMm = null, AbsoluteRoughnessMm = 0.001 };
-                            _network.AddSegment(pipe);
-                            
-                            AtualizarListaTrechos(); // Atualiza a tabela na Aba 3
-                        }
-                        
-                        // Reseta a cor do primeiro nó e limpa a memória temporária
-                        _noInicialParaTrecho.Fill = Brushes.SteelBlue;
-                        _noInicialParaTrecho = null;
-                    }
-                }
-            }
-            
-            // 3. MODO: SELECIONAR (Ver Propriedades)
-            else if (_modoAtual == ModoDesenho.Selecionar)
-            {
-                if (e.OriginalSource is Ellipse noParaEditar)
-                {
-                    // Encontra o ID do nó clicado e joga para a janela de edição da Aba 3
-                    Guid id = _mapaNosVisuais[noParaEditar];
-                    var item = NosDataGrid.Items.OfType<NodeGridItem>().FirstOrDefault(n => n.Id == id);
-                    if (item != null)
-                    {
-                        NosDataGrid.SelectedItem = item;
-                        CarregarNoSelecionadoParaEdicao();
-                        MessageBox.Show($"Selecionou o nó: {item.Name}.\n\nVá até a Aba 'REDE DE ÁGUA' para editar as suas propriedades (cota, pressão, etc).", "Bahr Hidro - CAD", MessageBoxButton.OK, MessageBoxImage.Information);
-                    }
-                }
-            }
-        }
+                            <!-- PAINEL DIREITO: TRECHOS -->
+                            <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <TextBlock Text="2. Trechos de Tubulação" FontSize="15" FontWeight="Bold" Foreground="#0F172A"/>
+                                        <Border x:Name="TrechoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="4" Padding="8,2" HorizontalAlignment="Right">
+                                            <TextBlock x:Name="TrechoModoEdicaoText" Text="Modo: Novo trecho" Foreground="#1D4ED8" FontSize="12" FontWeight="SemiBold"/>
+                                        </Border>
+                                    </DockPanel>
 
-        // =====================================================================
-        // UTILITÁRIOS GERAIS
-        // =====================================================================
-        private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };
-        private static bool TryParsePtBrDouble(string? text, out double value) { if (string.IsNullOrWhiteSpace(text)) { value = 0; return false; } return double.TryParse(text.Trim().Replace('.', ','), NumberStyles.Float, PtBr, out value); }
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="8"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
 
-        private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; public string WeightDisplay { get; init; } = ""; }
-        private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; }
-        private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
-        private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }
-        private class SewerFixtureViewModel { public string Name { get; set; } = ""; public int Uhc { get; set; } public int MinDiameter { get; set; } public string UhcDisplay => $"{Uhc} UHC"; public int Quantity { get; set; } = 0; }
-    }
-}
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="Nome do Trecho" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoNomeTextBox"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="Nó Montante (Início)" FontSize="12" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="TrechoNoInicialComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Padding="5"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="4">
+                                            <TextBlock Text="Nó Jusante (Fim)" FontSize="12" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="TrechoNoFinalComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Padding="5"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Comprimento (m)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoComprimentoTextBox" Text="10,00"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Diâmetro (mm ou Auto)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoDiametroTextBox" Text="Auto"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="4">
+                                            <TextBlock Text="Rugosidade (mm)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoRugosidadeTextBox" Text="0,001"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="0">
+                                            <TextBlock Text="Perda Localizada (K)" FontSize="12" FontWeight="SemiBold"/>
+                                            <DockPanel>
+                                                <Button DockPanel.Dock="Right" Content="+" Width="28" Margin="4,0,0,0" Style="{StaticResource PrimaryButton}" Padding="0" Click="CalcularConexoes_Click" ToolTip="Calcular K por conexões"/>
+                                                <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0"/>
+                                            </DockPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="2">
+                                            <TextBlock Text="Vazão Manual (Opcional)" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoVazaoTextBox"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                        <Button Content="Salvar Trecho" Style="{StaticResource PrimaryButton}" Click="SalvarTrecho_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" Click="CancelarEdicaoTrecho_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Editar" Style="{StaticResource SecondaryButton}" Click="EditarTrecho_Click" Margin="0,0,6,0"/>
+                                        <Button Content="Excluir" Style="{StaticResource SecondaryButton}" Click="ExcluirTrecho_Click"/>
+                                    </StackPanel>
+
+                                    <DataGrid x:Name="TrechosDataGrid" Height="160" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="TrechosDataGrid_MouseDoubleClick" Background="White">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="75"/>
+                                            <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                            <DataGridTextColumn Header="L (m)" Binding="{Binding LengthDisplay}" Width="60"/>
+                                            <DataGridTextColumn Header="Ø (mm)" Binding="{Binding DiameterDisplay}" Width="65"/>
+                                            <DataGridTextColumn Header="K" Binding="{Binding KDisplay}" Width="50"/>
+                                            <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="65"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                    <TextBlock x:Name="ResumoTrechosText" Text="Total: 0 trecho(s)" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- BARRA DE CÁLCULO DA REDE -->
+                        <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16">
+                            <DockPanel>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Viscosidade (m²/s):" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox x:Name="RedeViscosidadeTextBox" Text="0,000001003" Width="120" Margin="0,0,16,0"/>
+                                    <Button Content="Calcular Rede Hidráulica" Style="{StaticResource PrimaryButton}" Click="CalcularRede_Click"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button x:Name="DimensionarBombaButton" Content="Verificar Pressurização / Bomba" Style="{StaticResource SecondaryButton}" IsEnabled="False" Click="DimensionarBomba_Click" Margin="0,0,8,0"/>
+                                    <Button x:Name="ExportarMemorialButton" Content="Exportar Memorial (.xlsx)" Style="{StaticResource SecondaryButton}" IsEnabled="False" Click="ExportarMemorial_Click"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- TABELAS DE RESULTADOS -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.3*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Resultados Hidráulicos por Trecho" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <DataGrid x:Name="ResultadosTrechosDataGrid" Height="180" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="70"/>
+                                        <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                        <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="65"/>
+                                        <DataGridTextColumn Header="Ø (mm)" Binding="{Binding DiameterDisplay}" Width="65"/>
+                                        <DataGridTextColumn Header="V (m/s)" Binding="{Binding VelocityDisplay}" Width="65"/>
+                                        <DataGridTextColumn Header="Re" Binding="{Binding ReynoldsDisplay}" Width="65"/>
+                                        <DataGridTextColumn Header="ΔH (mca)" Binding="{Binding HeadLossDisplay}" Width="75"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Pressões Disponíveis nos Nós" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <DataGrid x:Name="ResultadosNosDataGrid" Height="180" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Nó" Binding="{Binding Name}" Width="*"/>
+                                        <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="85"/>
+                                        <DataGridTextColumn Header="Cota" Binding="{Binding ElevationDisplay}" Width="60"/>
+                                        <DataGridTextColumn Header="C. Piez." Binding="{Binding HeadDisplay}" Width="65"/>
+                                        <DataGridTextColumn Header="Pressão (mca)" Binding="{Binding PressureDisplay}" Width="90"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ABA 4: ÁGUA QUENTE (BOILER) -->
+            <TabItem Header="4. ÁGUA QUENTE">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel MaxWidth="650" HorizontalAlignment="Left">
+                        <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
+
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Perfil da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="BoilerPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6">
+                                    <ComboBoxItem Content="Residencial Padrão Alto" Tag="ResidentialHigh"/>
+                                    <ComboBoxItem Content="Residencial Padrão Médio" Tag="ResidentialMedium"/>
+                                    <ComboBoxItem Content="Residencial Padrão Popular" Tag="ResidentialLow"/>
+                                    <ComboBoxItem Content="Hotel / Pousada" Tag="Hotel"/>
+                                    <ComboBoxItem Content="Hospital / Clínica" Tag="Hospital"/>
+                                    <ComboBoxItem Content="Academia / Vestiário" Tag="Gym"/>
+                                </ComboBox>
+
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="BoilerOcupantesTextBox" Text="4"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Pressão de Trabalho (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="BoilerPressaoTextBox" Text="4,0"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Button Content="Dimensionar Boiler" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularBoiler_Click"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="230"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="28"/>
+                                    <RowDefinition Height="28"/>
+                                    <RowDefinition Height="32"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Estimado:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BoilerConsumoText" Text="--"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume de Acumulação:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Classificação de Pressão:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BoilerTipoText" Text="--" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ABA 5: RESERVATÓRIOS -->
+            <TabItem Header="5. RESERVATÓRIOS">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
+                    <StackPanel MaxWidth="650" HorizontalAlignment="Left">
+                        <TextBlock Text="Dimensionamento de Reservatórios (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
+
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="Categoria da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="CaixaPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6">
+                                    <ComboBoxItem Content="Residência Unifamiliar" Tag="SingleFamilyResidential"/>
+                                    <ComboBoxItem Content="Edifício Multifamiliar (Apartamentos)" Tag="MultiFamilyResidential"/>
+                                    <ComboBoxItem Content="Edifício Comercial / Escritórios" Tag="Commercial"/>
+                                    <ComboBoxItem Content="Hotel" Tag="Hotel"/>
+                                    <ComboBoxItem Content="Hospital" Tag="Hospital"/>
+                                    <ComboBoxItem Content="Escola" Tag="School"/>
+                                </ComboBox>
+
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="População Estimada (pessoas)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="CaixaPopulacaoTextBox" Text="5"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Autonomia / Reserva (dias)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="CaixaDiasTextBox" Text="2"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Margin="0,0,0,16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Reserva Técnica de Incêndio (L)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="CaixaIncendioTextBox" Text="0"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Percentual Cisterna Inferior (%)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="CaixaCisternaTextBox" Text="60"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <Button Content="Calcular Reservação" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularCaixa_Click"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="230"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="28"/>
+                                    <RowDefinition Height="28"/>
+                                    <RowDefinition Height="28"/>
+                                    <RowDefinition Height="28"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Total:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CaixaConsumoText" Text="--"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume Total Necessário:" FontWeight="Bold"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CaixaVolumeTotalText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Reservatório Superior:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="CaixaSuperiorText" Text="--"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Reservatório Inferior (Cisterna):" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="CaixaCisternaText" Text="--"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ABA 6: ESGOTO SANITÁRIO -->
+            <TabItem Header="6. ESGOTO (NBR 8160)">
+                <Grid Margin="20">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Aparelhos Sanitários (UHC)" FontSize="16" FontWeight="Bold" Margin="0,0,0,12"/>
+                            <Button DockPanel.Dock="Bottom" Content="Dimensionar Ramal de Esgoto" Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" Click="CalcularEsgoto_Click"/>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="SewerItemsControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,0,0,6">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="80"/>
+                                                        <ColumnDefinition Width="70"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding UhcDisplay}" VerticalAlignment="Center" Foreground="#64748B"/>
+                                                    <TextBox Grid.Column="2" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="20" VerticalAlignment="Top">
+                        <StackPanel>
+                            <TextBlock Text="Resultado do Dimensionamento" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="32"/>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Somatório de UHC:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="EsgotoUhcText" Text="--" FontWeight="Bold"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Tipo de Tubulação:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EsgotoTipoText" Text="--"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Diâmetro Nominal:" FontWeight="Bold"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="EsgotoDiametroText" Text="--" FontSize="16" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Declividade Mínima:" FontWeight="SemiBold"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EsgotoInclinacaoText" Text="--"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- ABA 7: DESENHO 2D (CAD) -->
+            <TabItem Header="7. DESENHO 2D">
+                <DockPanel Margin="12">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock x:Name="InstrucaoCanvasText" Text="Clique nos elementos desenhados para ver as suas propriedades na Aba 3." Foreground="#1D4ED8" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="RbSelecionar" Content="Selecionar / Propriedades" IsChecked="True" Checked="ModoDesenho_Changed" Margin="0,0,20,0" FontWeight="SemiBold"/>
+                                <RadioButton x:Name="RbNo" Content="Desenhar Nó" Checked="ModoDesenho_Changed" Margin="0,0,20,0" FontWeight="SemiBold"/>
+                                <RadioButton x:Name="RbTrecho" Content="Conectar Trecho (Tubo)" Checked="ModoDesenho_Changed" FontWeight="SemiBold"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#94A3B8" BorderThickness="1" Background="White">
+                        <Canvas x:Name="RedeCanvas" Background="White" ClipToBounds="True" MouseLeftButtonDown="RedeCanvas_MouseLeftButtonDown"/>
+                    </Border>
+                </DockPanel>
+            </TabItem>
+
+        </TabControl>
+    </DockPanel>
+</Window>
