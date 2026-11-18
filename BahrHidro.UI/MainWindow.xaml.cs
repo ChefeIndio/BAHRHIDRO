@@ -1,21 +1,20 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes; 
 using BahrHidro.Core;
 using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
 using BahrHidro.Core.Hydraulic.HotWater;
-using BahrHidro.Core.Hydraulic.Reservoirs; 
-using BahrHidro.Core.Hydraulic.Sewer; 
-using BahrHidro.Core.Reporting; 
+using BahrHidro.Core.Hydraulic.Reservoirs;
+using BahrHidro.Core.Hydraulic.Sewer;
+using BahrHidro.Core.Reporting;
 
 namespace BahrHidro.UI
 {
@@ -23,38 +22,29 @@ namespace BahrHidro.UI
     {
         private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
 
-        private readonly PipeCatalogDiameterSelector _diameterSelector;
-        private readonly PipeCatalogService _catalogService; 
+        private readonly PipeCatalogService _catalogService;
         private HydraulicNetwork _network = new HydraulicNetwork("Rede Hidráulica");
         private IRevitBimBridge? _revitBridge;
-
-        private Guid? _editingNodeId;
-        private Guid? _editingSegmentId;
         private NetworkCalculationResult? _ultimoResultadoDaRede;
-        
+
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // 1. Garante pasta e arquivo local do catálogo
             string catalogDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro");
-            if (!System.IO.Directory.Exists(catalogDir)) 
+            if (!System.IO.Directory.Exists(catalogDir))
                 System.IO.Directory.CreateDirectory(catalogDir);
-            
+
             string catalogPath = System.IO.Path.Combine(catalogDir, "pipe-catalog.json");
-            if (!System.IO.File.Exists(catalogPath)) 
+            if (!System.IO.File.Exists(catalogPath))
                 System.IO.File.WriteAllText(catalogPath, "[]");
 
             var repository = new PipeCatalogRepository(catalogPath);
             _catalogService = new PipeCatalogService(repository);
-            _diameterSelector = new PipeCatalogDiameterSelector(_catalogService);
 
-            // 2. Popula automaticamente os ComboBoxes com os Enums reais do BahrHidro.Core
             CarregarPerfisEdificacao();
-
-            AtualizarEstadoTipoNo();
             AtualizarListaNos();
             AtualizarListaTrechos();
 
@@ -62,23 +52,43 @@ namespace BahrHidro.UI
                 .Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm })
                 .ToList();
             SewerItemsControl.ItemsSource = _sewerFixtures;
+
+            RainwaterViewControl.CalculoAtualizado += AtualizarResumoPluvialNoMemorial;
+            Loaded += async (_, _) => await AtualizarStatusCatalogoInicioAsync();
         }
 
         public MainWindow(IRevitBimBridge revitBridge) : this()
         {
             _revitBridge = revitBridge;
-            RevitBimToolbar.Visibility = Visibility.Visible;
+
+            BtnImportarInicioRevit.Visibility = Visibility.Visible;
+            HeaderActionsAguaFria.Visibility = Visibility.Visible;
+            HeaderActionsAguaQuente.Visibility = Visibility.Visible;
+            HeaderActionsReservatorios.Visibility = Visibility.Visible;
+            HeaderActionsEsgoto.Visibility = Visibility.Visible;
+            HeaderActionsPluvial.Visibility = Visibility.Visible;
             SalvarDadosRevitButton.Visibility = Visibility.Visible;
-            BtnPopBoilerRevit.Visibility = Visibility.Visible;
-            BtnPopCaixaRevit.Visibility = Visibility.Visible;
-            BtnImportarEsgotoRevit.Visibility = Visibility.Visible;
-            RainwaterViewControl?.SetRevitBridge(revitBridge, this);
 
             var info = _revitBridge.GetProjectInfo();
             MemObraTextBox.Text = info.ProjectName;
             MemClienteTextBox.Text = info.ClientName;
             MemEnderecoTextBox.Text = info.Address;
             MemEngenheiroTextBox.Text = info.Author;
+
+            if (!string.IsNullOrWhiteSpace(info.ProjectName))
+                InicioProjetoStatusText.Text = $"Projeto Revit Conectado: {info.ProjectName} | Cliente: {info.ClientName}";
+        }
+
+        private async Task AtualizarStatusCatalogoInicioAsync()
+        {
+            try
+            {
+                var produtos = await _catalogService.GetAllAsync();
+                InicioCatalogoStatusText.Text = produtos.Count > 0
+                    ? $"{produtos.Count} bitola(s) comercial(is) pronta(s) no catálogo para dimensionamento automático."
+                    : "Nenhuma bitola cadastrada. Clique abaixo para carregar o catálogo padrão ABNT NBR 5648.";
+            }
+            catch { }
         }
 
         private void NavegadorTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -91,14 +101,47 @@ namespace BahrHidro.UI
 
         private void SelecionarPainel(string tag)
         {
-            if (PanelAguaFria == null) return;
+            if (PanelInicio == null) return;
 
+            PanelInicio.Visibility = tag == "Inicio" ? Visibility.Visible : Visibility.Collapsed;
             PanelAguaFria.Visibility = tag == "AguaFria" ? Visibility.Visible : Visibility.Collapsed;
+            PanelBomba.Visibility = tag == "Bomba" ? Visibility.Visible : Visibility.Collapsed;
             PanelAguaQuente.Visibility = tag == "AguaQuente" ? Visibility.Visible : Visibility.Collapsed;
             PanelReservatorios.Visibility = tag == "Reservatorios" ? Visibility.Visible : Visibility.Collapsed;
             PanelEsgoto.Visibility = tag == "Esgoto" ? Visibility.Visible : Visibility.Collapsed;
             PanelPluvial.Visibility = tag == "Pluvial" ? Visibility.Visible : Visibility.Collapsed;
             PanelMemorial.Visibility = tag == "Memorial" ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void BtnIrInicio_Click(object sender, RoutedEventArgs e)
+        {
+            NavInicio.IsSelected = true;
+            SelecionarPainel("Inicio");
+        }
+
+        private void BtnIrAguaFria_Click(object sender, RoutedEventArgs e)
+        {
+            NavAguaFria.IsSelected = true;
+            SelecionarPainel("AguaFria");
+        }
+
+        private void BtnIrEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            NavEsgoto.IsSelected = true;
+            SelecionarPainel("Esgoto");
+        }
+
+        private void BtnIrMemorial_Click(object sender, RoutedEventArgs e)
+        {
+            NavMemorial.IsSelected = true;
+            SelecionarPainel("Memorial");
+        }
+
+        private async void BtnCarregarPadraoInicio_Click(object sender, RoutedEventArgs e)
+        {
+            await GarantirCatalogoPadraoNbrAsync();
+            await AtualizarStatusCatalogoInicioAsync();
+            MessageBox.Show("Catálogo padrão ABNT NBR 5648 (PVC Soldável DN 20 a DN 110) carregado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void CarregarPerfisEdificacao()
@@ -131,9 +174,9 @@ namespace BahrHidro.UI
             "ResidentialHigh" or "HighStandardResidential" or "ResidencialAlto" => "Residencial Padrão Alto",
             "ResidentialMedium" or "MediumStandardResidential" or "ResidencialMedio" => "Residencial Padrão Médio",
             "ResidentialLow" or "LowStandardResidential" or "ResidencialPopular" => "Residencial Padrão Popular",
-            "SingleFamilyResidential" or "SingleFamily" or "House" or "Casa" => "Residência Unifamiliar",
-            "MultiFamilyResidential" or "MultiFamily" or "Apartment" or "Apartamento" => "Edifício Multifamiliar (Apartamentos)",
-            "Residential" or "Residencial" => "Residencial",
+            "SingleFamilyResidential" or "SingleFamily" or "House" or "Casa" or "ResidenciaUnifamiliar" => "Residência Unifamiliar",
+            "MultiFamilyResidential" or "MultiFamily" or "Apartment" or "Apartamento" or "EdificioMultifamiliar" => "Edifício Multifamiliar (Apartamentos)",
+            "Residential" or "Residencial" or "Residencia" => "Residência",
             "Commercial" or "Office" or "Comercial" => "Edifício Comercial / Escritórios",
             "Hotel" => "Hotel / Pousada",
             "Hospital" => "Hospital / Clínica",
@@ -142,216 +185,508 @@ namespace BahrHidro.UI
             _ => nomeEnum
         };
 
-        private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
+        private async void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
         {
             var janelaCatalogo = new PipeCatalogWindow { Owner = this };
             janelaCatalogo.ShowDialog();
+            await AtualizarStatusCatalogoInicioAsync();
         }
 
-        private void NoTipoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) { if (NoDemandaTextBox != null) AtualizarEstadoTipoNo(); }
-        private void AtualizarEstadoTipoNo()
-        {
-            HydraulicNodeType tipo = ObterTipoNoSelecionado();
-            if (tipo == HydraulicNodeType.Reservoir) 
-            { 
-                NoDemandaTextBox.Text = "0,00"; NoDemandaTextBox.IsEnabled = false; 
-                NoPesoTextBox.Text = "0,00"; NoPesoTextBox.IsEnabled = false;
-            }
-            else 
-            { 
-                NoDemandaTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoDemandaTextBox.Text)) NoDemandaTextBox.Text = "0,00"; 
-                NoPesoTextBox.IsEnabled = true; if (string.IsNullOrWhiteSpace(NoPesoTextBox.Text)) NoPesoTextBox.Text = "0,00";
-            }
-        }
-        private HydraulicNodeType ObterTipoNoSelecionado() => (NoTipoComboBox.SelectedItem is ComboBoxItem item && Enum.TryParse(item.Tag as string, out HydraulicNodeType parsed)) ? parsed : HydraulicNodeType.Junction;
-        private void SelecionarTipoNoNoComboBox(HydraulicNodeType type) { foreach (var obj in NoTipoComboBox.Items) if (obj is ComboBoxItem item && string.Equals(item.Tag as string, type.ToString(), StringComparison.Ordinal)) { NoTipoComboBox.SelectedItem = item; break; } }
-
-        private void SalvarNo_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string nome = (NoNomeTextBox.Text ?? "").Trim();
-                if (string.IsNullOrWhiteSpace(nome)) return;
-                if (!TryParsePtBrDouble(NoCotaTextBox.Text, out double cota)) return;
-                HydraulicNodeType tipo = ObterTipoNoSelecionado();
-                double demanda = 0; double peso = 0;
-                
-                if (tipo != HydraulicNodeType.Reservoir) 
-                {
-                    if (!TryParsePtBrDouble(NoDemandaTextBox.Text, out demanda) || demanda < 0) return;
-                    if (!TryParsePtBrDouble(NoPesoTextBox.Text, out peso) || peso < 0) return;
-                }
-
-                var novoNo = new HydraulicNode { Id = _editingNodeId ?? Guid.NewGuid(), Name = nome, Type = tipo, ElevationMeters = cota, DemandLitersPerSecond = demanda, RelativeWeight = peso };
-                if (_editingNodeId.HasValue) _network.UpdateNode(novoNo); else _network.AddNode(novoNo);
-                
-                LimparFormularioNo(); AtualizarListaNos();
-            }
-            catch (Exception ex) { MessageBox.Show($"Não foi possível salvar o elemento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
-
-        private void EditarNo_Click(object sender, RoutedEventArgs e) => CarregarNoSelecionadoParaEdicao();
-        private void NosDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e) { if (NosDataGrid.SelectedItem is NodeGridItem) CarregarNoSelecionadoParaEdicao(); }
-        private void CarregarNoSelecionadoParaEdicao()
-        {
-            if (NosDataGrid.SelectedItem is not NodeGridItem item) return;
-            var node = _network.FindNode(item.Id);
-            if (node == null) return;
-            _editingNodeId = node.Id;
-            SelecionarTipoNoNoComboBox(node.Type); AtualizarEstadoTipoNo();
-            NoNomeTextBox.Text = node.Name; NoCotaTextBox.Text = node.ElevationMeters.ToString("F2", PtBr);
-            NoDemandaTextBox.Text = node.DemandLitersPerSecond.ToString("F3", PtBr); NoPesoTextBox.Text = node.RelativeWeight.ToString("F2", PtBr);
-            NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
-            NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
-            NoModoEdicaoText.Text = $"Modo: Editando '{node.Name}'";
-        }
-        private void ExcluirNo_Click(object sender, RoutedEventArgs e)
-        {
-            if (NosDataGrid.SelectedItem is not NodeGridItem item) return;
-            _network.RemoveNode(item.Id); if (_editingNodeId == item.Id) LimparFormularioNo(); AtualizarListaNos();
-        }
-        private void CancelarEdicaoNo_Click(object sender, RoutedEventArgs e) => LimparFormularioNo();
-        private void LimparFormularioNo()
-        {
-            _editingNodeId = null; NoNomeTextBox.Text = ""; NoCotaTextBox.Text = "0,00"; NoDemandaTextBox.Text = "0,00"; NoPesoTextBox.Text = "0,00";
-            AtualizarEstadoTipoNo();
-            NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF"));
-            NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8"));
-            NoModoEdicaoText.Text = "Modo: Novo elemento";
-        }
         private void AtualizarListaNos()
         {
-            var itens = _network.Nodes.Select(n => new NodeGridItem { Id = n.Id, Name = n.Name, Type = n.Type, TypeLabel = FormatarTipoNo(n.Type), ElevationMeters = n.ElevationMeters, ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), DemandLitersPerSecond = n.DemandLitersPerSecond, DemandDisplay = n.DemandLitersPerSecond.ToString("F3", PtBr), WeightDisplay = n.RelativeWeight.ToString("F2", PtBr) }).ToList();
-            NosDataGrid.ItemsSource = itens; ResumoRedeText.Text = $"Total: {_network.Nodes.Count} elementos";
-            AtualizarCombosNosTrecho(itens); AtualizarListaTrechos();
-        }
-        private void AtualizarCombosNosTrecho(List<NodeGridItem> itens)
-        {
-            Guid? s = TrechoNoInicialComboBox?.SelectedValue as Guid?; Guid? e = TrechoNoFinalComboBox?.SelectedValue as Guid?;
-            if (TrechoNoInicialComboBox != null) TrechoNoInicialComboBox.ItemsSource = itens;
-            if (TrechoNoFinalComboBox != null) TrechoNoFinalComboBox.ItemsSource = itens;
-            if (s.HasValue && itens.Any(i => i.Id == s.Value)) TrechoNoInicialComboBox.SelectedValue = s.Value;
-            if (e.HasValue && itens.Any(i => i.Id == e.Value)) TrechoNoFinalComboBox.SelectedValue = e.Value;
-        }
-
-        private void CalcularConexoes_Click(object sender, RoutedEventArgs e)
-        {
-            var janelaConexoes = new FittingsWindow { Owner = this };
-            if (janelaConexoes.ShowDialog() == true)
+            var itens = _network.Nodes.Select(n => new NodeGridItem
             {
-                TrechoCoeficienteKTextBox.Text = janelaConexoes.TotalK.ToString("F2", PtBr);
-            }
+                Id = n.Id,
+                Name = n.Name,
+                Type = n.Type,
+                TypeLabel = FormatarTipoNo(n.Type),
+                ElevationMeters = n.ElevationMeters,
+                ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr),
+                DemandLitersPerSecond = n.DemandLitersPerSecond,
+                DemandDisplay = n.DemandLitersPerSecond.ToString("F3", PtBr),
+                WeightDisplay = n.RelativeWeight.ToString("F2", PtBr)
+            }).ToList();
+
+            NosDataGrid.ItemsSource = itens;
+            ResumoRedeText.Text = $"{_network.Nodes.Count} elemento(s)";
         }
 
-        private void SalvarTrecho_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                string nome = (TrechoNomeTextBox.Text ?? "").Trim();
-                if (string.IsNullOrWhiteSpace(nome) || TrechoNoInicialComboBox.SelectedValue is not Guid start || TrechoNoFinalComboBox.SelectedValue is not Guid end || start == end) return;
-                
-                if (!TryParsePtBrDouble(TrechoComprimentoTextBox.Text, out double comp) || !TryParsePtBrDouble(TrechoRugosidadeTextBox.Text, out double rug) || !TryParsePtBrDouble(TrechoCoeficienteKTextBox.Text, out double k)) return;
-                
-                double? dia = null;
-                if (TrechoDiametroTextBox.Text.Trim().Equals("Auto", StringComparison.OrdinalIgnoreCase)) { dia = null; }
-                else if (TryParsePtBrDouble(TrechoDiametroTextBox.Text, out double parsedDia) && parsedDia > 0) { dia = parsedDia; }
-                else { MessageBox.Show("Informe um diâmetro válido ou escreva 'Auto'.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
-
-                double? vazao = null; if (TryParsePtBrDouble(TrechoVazaoTextBox.Text, out double v) && v >= 0) vazao = v;
-                
-                var seg = new HydraulicPipeSegment { Id = _editingSegmentId ?? Guid.NewGuid(), Name = nome, StartNodeId = start, EndNodeId = end, LengthMeters = comp, InternalDiameterMm = dia, AbsoluteRoughnessMm = rug, TotalLossCoefficientK = k, FlowLitersPerSecond = vazao };
-                if (_editingSegmentId.HasValue) _network.UpdateSegment(seg); else _network.AddSegment(seg);
-                
-                LimparFormularioTrecho(); AtualizarListaTrechos();
-            }
-            catch { }
-        }
-        private void EditarTrecho_Click(object sender, RoutedEventArgs e) => CarregarTrechoSelecionadoParaEdicao();
-        private void TrechosDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e) { if (TrechosDataGrid.SelectedItem is SegmentGridItem) CarregarTrechoSelecionadoParaEdicao(); }
-        private void CarregarTrechoSelecionadoParaEdicao()
-        {
-            if (TrechosDataGrid.SelectedItem is not SegmentGridItem item) return;
-            var seg = _network.FindSegment(item.Id); if (seg == null) return;
-            _editingSegmentId = seg.Id; TrechoNomeTextBox.Text = seg.Name; TrechoNoInicialComboBox.SelectedValue = seg.StartNodeId; TrechoNoFinalComboBox.SelectedValue = seg.EndNodeId;
-            TrechoComprimentoTextBox.Text = seg.LengthMeters.ToString("F2", PtBr); 
-            TrechoDiametroTextBox.Text = seg.InternalDiameterMm.HasValue ? seg.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto";
-            TrechoRugosidadeTextBox.Text = seg.AbsoluteRoughnessMm.ToString("G", PtBr); TrechoCoeficienteKTextBox.Text = seg.TotalLossCoefficientK.ToString("F2", PtBr);
-            TrechoVazaoTextBox.Text = seg.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "";
-            TrechoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
-            TrechoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
-            TrechoModoEdicaoText.Text = $"Modo: Editando '{seg.Name}'";
-        }
-        private void ExcluirTrecho_Click(object sender, RoutedEventArgs e)
-        {
-            if (TrechosDataGrid.SelectedItem is not SegmentGridItem item) return;
-            _network.RemoveSegment(item.Id); if (_editingSegmentId == item.Id) LimparFormularioTrecho(); AtualizarListaTrechos();
-        }
-        private void CancelarEdicaoTrecho_Click(object sender, RoutedEventArgs e) => LimparFormularioTrecho();
-        private void LimparFormularioTrecho()
-        {
-            _editingSegmentId = null; TrechoNomeTextBox.Text = ""; TrechoNoInicialComboBox.SelectedIndex = -1; TrechoNoFinalComboBox.SelectedIndex = -1;
-            TrechoComprimentoTextBox.Text = "10,00"; TrechoDiametroTextBox.Text = "Auto"; TrechoRugosidadeTextBox.Text = "0,001"; TrechoCoeficienteKTextBox.Text = "0"; TrechoVazaoTextBox.Text = "";
-            TrechoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF"));
-            TrechoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8"));
-            TrechoModoEdicaoText.Text = "Modo: Novo trecho";
-        }
         private void AtualizarListaTrechos()
         {
             if (TrechosDataGrid == null) return;
-            TrechosDataGrid.ItemsSource = _network.Segments.Select(s => new SegmentGridItem { Id = s.Id, Name = s.Name, ConnectionDisplay = $"{_network.FindNode(s.StartNodeId)?.Name ?? "?"} → {_network.FindNode(s.EndNodeId)?.Name ?? "?"}", LengthDisplay = s.LengthMeters.ToString("F2", PtBr), DiameterDisplay = s.InternalDiameterMm.HasValue ? s.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto", KDisplay = s.TotalLossCoefficientK.ToString("F2", PtBr), FlowDisplay = s.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "Auto" }).ToList();
-            ResumoTrechosText.Text = $"Total: {_network.Segments.Count} trecho(s)";
+            TrechosDataGrid.ItemsSource = _network.Segments.Select(s => new SegmentGridItem
+            {
+                Id = s.Id,
+                Name = s.Name,
+                ConnectionDisplay = $"{_network.FindNode(s.StartNodeId)?.Name ?? "?"} → {_network.FindNode(s.EndNodeId)?.Name ?? "?"}",
+                LengthDisplay = s.LengthMeters.ToString("F2", PtBr),
+                DiameterDisplay = s.InternalDiameterMm.HasValue ? s.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto",
+                KDisplay = s.TotalLossCoefficientK.ToString("F2", PtBr)
+            }).ToList();
+            ResumoTrechosText.Text = $"{_network.Segments.Count} trecho(s)";
         }
 
         private async void CalcularRede_Click(object sender, RoutedEventArgs e)
         {
             try
             {
+                if (_network.Segments.Count == 0)
+                {
+                    MessageBox.Show("Importe uma rede do modelo 3D do Revit antes de calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
                 if (!TryParsePtBrDouble(RedeViscosidadeTextBox.Text, out double viscosidade)) return;
+
                 var produtosNoCatalogo = await _catalogService.GetAllAsync();
                 if (produtosNoCatalogo.Count <= 1)
                 {
                     await GarantirCatalogoPadraoNbrAsync();
                     produtosNoCatalogo = await _catalogService.GetAllAsync();
+                    await AtualizarStatusCatalogoInicioAsync();
                 }
-                var opcoesDiametro = produtosNoCatalogo.Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm)).ToList();
+
+                var opcoesDiametro = produtosNoCatalogo
+                    .Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm))
+                    .ToList();
 
                 var res = HydraulicNetworkSolver.Solve(_network, viscosidade, opcoesDiametro, 3.0);
-                
                 _ultimoResultadoDaRede = res;
-                ExportarMemorialButton.IsEnabled = true;
-                DimensionarBombaButton.IsEnabled = true;
+
+                StatusCalculoAguaFriaText.Text = $"Calculado com sucesso ({res.Segments.Count} trechos).";
+                StatusCalculoAguaFriaText.Foreground = Brushes.ForestGreen;
+
                 if (MemStatusRedeText != null)
                 {
-                    MemStatusRedeText.Text = $"Pronto para exportar: {res.Segments.Count} trecho(s) e {res.Nodes.Count} nó(s) calculados.";
+                    MemStatusRedeText.Text = $"Calculado: {res.Segments.Count} trecho(s) e {res.Nodes.Count} nó(s) prontos para exportação.";
                     MemStatusRedeText.Foreground = Brushes.ForestGreen;
                 }
-                
-                ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--", VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
-                ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem { Name = n.NodeName, TypeLabel = FormatarTipoNo(n.NodeType), ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr), PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr), IsLowPressure = n.AvailablePressureMca < 1.0 && n.NodeType != HydraulicNodeType.Reservoir }).ToList();
+
+                ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem
+                {
+                    Name = s.SegmentName,
+                    ConnectionDisplay = s.Connection,
+                    FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr),
+                    DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--",
+                    VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr),
+                    ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr),
+                    HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr)
+                }).ToList();
+
+                ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem
+                {
+                    Name = n.NodeName,
+                    TypeLabel = FormatarTipoNo(n.NodeType),
+                    ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr),
+                    HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr),
+                    PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr)
+                }).ToList();
+
+                AtualizarPainelBomba();
             }
-            catch (Exception ex) { MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void DimensionarBomba_Click(object sender, RoutedEventArgs e)
+        private void RecalcularBomba_Click(object sender, RoutedEventArgs e)
+        {
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Calcule primeiro a rede na aba 'Água Fria (Rede BIM 3D)'.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            AtualizarPainelBomba();
+        }
+
+        private void AtualizarPainelBomba()
         {
             if (_ultimoResultadoDaRede == null) return;
+
             try
             {
-                var resultadoBomba = PumpCalculator.Calculate(_ultimoResultadoDaRede, 1.0, 0.60);
-                if (!resultadoBomba.RequiresPump) { MessageBox.Show("O sistema atende perfeitamente por gravidade!\n\nNão é necessária a instalação de bomba/pressurizador na rede.", "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Information); }
+                double pressaoMin = TryParsePtBrDouble(BombaPressaoMinimaTextBox.Text, out double pMin) && pMin > 0 ? pMin : 1.0;
+                double rendimento = TryParsePtBrDouble(BombaRendimentoTextBox.Text, out double rend) && rend > 0 && rend <= 100 ? rend / 100.0 : 0.60;
+
+                var resultadoBomba = PumpCalculator.Calculate(_ultimoResultadoDaRede, pressaoMin, rendimento);
+
+                BombaNoCriticoText.Text = resultadoBomba.CriticalNodeName;
+                BombaPressaoAtualText.Text = $"{resultadoBomba.CriticalNodeCurrentPressure.ToString("F2", PtBr)} m.c.a.";
+                BombaVazaoText.Text = $"{resultadoBomba.TotalFlowLitersPerSecond.ToString("F2", PtBr)} L/s ({(resultadoBomba.TotalFlowLitersPerSecond * 3.6).ToString("F2", PtBr)} m³/h)";
+
+                if (!resultadoBomba.RequiresPump)
+                {
+                    BombaDiagnosticoText.Text = $"ATENDE POR GRAVIDADE — Todos os pontos possuem pressão acima de {pressaoMin.ToString("F2", PtBr)} m.c.a. Não é necessária bomba pressurizadora.";
+                    BombaDiagnosticoText.Foreground = Brushes.ForestGreen;
+                    BombaAmtText.Text = "0,00 m.c.a. (Gravidade)";
+                    BombaPotenciaText.Text = "Dispensada";
+
+                    if (MemStatusBombaText != null)
+                        MemStatusBombaText.Text = $"Atende por gravidade (ponto crítico: {resultadoBomba.CriticalNodeName} com {resultadoBomba.CriticalNodeCurrentPressure:F2} m.c.a.).";
+                }
                 else
                 {
-                    string msg = $"Atenção! A rede necessita de PRESSURIZAÇÃO.\n\nNó mais crítico: {resultadoBomba.CriticalNodeName}\n(Pressão atual: {resultadoBomba.CriticalNodeCurrentPressure:F2} m.c.a)\n\nESPECIFICAÇÕES RECOMENDADAS PARA A BOMBA:\n- Vazão de Projeto: {resultadoBomba.TotalFlowLitersPerSecond:F2} L/s\n- Altura Manométrica (AMT): {resultadoBomba.RequiredAmtMca:F2} m.c.a.\n- Potência Estimada: {resultadoBomba.EstimatedPowerCv:F2} cv";
-                    MessageBox.Show(msg, "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    BombaDiagnosticoText.Text = $"PRESSURIZAÇÃO NECESSÁRIA — Pressão insuficiente no ponto '{resultadoBomba.CriticalNodeName}'. Instale conjunto pressurizador.";
+                    BombaDiagnosticoText.Foreground = Brushes.DarkRed;
+                    BombaAmtText.Text = $"{resultadoBomba.RequiredAmtMca.ToString("F2", PtBr)} m.c.a.";
+                    BombaPotenciaText.Text = $"{resultadoBomba.EstimatedPowerCv.ToString("F2", PtBr)} cv";
+
+                    if (MemStatusBombaText != null)
+                        MemStatusBombaText.Text = $"Necessária bomba: Q = {resultadoBomba.TotalFlowLitersPerSecond:F2} L/s | AMT = {resultadoBomba.RequiredAmtMca:F2} m.c.a. | {resultadoBomba.EstimatedPowerCv:F2} cv.";
                 }
             }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o sistema de bombagem:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao verificar pressurização:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
-        private void ExportarMemorial_Click(object sender, RoutedEventArgs e)
+        private void CalcularBoiler_Click(object sender, RoutedEventArgs e)
         {
-            if (_ultimoResultadoDaRede == null) return;
-            var dialog = new Microsoft.Win32.SaveFileDialog { FileName = "Memorial_Hidraulico_BahrHidro", DefaultExt = ".xlsx", Filter = "Ficheiro Excel (.xlsx)|*.xlsx" };
+            try
+            {
+                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0)
+                {
+                    MessageBox.Show("Informe um número válido de ocupantes.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao) || pressao <= 0)
+                {
+                    MessageBox.Show("Informe uma pressão de trabalho válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil))
+                    return;
+
+                var resultado = BoilerCalculator.Calculate(perfil, ocupantes, pressao);
+                int comercial = SugerirCapacidadeComercialBoiler(resultado.RequiredAccumulationVolumeLiters);
+
+                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L";
+                BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L";
+                BoilerComercialText.Text = $"Boiler {comercial} Litros ({(resultado.RecommendedPressureType.Contains("ALTA") ? "Alta Pressão" : "Baixa Pressão")})";
+                BoilerTipoText.Text = resultado.RecommendedPressureType;
+
+                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA"))
+                    BoilerTipoText.Foreground = Brushes.DarkRed;
+                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO"))
+                    BoilerTipoText.Foreground = Brushes.DarkOrange;
+                else
+                    BoilerTipoText.Foreground = Brushes.ForestGreen;
+
+                if (MemStatusBoilerText != null)
+                    MemStatusBoilerText.Text = $"Boiler Comercial {comercial} L ({ocupantes} ocupantes) — {resultado.RecommendedPressureType}.";
+            }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+        }
+
+        private static int SugerirCapacidadeComercialBoiler(double litros)
+        {
+            int[] comerciais = { 100, 150, 200, 250, 300, 400, 500, 600, 800, 1000, 1500, 2000 };
+            return comerciais.FirstOrDefault(c => c >= litros);
+        }
+
+        private static int SugerirCapacidadeComercialCaixa(double litros)
+        {
+            int[] comerciais = { 310, 500, 750, 1000, 1500, 2000, 2500, 3000, 5000, 10000 };
+            int achado = comerciais.FirstOrDefault(c => c >= litros);
+            return achado > 0 ? achado : (int)(Math.Ceiling(litros / 1000.0) * 1000);
+        }
+
+        private void CalcularCaixa_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0)
+                {
+                    MessageBox.Show("Informe uma população válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0)
+                {
+                    MessageBox.Show("Informe uma autonomia (dias) válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio) || incendio < 0)
+                {
+                    MessageBox.Show("Informe um valor válido para reserva de incêndio.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100)
+                {
+                    MessageBox.Show("Informe um percentual entre 0 e 100 para a cisterna.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil))
+                    return;
+
+                var resultado = ReservoirCalculator.Calculate(perfil, populacao, dias, incendio, percentagem / 100.0);
+                int comSup = SugerirCapacidadeComercialCaixa(resultado.UpperReservoirVolumeLiters);
+                int comInf = resultado.LowerReservoirVolumeLiters > 0 ? SugerirCapacidadeComercialCaixa(resultado.LowerReservoirVolumeLiters) : 0;
+
+                CaixaConsumoText.Text = $"{resultado.TotalDailyConsumptionLiters:F0} Litros";
+                CaixaVolumeTotalText.Text = $"{resultado.TotalRequiredVolumeLiters:F0} Litros";
+                CaixaSuperiorText.Text = $"{resultado.UpperReservoirVolumeLiters:F0} L (Comercial: {comSup} L)";
+                CaixaCisternaText.Text = resultado.LowerReservoirVolumeLiters > 0
+                    ? $"{resultado.LowerReservoirVolumeLiters:F0} L (Comercial: {comInf} L)"
+                    : "Dispensada (0 L)";
+
+                if (MemStatusCaixaText != null)
+                    MemStatusCaixaText.Text = $"Total: {resultado.TotalRequiredVolumeLiters:F0} L | Superior: {comSup} L | Cisterna: {comInf} L.";
+            }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+        }
+
+        private void CalcularEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                int totalUhc = 0;
+                int maiorDiametroPeca = 0;
+                bool temCozinha = false;
+                bool temBanheiroOuServico = false;
+
+                foreach (var item in _sewerFixtures)
+                {
+                    if (item.Quantity > 0)
+                    {
+                        totalUhc += (item.Uhc * item.Quantity);
+                        if (item.MinDiameter > maiorDiametroPeca) maiorDiametroPeca = item.MinDiameter;
+                        if (item.Name.Contains("Cozinha", StringComparison.OrdinalIgnoreCase)) temCozinha = true;
+                        else temBanheiroOuServico = true;
+                    }
+                }
+
+                if (totalUhc == 0)
+                {
+                    MessageBox.Show("Adicione ou importe pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var resultado = SewerCalculator.CalculateBranch(totalUhc, maiorDiametroPeca);
+                EsgotoUhcText.Text = resultado.TotalUhc.ToString();
+                EsgotoTipoText.Text = resultado.ComponentType;
+                EsgotoDiametroText.Text = $"DN {resultado.RequiredDiameterMm}";
+                EsgotoInclinacaoText.Text = $"{resultado.MinimumSlopePercentage:F1} %";
+
+                string itensObrigatorios = "• Linha Recomendada: PVC Esgoto Série Normal (ramais internos) e Série Reforçada (prumadas/subcoletores — Tigre / Amanco).\n• Peças Obrigatórias (NBR 8160):\n";
+                if (temBanheiroOuServico)
+                    itensObrigatorios += "  - Caixa Sifonada (DN 100×100×50 ou DN 150×150×50) com grelha para proteção do fecho hídrico;\n";
+                if (temCozinha)
+                    itensObrigatorios += "  - Caixa de Gordura obrigatória na saída da pia de cozinha antes da rede coletora;\n";
+                itensObrigatorios += "  - Ramal e Coluna de Ventilação (DN 50 / DN 75) com terminal 30 cm acima da cobertura;\n  - Caixas de Inspeção (CI 60×60 cm) nas mudanças de direção.";
+                EsgotoSugestoesText.Text = itensObrigatorios;
+
+                if (MemStatusEsgotoText != null)
+                    MemStatusEsgotoText.Text = $"Total: {resultado.TotalUhc} UHC | Tubulação: DN {resultado.RequiredDiameterMm} mm | Declividade: {resultado.MinimumSlopePercentage:F1}%.";
+            }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+        }
+
+        private void AtualizarResumoPluvialNoMemorial()
+        {
+            if (RainwaterView.UltimoResultado != null && MemStatusPluvialText != null)
+            {
+                var r = RainwaterView.UltimoResultado;
+                MemStatusPluvialText.Text = $"Área: {r.ContributionAreaM2:F2} m² | Q = {r.DesignFlowLitersPerMinute:F1} L/min | Calha: {r.SelectedGutterDescription} | Descidas: {r.DownspoutCount}× DN {r.RequiredDownspoutDiameterMm} mm.";
+            }
+        }
+
+        // =====================================================================
+        // INTEGRAÇÃO REVIT 3D (PADRONIZADA)
+        // =====================================================================
+        private void ImportarRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                _revitBridge.ImportNetworkFromRevit(this, importedNetwork =>
+                {
+                    _network = importedNetwork;
+                    _ultimoResultadoDaRede = null;
+                    AtualizarListaNos();
+                    AtualizarListaTrechos();
+                    InicioRedeStatusText.Text = $"Rede carregada: {_network.Nodes.Count} nós e {_network.Segments.Count} trechos.";
+                    StatusCalculoAguaFriaText.Text = "Rede importada! Clique em 'Calcular Rede Hidráulica'.";
+                    StatusCalculoAguaFriaText.Foreground = Brushes.DarkOrange;
+
+                    NavAguaFria.IsSelected = true;
+                    SelecionarPainel("AguaFria");
+
+                    if (MemStatusRedeText != null)
+                    {
+                        MemStatusRedeText.Text = $"Rede importada ({_network.Segments.Count} trechos). Clique em 'Calcular Rede Hidráulica' antes de exportar.";
+                        MemStatusRedeText.Foreground = Brushes.DarkOrange;
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void AplicarRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Calcule a rede hidráulica antes de aplicar os diâmetros no Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                int atualizados = _revitBridge.ApplyDiametersToRevit(_ultimoResultadoDaRede);
+                MessageBox.Show($"{atualizados} tubo(s) atualizado(s) com sucesso no modelo 3D do Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao aplicar diâmetros no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void EstimarPopulacaoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var est = _revitBridge.EstimateBuildingPopulation();
+                CaixaPopulacaoTextBox.Text = est.EstimatedPeople.ToString();
+                BoilerOcupantesTextBox.Text = est.EstimatedPeople.ToString();
+                MessageBox.Show(est.Summary, "Bahr Hidro BIM - Ambientes Revit", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao ler ambientes do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ImportarEsgotoAutoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var mapeados = _revitBridge.ImportAllSewerFixturesFromRevit();
+                AplicarAparelhosEsgoto(mapeados, sender, e);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao ler aparelhos do projeto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ImportarEsgotoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var mapeados = _revitBridge.ImportSewerFixturesFromRevit(this);
+                AplicarAparelhosEsgoto(mapeados, sender, e);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao selecionar aparelhos no 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void AplicarAparelhosEsgoto(Dictionary<string, int> mapeados, object sender, RoutedEventArgs e)
+        {
+            if (mapeados.Count == 0)
+            {
+                MessageBox.Show("Nenhum aparelho sanitário compatível encontrado no modelo.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            foreach (var item in _sewerFixtures)
+            {
+                item.Quantity = mapeados.TryGetValue(item.Name, out int qtd) ? qtd : 0;
+            }
+
+            SewerItemsControl.ItemsSource = null;
+            SewerItemsControl.ItemsSource = _sewerFixtures;
+            CalcularEsgoto_Click(sender, e);
+
+            int totalPecas = mapeados.Values.Sum();
+            MessageBox.Show($"{totalPecas} aparelho(s) sanitário(s) lido(s) do Revit e dimensionados!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void ImportarPluvialAutoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var roof = _revitBridge.CaptureAllRoofsFromRevit();
+                if (roof == null)
+                {
+                    MessageBox.Show("Nenhum telhado (Roof) encontrado no modelo Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+                RainwaterViewControl.AplicarDadosTelhadoRevit(roof);
+                MessageBox.Show($"Cobertura '{roof.RoofName}' lida automaticamente!\nÁrea total: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao ler telhados do projeto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ImportarPluvialRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var roof = _revitBridge.CaptureRoofFromRevit(this);
+                if (roof == null) return;
+                RainwaterViewControl.AplicarDadosTelhadoRevit(roof);
+                MessageBox.Show($"Telhado '{roof.RoofName}' capturado!\nÁrea medida: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao capturar telhado no 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void SalvarDadosRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string autorCompleto = string.IsNullOrWhiteSpace(MemCreaTextBox.Text)
+                    ? MemEngenheiroTextBox.Text.Trim()
+                    : $"{MemEngenheiroTextBox.Text.Trim()} ({MemCreaTextBox.Text.Trim()})";
+
+                _revitBridge.SaveProjectInfo(
+                    MemObraTextBox.Text.Trim(),
+                    MemClienteTextBox.Text.Trim(),
+                    MemEnderecoTextBox.Text.Trim(),
+                    autorCompleto);
+
+                MessageBox.Show("Dados salvos com sucesso nas propriedades do projeto Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao salvar dados no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void ExportarMemorialAba_Click(object sender, RoutedEventArgs e)
+        {
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria (Rede BIM 3D)' antes de gerar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                NavAguaFria.IsSelected = true;
+                SelecionarPainel("AguaFria");
+                return;
+            }
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = $"Memorial_Hidraulico_{(string.IsNullOrWhiteSpace(MemObraTextBox.Text) ? "BahrHidro" : MemObraTextBox.Text.Trim().Replace(" ", "_"))}",
+                DefaultExt = ".xlsx",
+                Filter = "Ficheiro Excel (.xlsx)|*.xlsx"
+            };
+
             if (dialog.ShowDialog() == true)
             {
                 try
@@ -361,7 +696,7 @@ namespace BahrHidro.UI
                     else
                         ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName);
 
-                    MessageBox.Show("Memorial exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Memorial de cálculo exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -415,195 +750,7 @@ namespace BahrHidro.UI
             }
         }
 
-        private void CalcularBoiler_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0)
-                {
-                    MessageBox.Show("Informe um número válido de ocupantes.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao) || pressao <= 0)
-                {
-                    MessageBox.Show("Informe uma pressão de trabalho válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil))
-                    return;
-
-                var resultado = BoilerCalculator.Calculate(perfil, ocupantes, pressao);
-                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L";
-                BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L";
-                BoilerTipoText.Text = resultado.RecommendedPressureType;
-
-                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA"))
-                    BoilerTipoText.Foreground = Brushes.DarkRed;
-                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO"))
-                    BoilerTipoText.Foreground = Brushes.DarkOrange;
-                else
-                    BoilerTipoText.Foreground = Brushes.ForestGreen;
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
-
-        private void CalcularCaixa_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0)
-                {
-                    MessageBox.Show("Informe uma população válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0)
-                {
-                    MessageBox.Show("Informe uma autonomia (dias) válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio) || incendio < 0)
-                {
-                    MessageBox.Show("Informe um valor válido para reserva de incêndio.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100)
-                {
-                    MessageBox.Show("Informe um percentual entre 0 e 100 para a cisterna.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-                if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil))
-                    return;
-
-                var resultado = ReservoirCalculator.Calculate(perfil, populacao, dias, incendio, percentagem / 100.0);
-
-                CaixaConsumoText.Text = $"{resultado.TotalDailyConsumptionLiters:F0} Litros";
-                CaixaVolumeTotalText.Text = $"{resultado.TotalRequiredVolumeLiters:F0} Litros";
-                CaixaSuperiorText.Text = $"{resultado.UpperReservoirVolumeLiters:F0} Litros";
-                CaixaCisternaText.Text = $"{resultado.LowerReservoirVolumeLiters:F0} Litros";
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
-
-        private void CalcularEsgoto_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                int totalUhc = 0; int maiorDiametroPeca = 0;
-                foreach (var item in _sewerFixtures)
-                {
-                    if (item.Quantity > 0)
-                    {
-                        totalUhc += (item.Uhc * item.Quantity);
-                        if (item.MinDiameter > maiorDiametroPeca) maiorDiametroPeca = item.MinDiameter;
-                    }
-                }
-                if (totalUhc == 0) { MessageBox.Show("Adicione pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
-                var resultado = SewerCalculator.CalculateBranch(totalUhc, maiorDiametroPeca);
-                EsgotoUhcText.Text = resultado.TotalUhc.ToString(); EsgotoTipoText.Text = resultado.ComponentType;
-                EsgotoDiametroText.Text = $"DN {resultado.RequiredDiameterMm}"; EsgotoInclinacaoText.Text = $"{resultado.MinimumSlopePercentage:F1} %";
-            }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
-        }
-
-        // =====================================================================
-        // UTILITÁRIOS GERAIS
-        // =====================================================================
-        private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };
-        private static bool TryParsePtBrDouble(string? text, out double value) { if (string.IsNullOrWhiteSpace(text)) { value = 0; return false; } return double.TryParse(text.Trim().Replace('.', ','), NumberStyles.Float, PtBr, out value); }
-
-        private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; public string WeightDisplay { get; init; } = ""; }
-        private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; }
-        private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
-        private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }
-        private class SewerFixtureViewModel { public string Name { get; set; } = ""; public int Uhc { get; set; } public int MinDiameter { get; set; } public string UhcDisplay => $"{Uhc} UHC"; public int Quantity { get; set; } = 0; }
-    
-        private void ImportarRevit_Click(object sender, RoutedEventArgs e)
-        {
-            if (_revitBridge == null) return;
-            try
-            {
-                _revitBridge.ImportNetworkFromRevit(this, importedNetwork =>
-                {
-                    _network = importedNetwork;
-                    _ultimoResultadoDaRede = null;
-                    _editingNodeId = null;
-                    _editingSegmentId = null;
-                    AtualizarListaNos();
-                    AtualizarListaTrechos();
-                    if (NavAguaFria != null) NavAguaFria.IsSelected = true;
-                    SelecionarPainel("AguaFria");
-                    if (MemStatusRedeText != null)
-                    {
-                        MemStatusRedeText.Text = $"Rede importada ({_network.Segments.Count} trechos). Clique em 'Calcular Rede Hidráulica' antes de exportar.";
-                        MemStatusRedeText.Foreground = Brushes.DarkOrange;
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private void AplicarRevit_Click(object sender, RoutedEventArgs e)
-        {
-            if (_revitBridge == null) return;
-            if (_ultimoResultadoDaRede == null)
-            {
-                MessageBox.Show("Clique em 'Calcular Rede Hidráulica' em 'Água Fria (Rede BIM 3D)' antes de aplicar os diâmetros no Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
-                if (NavAguaFria != null) NavAguaFria.IsSelected = true;
-                SelecionarPainel("AguaFria");
-                return;
-            }
-
-            try
-            {
-                int atualizados = _revitBridge.ApplyDiametersToRevit(_ultimoResultadoDaRede);
-                MessageBox.Show($"{atualizados} tubo(s) atualizado(s) com sucesso no modelo 3D do Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao aplicar diâmetros no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void SalvarDadosRevit_Click(object sender, RoutedEventArgs e)
-        {
-            if (_revitBridge == null) return;
-            try
-            {
-                string autorCompleto = string.IsNullOrWhiteSpace(MemCreaTextBox.Text)
-                    ? MemEngenheiroTextBox.Text.Trim()
-                    : $"{MemEngenheiroTextBox.Text.Trim()} ({MemCreaTextBox.Text.Trim()})";
-
-                _revitBridge.SaveProjectInfo(
-                    MemObraTextBox.Text.Trim(),
-                    MemClienteTextBox.Text.Trim(),
-                    MemEnderecoTextBox.Text.Trim(),
-                    autorCompleto);
-
-                MessageBox.Show("Dados salvos com sucesso nas propriedades do projeto Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao salvar dados no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-        private void ExportarMemorialAba_Click(object sender, RoutedEventArgs e)
-        {
-            if (_ultimoResultadoDaRede == null)
-            {
-                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria (Rede BIM 3D)' antes de gerar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                if (NavAguaFria != null) NavAguaFria.IsSelected = true;
-                SelecionarPainel("AguaFria");
-                return;
-            }
-            ExportarMemorial_Click(sender, e);
-        }
-
-
-        private async System.Threading.Tasks.Task GarantirCatalogoPadraoNbrAsync()
+        private async Task GarantirCatalogoPadraoNbrAsync()
         {
             var padroes = new (string dn, decimal ext, decimal esp)[]
             {
@@ -640,47 +787,24 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ImportarEsgotoRevit_Click(object sender, RoutedEventArgs e)
+        private static string FormatarTipoNo(HydraulicNodeType type) => type switch
         {
-            if (_revitBridge == null) return;
-            try
-            {
-                var mapeados = _revitBridge.ImportSewerFixturesFromRevit(this);
-                if (mapeados.Count == 0) return;
+            HydraulicNodeType.Reservoir => "Reservatório",
+            HydraulicNodeType.Junction => "Nó",
+            HydraulicNodeType.ConsumptionPoint => "Consumo",
+            _ => type.ToString()
+        };
 
-                foreach (var item in _sewerFixtures)
-                {
-                    item.Quantity = mapeados.TryGetValue(item.Name, out int qtd) ? qtd : 0;
-                }
-
-                SewerItemsControl.ItemsSource = null;
-                SewerItemsControl.ItemsSource = _sewerFixtures;
-                CalcularEsgoto_Click(sender, e);
-
-                int totalPecas = mapeados.Values.Sum();
-                MessageBox.Show($"{totalPecas} aparelho(s) sanitário(s) importado(s) do Revit 3D e dimensionados!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao importar aparelhos de esgoto do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+        private static bool TryParsePtBrDouble(string? text, out double value)
+        {
+            if (string.IsNullOrWhiteSpace(text)) { value = 0; return false; }
+            return double.TryParse(text.Trim().Replace('.', ','), NumberStyles.Float, PtBr, out value);
         }
 
-        private void EstimarPopulacaoRevit_Click(object sender, RoutedEventArgs e)
-        {
-            if (_revitBridge == null) return;
-            try
-            {
-                var est = _revitBridge.EstimateBuildingPopulation();
-                CaixaPopulacaoTextBox.Text = est.EstimatedPeople.ToString();
-                BoilerOcupantesTextBox.Text = est.EstimatedPeople.ToString();
-                MessageBox.Show(est.Summary, "Bahr Hidro BIM - Ambientes Revit", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao ler ambientes do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-
-}
+        private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; public string WeightDisplay { get; init; } = ""; }
+        private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; }
+        private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
+        private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; }
+        private class SewerFixtureViewModel { public string Name { get; set; } = ""; public int Uhc { get; set; } public int MinDiameter { get; set; } public string UhcDisplay => $"{Uhc} UHC"; public int Quantity { get; set; } = 0; }
+    }
 }

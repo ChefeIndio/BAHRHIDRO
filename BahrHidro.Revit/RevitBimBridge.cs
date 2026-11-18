@@ -114,6 +114,30 @@ namespace BahrHidro.Revit
             return tubosAtualizados;
         }
 
+        public Dictionary<string, int> ImportAllSewerFixturesFromRevit()
+        {
+            var contagem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            var fixtures = new FilteredElementCollector(_doc)
+                .OfCategory(BuiltInCategory.OST_PlumbingFixtures)
+                .WhereElementIsNotElementType()
+                .ToElements();
+
+            foreach (Element elem in fixtures)
+            {
+                string familia = (elem as FamilyInstance)?.Symbol?.FamilyName ?? "";
+                string tipo = elem.Name ?? "";
+                string categoria = MapearAparelhoEsgoto($"{familia} {tipo}");
+
+                if (!string.IsNullOrEmpty(categoria))
+                {
+                    contagem[categoria] = contagem.TryGetValue(categoria, out int atual) ? atual + 1 : 1;
+                }
+            }
+
+            return contagem;
+        }
+
         public Dictionary<string, int> ImportSewerFixturesFromRevit(Window ownerWindow)
         {
             var contagem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -151,6 +175,48 @@ namespace BahrHidro.Revit
             }
 
             return contagem;
+        }
+
+        public RevitRoofData? CaptureAllRoofsFromRevit()
+        {
+            var roofs = new FilteredElementCollector(_doc)
+                .OfCategory(BuiltInCategory.OST_Roofs)
+                .WhereElementIsNotElementType()
+                .ToElements();
+
+            if (roofs.Count == 0) return null;
+
+            double areaTotalM2 = 0;
+            double maiorLarguraM = 0;
+            double maiorAlturaM = 0;
+
+            foreach (Element roof in roofs)
+            {
+                Parameter? areaParam = roof.get_Parameter(BuiltInParameter.HOST_AREA_COMPUTED);
+                if (areaParam != null && areaParam.HasValue)
+                    areaTotalM2 += UnitUtils.ConvertFromInternalUnits(areaParam.AsDouble(), UnitTypeId.SquareMeters);
+
+                BoundingBoxXYZ? bb = roof.get_BoundingBox(null);
+                if (bb != null)
+                {
+                    double dx = UnitUtils.ConvertFromInternalUnits(bb.Max.X - bb.Min.X, UnitTypeId.Meters);
+                    double dy = UnitUtils.ConvertFromInternalUnits(bb.Max.Y - bb.Min.Y, UnitTypeId.Meters);
+                    double dz = UnitUtils.ConvertFromInternalUnits(bb.Max.Z - bb.Min.Z, UnitTypeId.Meters);
+                    maiorLarguraM = Math.Max(maiorLarguraM, Math.Max(dx, dy));
+                    maiorAlturaM = Math.Max(maiorAlturaM, dz);
+                }
+            }
+
+            if (maiorLarguraM <= 0) maiorLarguraM = 10.0;
+            double projM = areaTotalM2 > 0 ? Math.Round(areaTotalM2 / maiorLarguraM, 2) : 6.0;
+            if (areaTotalM2 <= 0) areaTotalM2 = maiorLarguraM * projM;
+
+            return new RevitRoofData(
+                $"{roofs.Count} Cobertura(s) do Projeto",
+                areaTotalM2,
+                Math.Round(maiorLarguraM, 2),
+                projM,
+                Math.Round(maiorAlturaM, 2));
         }
 
         public RevitRoofData? CaptureRoofFromRevit(Window ownerWindow)

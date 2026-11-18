@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:BahrHidro.UI"
         Title="Bahr Hidro - Engenharia Hidráulica e BIM"
-        Height="780" Width="1280"
+        Height="780" Width="1300"
         WindowStartupLocation="CenterScreen"
         Background="#F1F5F9"
         FontFamily="Segoe UI">
@@ -25,6 +25,26 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
+        <Style TargetType="Button" x:Key="RevitActionButton">
+            <Setter Property="Background" Value="#0284C7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="Button" x:Key="RevitApplyButton">
+            <Setter Property="Background" Value="#15803D"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
         <Style TargetType="TextBox">
             <Setter Property="Padding" Value="6,5"/>
             <Setter Property="BorderBrush" Value="#CBD5E1"/>
@@ -40,7 +60,7 @@
     </Window.Resources>
 
     <DockPanel>
-        <!-- CABEÇALHO SUPERIOR -->
+        <!-- CABEÇALHO GLOBAL SUPERIOR -->
         <Border DockPanel.Dock="Top" Background="#0F172A" Padding="20,12">
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -48,10 +68,7 @@
                     <TextBlock Text=" | Plataforma de Engenharia Hidráulica &amp; BIM" Foreground="#94A3B8" FontSize="14" VerticalAlignment="Center" Margin="6,0,0,0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <StackPanel x:Name="RevitBimToolbar" Orientation="Horizontal" Visibility="Collapsed" Margin="0,0,12,0">
-                        <Button x:Name="ImportarRevitButton" Content="Importar Rede 3D (Revit)" Background="#0284C7" Foreground="White" FontWeight="SemiBold" Padding="12,8" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
-                        <Button x:Name="AplicarRevitButton" Content="Aplicar Diâmetros no Revit" Background="#15803D" Foreground="White" FontWeight="SemiBold" Padding="12,8" BorderThickness="0" Cursor="Hand" Click="AplicarRevit_Click"/>
-                    </StackPanel>
+                    <Button Content="Início" Background="#1E293B" Foreground="White" FontWeight="SemiBold" Padding="14,8" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="BtnIrInicio_Click"/>
                     <Button Content="Catálogo de Tubos" Style="{StaticResource PrimaryButton}" Click="AbrirCatalogo_Click"/>
                 </StackPanel>
             </Grid>
@@ -65,8 +82,11 @@
                 </Border>
 
                 <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="8,10" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
+                    <TreeViewItem x:Name="NavInicio" Header="Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+
                     <TreeViewItem Header="HIDRÁULICA (NBR 5626)" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A">
-                        <TreeViewItem x:Name="NavAguaFria" Header="Água Fria (Rede BIM 3D)" Tag="AguaFria" IsSelected="True" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavAguaFria" Header="Água Fria (Rede BIM 3D)" Tag="AguaFria" FontWeight="Normal" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavBomba" Header="Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#334155"/>
                         <TreeViewItem x:Name="NavAguaQuente" Header="Água Quente (Boiler)" Tag="AguaQuente" FontWeight="Normal" Foreground="#334155"/>
                         <TreeViewItem x:Name="NavReservatorios" Header="Reservatórios" Tag="Reservatorios" FontWeight="Normal" Foreground="#334155"/>
                     </TreeViewItem>
@@ -86,498 +106,711 @@
         <!-- ÁREA PRINCIPAL DE CONTEÚDO -->
         <Border Margin="12" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6">
             <Grid>
-                <!-- 1. ÁGUA FRIA (REDE BIM 3D) -->
-                <ScrollViewer x:Name="PanelAguaFria" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="18">
-                    <StackPanel>
-                        <TextBlock Text="Rede de Água Fria — Dimensionamento Hidráulico (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,14"/>
+                <!-- 0. TELA INICIAL / VISÃO GERAL -->
+                <ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="28">
+                    <StackPanel MaxWidth="960" HorizontalAlignment="Left">
+                        <Border Background="#0F172A" CornerRadius="8" Padding="24" Margin="0,0,0,20">
+                            <Grid>
+                                <StackPanel>
+                                    <TextBlock Text="BEM-VINDO AO BAHR HIDRO" Foreground="#38BDF8" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Automação Hidrossanitária &amp; BIM para Revit 2026" Foreground="White" FontSize="22" FontWeight="Bold" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="InicioProjetoStatusText" Text="Prepare o catálogo de tubulações, importe elementos do modelo 3D e execute os dimensionamentos normativos." Foreground="#CBD5E1" FontSize="13"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
 
-                        <!-- SECÇÃO NÓS E TRECHOS -->
-                        <Grid Margin="0,0,0,16">
+                        <Grid Margin="0,0,0,20">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="16"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- PAINEL ESQUERDO: NÓS -->
-                            <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                            <!-- Card 1: Catálogo -->
+                            <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
                                 <StackPanel>
-                                    <DockPanel Margin="0,0,0,10">
-                                        <TextBlock Text="1. Nós e Reservatórios" FontSize="15" FontWeight="Bold" Foreground="#0F172A"/>
-                                        <Border x:Name="NoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="4" Padding="8,2" HorizontalAlignment="Right">
-                                            <TextBlock x:Name="NoModoEdicaoText" Text="Modo: Novo elemento" Foreground="#1D4ED8" FontSize="12" FontWeight="SemiBold"/>
-                                        </Border>
-                                    </DockPanel>
-
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="0">
-                                            <TextBlock Text="Tipo de Elemento" FontSize="12" FontWeight="SemiBold"/>
-                                            <ComboBox x:Name="NoTipoComboBox" SelectedIndex="1" SelectionChanged="NoTipoComboBox_SelectionChanged" Padding="5">
-                                                <ComboBoxItem Content="Reservatório" Tag="Reservoir"/>
-                                                <ComboBoxItem Content="Nó de Derivação" Tag="Junction"/>
-                                                <ComboBoxItem Content="Ponto de Consumo" Tag="ConsumptionPoint"/>
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="2">
-                                            <TextBlock Text="Nome / Identificação" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="NoNomeTextBox"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="0">
-                                            <TextBlock Text="Cota Geométrica (m)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="NoCotaTextBox" Text="0,00"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="2">
-                                            <TextBlock Text="Demanda Direta (L/s)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="NoDemandaTextBox" Text="0,00"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="4" Grid.Column="0">
-                                            <TextBlock Text="Peso Relativo (ΣP)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="NoPesoTextBox" Text="0,00"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <Button Content="Salvar Nó" Style="{StaticResource PrimaryButton}" Click="SalvarNo_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" Click="CancelarEdicaoNo_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Editar" Style="{StaticResource SecondaryButton}" Click="EditarNo_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Excluir" Style="{StaticResource SecondaryButton}" Click="ExcluirNo_Click"/>
-                                    </StackPanel>
-
-                                    <DataGrid x:Name="NosDataGrid" Height="160" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="NosDataGrid_MouseDoubleClick" Background="White">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="*"/>
-                                            <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="95"/>
-                                            <DataGridTextColumn Header="Cota (m)" Binding="{Binding ElevationDisplay}" Width="70"/>
-                                            <DataGridTextColumn Header="Vazão" Binding="{Binding DemandDisplay}" Width="65"/>
-                                            <DataGridTextColumn Header="Peso" Binding="{Binding WeightDisplay}" Width="60"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
-                                    <TextBlock x:Name="ResumoRedeText" Text="Total: 0 elementos" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                                    <TextBlock Text="1. CATÁLOGO DE TUBULAÇÕES" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="InicioCatalogoStatusText" Text="Verificando bitolas cadastradas..." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                                    <Button Content="Abrir Catálogo de Tubos" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="AbrirCatalogo_Click"/>
+                                    <Button Content="Carregar Padrão NBR 5648 (DN 20-110)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnCarregarPadraoInicio_Click"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- PAINEL DIREITO: TRECHOS -->
-                            <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                            <!-- Card 2: Rede BIM 3D -->
+                            <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
                                 <StackPanel>
-                                    <DockPanel Margin="0,0,0,10">
-                                        <TextBlock Text="2. Trechos de Tubulação" FontSize="15" FontWeight="Bold" Foreground="#0F172A"/>
-                                        <Border x:Name="TrechoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="4" Padding="8,2" HorizontalAlignment="Right">
-                                            <TextBlock x:Name="TrechoModoEdicaoText" Text="Modo: Novo trecho" Foreground="#1D4ED8" FontSize="12" FontWeight="SemiBold"/>
-                                        </Border>
-                                    </DockPanel>
+                                    <TextBlock Text="2. REDE HIDRÁULICA BIM 3D" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="InicioRedeStatusText" Text="Nenhuma rede carregada. Importe do modelo 3D do Revit para dimensionar." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                                    <Button x:Name="BtnImportarInicioRevit" Content="Importar Rede 3D (Revit)" Style="{StaticResource RevitActionButton}" Height="36" Visibility="Collapsed" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="ImportarRevit_Click"/>
+                                    <Button Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
+                                </StackPanel>
+                            </Border>
 
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="0">
-                                            <TextBlock Text="Nome do Trecho" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoNomeTextBox"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="2">
-                                            <TextBlock Text="Nó Montante (Início)" FontSize="12" FontWeight="SemiBold"/>
-                                            <ComboBox x:Name="TrechoNoInicialComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Padding="5"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="4">
-                                            <TextBlock Text="Nó Jusante (Fim)" FontSize="12" FontWeight="SemiBold"/>
-                                            <ComboBox x:Name="TrechoNoFinalComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Padding="5"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="0">
-                                            <TextBlock Text="Comprimento (m)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoComprimentoTextBox" Text="10,00"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="2">
-                                            <TextBlock Text="Diâmetro (mm ou Auto)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoDiametroTextBox" Text="Auto"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="4">
-                                            <TextBlock Text="Rugosidade (mm)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoRugosidadeTextBox" Text="0,001"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="4" Grid.Column="0">
-                                            <TextBlock Text="Perda Localizada (K)" FontSize="12" FontWeight="SemiBold"/>
-                                            <DockPanel>
-                                                <Button DockPanel.Dock="Right" Content="+" Width="28" Margin="4,0,0,0" Style="{StaticResource PrimaryButton}" Padding="0" Click="CalcularConexoes_Click" ToolTip="Calcular K por conexões"/>
-                                                <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0"/>
-                                            </DockPanel>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="4" Grid.Column="2">
-                                            <TextBlock Text="Vazão Manual (Opcional)" FontSize="12" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoVazaoTextBox"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                        <Button Content="Salvar Trecho" Style="{StaticResource PrimaryButton}" Click="SalvarTrecho_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Cancelar" Style="{StaticResource SecondaryButton}" Click="CancelarEdicaoTrecho_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Editar" Style="{StaticResource SecondaryButton}" Click="EditarTrecho_Click" Margin="0,0,6,0"/>
-                                        <Button Content="Excluir" Style="{StaticResource SecondaryButton}" Click="ExcluirTrecho_Click"/>
-                                    </StackPanel>
-
-                                    <DataGrid x:Name="TrechosDataGrid" Height="160" AutoGenerateColumns="False" IsReadOnly="True" MouseDoubleClick="TrechosDataGrid_MouseDoubleClick" Background="White">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="75"/>
-                                            <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
-                                            <DataGridTextColumn Header="L (m)" Binding="{Binding LengthDisplay}" Width="60"/>
-                                            <DataGridTextColumn Header="Ø (mm)" Binding="{Binding DiameterDisplay}" Width="65"/>
-                                            <DataGridTextColumn Header="K" Binding="{Binding KDisplay}" Width="50"/>
-                                            <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="65"/>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
-                                    <TextBlock x:Name="ResumoTrechosText" Text="Total: 0 trecho(s)" FontSize="12" Foreground="#64748B" Margin="0,4,0,0"/>
+                            <!-- Card 3: Leitura Automática & Steel Frame -->
+                            <Border Grid.Column="4" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                                <StackPanel>
+                                    <TextBlock Text="3. LEITURA AUTOMÁTICA &amp; LSF" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Leitura automática de aparelhos sanitários, coberturas e ambientes já integrada. Próxima etapa: traçado automático para Light Steel Framing." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                                    <Button Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrEsgoto_Click"/>
+                                    <Button Content="Abrir Memorial Executivo" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrMemorial_Click"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
-
-                        <!-- BARRA DE CÁLCULO DA REDE -->
-                        <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,16">
-                            <DockPanel>
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="Viscosidade (m²/s):" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                    <TextBox x:Name="RedeViscosidadeTextBox" Text="0,000001003" Width="120" Margin="0,0,16,0"/>
-                                    <Button Content="Calcular Rede Hidráulica" Style="{StaticResource PrimaryButton}" Click="CalcularRede_Click"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button x:Name="DimensionarBombaButton" Content="Verificar Pressurização / Bomba" Style="{StaticResource SecondaryButton}" IsEnabled="False" Click="DimensionarBomba_Click" Margin="0,0,8,0"/>
-                                    <Button x:Name="ExportarMemorialButton" Content="Exportar Memorial (.xlsx)" Style="{StaticResource SecondaryButton}" IsEnabled="False" Click="ExportarMemorial_Click"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-
-                        <!-- TABELAS DE RESULTADOS -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.3*"/>
-                                <ColumnDefinition Width="16"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Resultados Hidráulicos por Trecho" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <DataGrid x:Name="ResultadosTrechosDataGrid" Height="180" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="70"/>
-                                        <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
-                                        <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="65"/>
-                                        <DataGridTextColumn Header="Ø (mm)" Binding="{Binding DiameterDisplay}" Width="65"/>
-                                        <DataGridTextColumn Header="V (m/s)" Binding="{Binding VelocityDisplay}" Width="65"/>
-                                        <DataGridTextColumn Header="Re" Binding="{Binding ReynoldsDisplay}" Width="65"/>
-                                        <DataGridTextColumn Header="ΔH (mca)" Binding="{Binding HeadLossDisplay}" Width="75"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Pressões Disponíveis nos Nós" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <DataGrid x:Name="ResultadosNosDataGrid" Height="180" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
-                                    <DataGrid.Columns>
-                                        <DataGridTextColumn Header="Nó" Binding="{Binding Name}" Width="*"/>
-                                        <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="85"/>
-                                        <DataGridTextColumn Header="Cota" Binding="{Binding ElevationDisplay}" Width="60"/>
-                                        <DataGridTextColumn Header="C. Piez." Binding="{Binding HeadDisplay}" Width="65"/>
-                                        <DataGridTextColumn Header="Pressão (mca)" Binding="{Binding PressureDisplay}" Width="90"/>
-                                    </DataGrid.Columns>
-                                </DataGrid>
-                            </StackPanel>
-                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- 2. ÁGUA QUENTE (BOILER) -->
-                <ScrollViewer x:Name="PanelAguaQuente" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="24">
-                    <StackPanel MaxWidth="680" HorizontalAlignment="Left">
-                        <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
-
-                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="Perfil da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="BoilerPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6"/>
-
-                                <Grid Margin="0,0,0,16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <DockPanel Margin="0,0,0,4"><Button x:Name="BtnPopBoilerRevit" DockPanel.Dock="Right" Content="Ler Revit" Background="#0284C7" Foreground="White" FontSize="11" FontWeight="SemiBold" Padding="8,2" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="EstimarPopulacaoRevit_Click"/><TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
-                                        <TextBox x:Name="BoilerOcupantesTextBox" Text="4"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Pressão de Trabalho (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="BoilerPressaoTextBox" Text="4,0"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Button Content="Dimensionar Boiler" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularBoiler_Click"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="230"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="28"/>
-                                    <RowDefinition Height="28"/>
-                                    <RowDefinition Height="32"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Estimado:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BoilerConsumoText" Text="--"/>
-
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume de Acumulação:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
-
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Classificação de Pressão:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BoilerTipoText" Text="--" FontWeight="Bold" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- 3. RESERVATÓRIOS -->
-                <ScrollViewer x:Name="PanelReservatorios" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="24">
-                    <StackPanel MaxWidth="680" HorizontalAlignment="Left">
-                        <TextBlock Text="Dimensionamento de Reservatórios (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,15"/>
-
-                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="Categoria da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                <ComboBox x:Name="CaixaPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6"/>
-
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <DockPanel Margin="0,0,0,4"><Button x:Name="BtnPopCaixaRevit" DockPanel.Dock="Right" Content="Ler Revit" Background="#0284C7" Foreground="White" FontSize="11" FontWeight="SemiBold" Padding="8,2" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="EstimarPopulacaoRevit_Click"/><TextBlock Text="População Estimada (pessoas)" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
-                                        <TextBox x:Name="CaixaPopulacaoTextBox" Text="5"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Autonomia / Reserva (dias)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="CaixaDiasTextBox" Text="2"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Grid Margin="0,0,0,16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Reserva Técnica de Incêndio (L)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="CaixaIncendioTextBox" Text="0"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Percentual Cisterna Inferior (%)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="CaixaCisternaTextBox" Text="60"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Button Content="Calcular Reservação" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularCaixa_Click"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="230"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="28"/>
-                                    <RowDefinition Height="28"/>
-                                    <RowDefinition Height="28"/>
-                                    <RowDefinition Height="28"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Total:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CaixaConsumoText" Text="--"/>
-
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume Total Necessário:" FontWeight="Bold"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CaixaVolumeTotalText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
-
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Reservatório Superior:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="CaixaSuperiorText" Text="--"/>
-
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Reservatório Inferior (Cisterna):" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="CaixaCisternaText" Text="--"/>
-                            </Grid>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- 4. ESGOTO SANITÁRIO -->
-                <Grid x:Name="PanelEsgoto" Visibility="Collapsed" Margin="20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.2*"/>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16">
+                <!-- 1. ÁGUA FRIA (REDE BIM 3D - SOMENTE LEITURA AUTOMÁTICA) -->
+                <DockPanel x:Name="PanelAguaFria" Visibility="Collapsed">
+                    <!-- Cabeçalho Padronizado do Módulo -->
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
-                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12"><Button x:Name="BtnImportarEsgotoRevit" DockPanel.Dock="Right" Content="Importar Aparelhos do Revit 3D" Background="#0284C7" Foreground="White" FontWeight="SemiBold" FontSize="12" Padding="10,5" BorderThickness="0" Cursor="Hand" Visibility="Collapsed" Click="ImportarEsgotoRevit_Click"/><TextBlock Text="Aparelhos Sanitários (UHC — NBR 8160)" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/></DockPanel>
-                            <Button DockPanel.Dock="Bottom" Content="Dimensionar Ramal de Esgoto" Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" Click="CalcularEsgoto_Click"/>
-                            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                <ItemsControl x:Name="SewerItemsControl">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,0,0,6">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="80"/>
-                                                        <ColumnDefinition Width="70"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding UhcDisplay}" VerticalAlignment="Center" Foreground="#64748B"/>
-                                                    <TextBox Grid.Column="2" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Center"/>
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
+                            <StackPanel x:Name="HeaderActionsAguaFria" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Importar Rede 3D (Revit)" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
+                                <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Click="AplicarRevit_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Rede de Água Fria — Dimensionamento Hidráulico (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Leitura topológica automática do modelo 3D, cálculo de vazões pelos pesos relativos e dimensionamento comercial." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
                         </DockPanel>
                     </Border>
 
-                    <Border Grid.Column="2" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="20" VerticalAlignment="Top">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
                         <StackPanel>
-                            <TextBlock Text="Resultado do Dimensionamento" FontSize="16" FontWeight="Bold" Margin="0,0,0,16"/>
-                            <Grid>
+                            <!-- TABELAS DE LEITURA DO MODELO 3D -->
+                            <Grid Margin="0,0,0,16">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="180"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="16"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="32"/>
-                                    <RowDefinition Height="30"/>
-                                </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Somatório de UHC:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="EsgotoUhcText" Text="--" FontWeight="Bold"/>
+                                <!-- PAINEL ESQUERDO: NÓS E RESERVATÓRIOS -->
+                                <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock x:Name="ResumoRedeText" DockPanel.Dock="Right" Text="0 elementos" FontSize="12" FontWeight="SemiBold" Foreground="#1D4ED8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="1. Nós e Reservatórios Lidos do Modelo 3D" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                                        </DockPanel>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Tipo de Tubulação:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EsgotoTipoText" Text="--"/>
+                                        <DataGrid x:Name="NosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Identificação" Binding="{Binding Name}" Width="*"/>
+                                                <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="100"/>
+                                                <DataGridTextColumn Header="Cota (m)" Binding="{Binding ElevationDisplay}" Width="75"/>
+                                                <DataGridTextColumn Header="Vazão (L/s)" Binding="{Binding DemandDisplay}" Width="80"/>
+                                                <DataGridTextColumn Header="Peso (ΣP)" Binding="{Binding WeightDisplay}" Width="75"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                </Border>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Diâmetro Nominal:" FontWeight="Bold"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="EsgotoDiametroText" Text="--" FontSize="16" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                <!-- PAINEL DIREITO: TRECHOS DE TUBULAÇÃO -->
+                                <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,8">
+                                            <TextBlock x:Name="ResumoTrechosText" DockPanel.Dock="Right" Text="0 trecho(s)" FontSize="12" FontWeight="SemiBold" Foreground="#1D4ED8" VerticalAlignment="Center"/>
+                                            <TextBlock Text="2. Trechos de Tubulação Lidos do Modelo 3D" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                                        </DockPanel>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Declividade Mínima:" FontWeight="SemiBold"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EsgotoInclinacaoText" Text="--"/>
+                                        <DataGrid x:Name="TrechosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="85"/>
+                                                <DataGridTextColumn Header="Ligação (Montante → Jusante)" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                                <DataGridTextColumn Header="Comp. (m)" Binding="{Binding LengthDisplay}" Width="75"/>
+                                                <DataGridTextColumn Header="Ø (mm)" Binding="{Binding DiameterDisplay}" Width="65"/>
+                                                <DataGridTextColumn Header="K" Binding="{Binding KDisplay}" Width="55"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <!-- BARRA DE CÁLCULO HIDRÁULICO -->
+                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,16">
+                                <DockPanel>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Viscosidade Cinemática (m²/s):" FontWeight="SemiBold" Foreground="#1E3A8A" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBox x:Name="RedeViscosidadeTextBox" Width="130" Text="0,000001003" Margin="0,0,16,0"/>
+                                        <Button Content="Calcular Rede Hidráulica" Style="{StaticResource PrimaryButton}" Click="CalcularRede_Click"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="StatusCalculoAguaFriaText" DockPanel.Dock="Right" Text="Importe a rede 3D do Revit e clique em Calcular." Foreground="#1E40AF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- RESULTADOS HIDRÁULICOS -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.15*"/>
+                                    <ColumnDefinition Width="16"/>
+                                    <ColumnDefinition Width="0.85*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Resultados Hidráulicos por Trecho" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                                    <DataGrid x:Name="ResultadosTrechosDataGrid" Height="220" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="80"/>
+                                            <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                            <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="65"/>
+                                            <DataGridTextColumn Header="Ø Int (mm)" Binding="{Binding DiameterDisplay}" Width="75"/>
+                                            <DataGridTextColumn Header="V (m/s)" Binding="{Binding VelocityDisplay}" Width="65"/>
+                                            <DataGridTextColumn Header="Re" Binding="{Binding ReynoldsDisplay}" Width="65"/>
+                                            <DataGridTextColumn Header="ΔH (mca)" Binding="{Binding HeadLossDisplay}" Width="75"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Pressões Disponíveis nos Nós" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                                    <DataGrid x:Name="ResultadosNosDataGrid" Height="220" AutoGenerateColumns="False" IsReadOnly="True" Background="White">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Nó" Binding="{Binding Name}" Width="*"/>
+                                            <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="85"/>
+                                            <DataGridTextColumn Header="Cota (m)" Binding="{Binding ElevationDisplay}" Width="65"/>
+                                            <DataGridTextColumn Header="C. Piez." Binding="{Binding HeadDisplay}" Width="70"/>
+                                            <DataGridTextColumn Header="Pressão (mca)" Binding="{Binding PressureDisplay}" Width="90"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
                             </Grid>
                         </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- 1B. PRESSURIZAÇÃO / BOMBA (ABA DEDICADA) -->
+                <DockPanel x:Name="PanelBomba" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Pressurização &amp; Dimensionamento de Bomba (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Verificação automática de pressão dinâmica mínima nos pontos de consumo e dimensionamento do conjunto motobomba." FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
                     </Border>
-                </Grid>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1040" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="1.15*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Parâmetros & Resultado Direto -->
+                            <StackPanel Grid.Column="0">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="Parâmetros de Verificação" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+
+                                        <Grid Margin="0,0,0,14">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Pressão Mínima Exigida (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="BombaPressaoMinimaTextBox" Text="1,00"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Rendimento do Conjunto (%)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="BombaRendimentoTextBox" Text="60"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Button Content="Verificar Pressurização da Rede" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="RecalcularBomba_Click"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border x:Name="BombaStatusCard" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                                    <StackPanel>
+                                        <TextBlock Text="Diagnóstico e Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10"/>
+                                        <TextBlock x:Name="BombaDiagnosticoText" Text="Calcule a rede de Água Fria para verificar automaticamente a necessidade de pressurização." FontWeight="Bold" FontSize="13" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="210"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="28"/>
+                                                <RowDefinition Height="28"/>
+                                                <RowDefinition Height="28"/>
+                                                <RowDefinition Height="28"/>
+                                                <RowDefinition Height="28"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Ponto Crítico Identificado:" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BombaNoCriticoText" Text="--"/>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Pressão Atual no Ponto:" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BombaPressaoAtualText" Text="--"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Vazão de Projeto (Q):" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BombaVazaoText" Text="--"/>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Altura Manométrica (AMT):" FontWeight="Bold"/>
+                                            <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Potência Comercial Estimada:" FontWeight="Bold"/>
+                                            <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Sugestões Comerciais e Peças Obrigatórias -->
+                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
+                                    <TextBlock x:Name="BombaSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
+                                               Text="• Equipamento Recomendado: Pressurizador silencioso com inversor de frequência ou fluxostato automático (ex.: Grundfos Scala2 / CMB, Komeco TP40/TP80, Rowa Tango/Press).&#x0a;&#x0a;• Peças Obrigatórias no Barrilete (NBR 5626):&#x0a;  1. Válvula de retenção horizontal/vertical na sucção e no recalque;&#x0a;  2. Registros de esfera/gaveta antes e depois da bomba para manutenção;&#x0a;  3. By-pass com válvula de retenção para abastecimento por gravidade em falta de energia;&#x0a;  4. Manômetro com registro na saída do recalque;&#x0a;  5. Uniões e juntas flexíveis antivibração (essencial em estruturas Light Steel Framing)."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- 2. ÁGUA QUENTE (BOILER) -->
+                <DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <StackPanel x:Name="HeaderActionsAguaQuente" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Ler Ocupantes do Revit" Style="{StaticResource RevitActionButton}" Click="EstimarPopulacaoRevit_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Cálculo de acumulação de água quente (NBR 7198 / NBR 5626), classificação de pressão e especificação de componentes." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1060" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="1.15*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="Perfil da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="BoilerPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6"/>
+
+                                        <Grid Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="BoilerOcupantesTextBox" Text="5"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Pressão de Trabalho (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="BoilerPressaoTextBox" Text="4,0"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Button Content="Dimensionar Boiler" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularBoiler_Click"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="32"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Estimado:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BoilerConsumoText" Text="--"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume de Acumulação:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Modelo Comercial Sugerido:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BoilerComercialText" Text="--" FontWeight="Bold" Foreground="#0F172A"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Classificação de Pressão:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BoilerTipoText" Text="--" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Sugestões Comerciais e Peças Obrigatórias (Boiler) -->
+                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS (ÁGUA QUENTE)" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
+                                    <TextBlock x:Name="BoilerSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
+                                               Text="• Marcas e Linhas de Referência: Komeco (KSS / Inox), Bosch / Heliotek (MK / HP), Soletrol ou Cumulus (tanque interno em Aço Inox 304 ou 316L).&#x0a;&#x0a;• Tubulação Recomendada: PPR PN 20 / PN 25 (termofusão) ou CPVC Aquatherm (soldável), com isolamento térmico nos trechos embutidos em Steel Frame.&#x0a;&#x0a;• Peças Obrigatórias no Projeto (NBR 7198):&#x0a;  1. Válvula de segurança e alívio (pressão/temperatura) na saída de água quente;&#x0a;  2. Tubo de respiro (suspiro) acima do nível máximo da caixa d'água fria (para baixa pressão) ou válvula eliminadora de ar (alta pressão);&#x0a;  3. Válvula de retenção na entrada de alimentação de água fria;&#x0a;  4. Registros de esfera/gaveta na entrada, saída e dreno de limpeza."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- 3. RESERVATÓRIOS -->
+                <DockPanel x:Name="PanelReservatorios" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <StackPanel x:Name="HeaderActionsReservatorios" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Ler População do Revit" Style="{StaticResource RevitActionButton}" Click="EstimarPopulacaoRevit_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Dimensionamento de Reservatórios (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Reservação superior e inferior (cisterna), capacidades comerciais recomendadas e acessórios obrigatórios de barrilete." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1060" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="1.15*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="Categoria da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="CaixaPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6"/>
+
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="População Estimada (pessoas)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="CaixaPopulacaoTextBox" Text="5"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Autonomia / Reserva (dias)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="CaixaDiasTextBox" Text="2"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Grid Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Reserva Técnica de Incêndio (L)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="CaixaIncendioTextBox" Text="0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Percentual Cisterna Inferior (%)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="CaixaCisternaTextBox" Text="60"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Button Content="Calcular Reservação" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularCaixa_Click"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="220"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Total:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CaixaConsumoText" Text="--"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume Total Necessário:" FontWeight="Bold"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CaixaVolumeTotalText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Reservatório Superior:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="CaixaSuperiorText" Text="--"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Reservatório Inferior (Cisterna):" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="CaixaCisternaText" Text="--"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Sugestões Comerciais e Peças Obrigatórias (Reservatórios) -->
+                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS (RESERVAÇÃO)" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
+                                    <TextBlock x:Name="CaixaSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
+                                               Text="• Modelos Comerciais Recomendados: Caixas d'água em Polietileno com tampa de rosca (Tigre / Fortlev / Acqualimp) ou Aço Inox 304 para reservatório superior; cisterna enterrada em Polietileno reforçado ou fibra.&#x0a;&#x0a;• Peças Obrigatórias no Projeto (ABNT NBR 5626):&#x0a;  1. Torneira de boia de vazão total na tubulação de alimentação;&#x0a;  2. Tubo extravasor (ladrão) com diâmetro 1 bitola acima da alimentação e descarga livre visível;&#x0a;  3. Tubulação de limpeza no fundo com registro de bloqueio;&#x0a;  4. Tubo de ventilação (suspiro) após o registro geral do barrilete;&#x0a;  5. Chave de boia elétrica (nível superior/inferior) para controle automático da bomba de recalque."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- 4. ESGOTO SANITÁRIO -->
+                <DockPanel x:Name="PanelEsgoto" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <StackPanel x:Name="HeaderActionsEsgoto" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Ler Todos do Projeto" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarEsgotoAutoRevit_Click"/>
+                                <Button Content="Selecionar no 3D" Style="{StaticResource RevitApplyButton}" Click="ImportarEsgotoRevit_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Esgoto Sanitário — Dimensionamento por UHC (NBR 8160)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Contagem automática ou por seleção 3D dos aparelhos sanitários, diâmetro mínimo e peças obrigatórias." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <Grid Margin="24,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.15*"/>
+                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Top" Text="Aparelhos Sanitários (UHC — NBR 8160)" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+                                <Button DockPanel.Dock="Bottom" Content="Dimensionar Ramal de Esgoto" Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" Click="CalcularEsgoto_Click"/>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl x:Name="SewerItemsControl">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,0,0,6">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="80"/>
+                                                            <ColumnDefinition Width="70"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                        <TextBlock Grid.Column="1" Text="{Binding UhcDisplay}" VerticalAlignment="Center" Foreground="#64748B"/>
+                                                        <TextBox Grid.Column="2" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Center"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+
+                        <StackPanel Grid.Column="2">
+                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="Resultado do Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,14"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="180"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="32"/>
+                                            <RowDefinition Height="28"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Somatório de UHC:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="EsgotoUhcText" Text="--" FontWeight="Bold"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tipo de Tubulação:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EsgotoTipoText" Text="--"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Diâmetro Nominal:" FontWeight="Bold"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="EsgotoDiametroText" Text="--" FontSize="16" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Declividade Mínima:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EsgotoInclinacaoText" Text="--"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Sugestões Comerciais e Peças Obrigatórias (Esgoto) -->
+                            <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="SUGESTÕES TÉCNICAS &amp; PEÇAS OBRIGATÓRIAS (NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,8"/>
+                                    <TextBlock x:Name="EsgotoSugestoesText" TextWrapping="Wrap" FontSize="12" Foreground="#14532D" LineHeight="19"
+                                               Text="• Linha Recomendada: Tubos e conexões PVC Esgoto Série Normal (ramais internos) e Série Reforçada (tubos de queda e subcoletores enterrados — Tigre / Amanco).&#x0a;• Peças Obrigatórias:&#x0a;  1. Caixa Sifonada (DN 100×100×50 ou DN 150×150×50) com grelha para lavatórios, chuveiros e ralos;&#x0a;  2. Caixa de Gordura individual/coletiva antes da rede principal (obrigatória para pia de cozinha);&#x0a;  3. Ramal e Coluna de Ventilação (DN 50 / DN 75) com terminal 30 cm acima da cobertura;&#x0a;  4. Caixas de Inspeção (CI 60×60 cm) nas mudanças de direção e a cada 15 m."/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </DockPanel>
 
                 <!-- 5. ÁGUAS PLUVIAIS -->
-                <Grid x:Name="PanelPluvial" Visibility="Collapsed">
+                <DockPanel x:Name="PanelPluvial" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <StackPanel x:Name="HeaderActionsPluvial" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Ler Telhados do Projeto" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarPluvialAutoRevit_Click"/>
+                                <Button Content="Capturar Telhado no 3D" Style="{StaticResource RevitApplyButton}" Click="ImportarPluvialRevit_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Águas Pluviais — Calhas e Condutores (NBR 10844)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Leitura automática de coberturas no Revit 3D, cálculo de vazão de projeto, calhas e condutores verticais." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
                     <local:RainwaterView x:Name="RainwaterViewControl" />
-                </Grid>
+                </DockPanel>
 
-                <!-- 6. MEMORIAL DE CÁLCULO & PROJETO -->
-                <ScrollViewer x:Name="PanelMemorial" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="24">
-                    <StackPanel MaxWidth="720" HorizontalAlignment="Left">
-                        <TextBlock Text="Memorial de Cálculo &amp; Dados do Projeto BIM" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
-                        <TextBlock Text="Identificação da obra e geração do memorial descritivo em planilha Excel (.xlsx)." Foreground="#64748B" Margin="0,0,0,16"/>
+                <!-- 6. MEMORIAL DE CÁLCULO & PROJETO (DASHBOARD EXECUTIVO) -->
+                <DockPanel x:Name="PanelMemorial" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Memorial de Cálculo &amp; Dados do Projeto BIM" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Cadastro técnico do empreendimento, consolidação dos resultados normativos e exportação do memorial (.xlsx)." FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </Border>
 
-                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="Identificação da Obra / Empreendimento" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                <TextBox x:Name="MemObraTextBox" Margin="0,0,0,12"/>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1120" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="0.95*"/>
+                            </Grid.ColumnDefinitions>
 
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Proprietário / Cliente" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="MemClienteTextBox"/>
+                            <!-- Coluna Esquerda: Identificação Completa -->
+                            <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="1. Identificação do Empreendimento e Responsabilidade Técnica" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+
+                                    <TextBlock Text="Identificação da Obra / Empreendimento" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                    <TextBox x:Name="MemObraTextBox" Margin="0,0,0,10"/>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Proprietário / Cliente" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemClienteTextBox"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Endereço da Obra" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemEnderecoTextBox"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.4*"/>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Responsável Técnico (Engenheiro)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemEngenheiroTextBox"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Registro CREA / CAU" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemCreaTextBox"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="0.7*"/>
+                                            <ColumnDefinition Width="14"/>
+                                            <ColumnDefinition Width="1.3*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="Nº ART / RRT" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemArtTextBox" Text=""/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2">
+                                            <TextBlock Text="Revisão" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemRevisaoTextBox" Text="R00"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="4">
+                                            <TextBlock Text="Normas Aplicadas" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                            <TextBox x:Name="MemNormasTextBox" Text="NBR 5626 / 8160 / 10844" IsReadOnly="True" Background="#F1F5F9"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Projeto Revit" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" Margin="0,0,10,0" Click="SalvarDadosRevit_Click"/>
+                                        <Button x:Name="ExportarMemorialAbaButton" Content="Exportar Memorial de Cálculo (.xlsx)" Style="{StaticResource PrimaryButton}" Click="ExportarMemorialAba_Click"/>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Endereço da Obra" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="MemEnderecoTextBox"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Grid Margin="0,0,0,16">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.5*"/>
-                                        <ColumnDefinition Width="16"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="Responsável Técnico (Engenheiro)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="MemEngenheiroTextBox"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <TextBlock Text="Registro CREA / CAU" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <TextBox x:Name="MemCreaTextBox"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <StackPanel Orientation="Horizontal">
-                                    <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Projeto Revit" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" Margin="0,0,10,0" Click="SalvarDadosRevit_Click"/>
-                                    <Button x:Name="ExportarMemorialAbaButton" Content="Exportar Memorial de Cálculo (.xlsx)" Style="{StaticResource PrimaryButton}" Click="ExportarMemorialAba_Click"/>
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
+                            </Border>
 
-                        <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="14">
-                            <StackPanel>
-                                <TextBlock Text="Status do Dimensionamento para Exportação" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
-                                <TextBlock x:Name="MemStatusRedeText" Text="Pendente: importe ou calcule a rede na aba 'Água Fria (Rede BIM 3D)' antes de exportar o memorial." Foreground="#1D4ED8"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            <!-- Coluna Direita: Resumo Executivo Consolidado -->
+                            <Border Grid.Column="2" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="2. Resumo Consolidado dos Dimensionamentos" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+
+                                    <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="ÁGUA FRIA (NBR 5626)" FontSize="11" FontWeight="Bold" Foreground="#1E3A8A"/>
+                                            <TextBlock x:Name="MemStatusRedeText" Text="Pendente: importe e calcule a rede na aba Água Fria." FontSize="12" Foreground="#1D4ED8" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="PRESSURIZAÇÃO / BOMBA" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                                            <TextBlock x:Name="MemStatusBombaText" Text="Aguardando cálculo da rede de Água Fria." FontSize="12" Foreground="#334155" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="ÁGUA QUENTE (BOILER)" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                                            <TextBlock x:Name="MemStatusBoilerText" Text="Não dimensionado." FontSize="12" Foreground="#334155" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="RESERVATÓRIOS (NBR 5626)" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                                            <TextBlock x:Name="MemStatusCaixaText" Text="Não dimensionado." FontSize="12" Foreground="#334155" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                                        <StackPanel>
+                                            <TextBlock Text="ESGOTO SANITÁRIO (NBR 8160)" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                                            <TextBlock x:Name="MemStatusEsgotoText" Text="Não dimensionado." FontSize="12" Foreground="#334155" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10">
+                                        <StackPanel>
+                                            <TextBlock Text="ÁGUAS PLUVIAIS (NBR 10844)" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                                            <TextBlock x:Name="MemStatusPluvialText" Text="Não dimensionado." FontSize="12" Foreground="#334155" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
             </Grid>
         </Border>
     </DockPanel>

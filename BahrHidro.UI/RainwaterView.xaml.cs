@@ -11,8 +11,7 @@ namespace BahrHidro.UI
     public partial class RainwaterView : UserControl
     {
         public static RainwaterResult? UltimoResultado { get; private set; }
-        private IRevitBimBridge? _revitBridge;
-        private Window? _ownerWindow;
+        public event Action? CalculoAtualizado;
 
         public RainwaterView()
         {
@@ -20,40 +19,18 @@ namespace BahrHidro.UI
             var regioes = RainwaterRegionCatalog.GetRegions();
             CmbRegiao.ItemsSource = regioes;
 
-            // Seleciona Ponta Grossa - PR por defeito (ou o primeiro item)
             var padrao = regioes.FirstOrDefault(r => r.City == "Ponta Grossa") ?? regioes.First();
             CmbRegiao.SelectedItem = padrao;
             AtualizarIntensidadePelaSelecao();
         }
 
-        public void SetRevitBridge(IRevitBimBridge bridge, Window ownerWindow)
+        public void AplicarDadosTelhadoRevit(RevitRoofData roof)
         {
-            _revitBridge = bridge;
-            _ownerWindow = ownerWindow;
-            if (BtnCapturarTelhadoRevit != null)
-                BtnCapturarTelhadoRevit.Visibility = Visibility.Visible;
-        }
-
-        private void BtnCapturarTelhadoRevit_Click(object sender, RoutedEventArgs e)
-        {
-            if (_revitBridge == null || _ownerWindow == null) return;
-            try
-            {
-                var roof = _revitBridge.CaptureRoofFromRevit(_ownerWindow);
-                if (roof == null) return;
-
-                var pt = CultureInfo.GetCultureInfo("pt-BR");
-                TxtLarguraTelhado.Text = roof.WidthMeters.ToString("F2", pt);
-                TxtProjecaoTelhado.Text = roof.ProjectionMeters.ToString("F2", pt);
-                TxtAlturaTelhado.Text = roof.HeightMeters.ToString("F2", pt);
-
-                BtnCalcularPluvial_Click(sender, e);
-                MessageBox.Show($"Telhado '{roof.RoofName}' capturado com sucesso!\nÁrea real medida: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao capturar telhado no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
+            var pt = CultureInfo.GetCultureInfo("pt-BR");
+            TxtLarguraTelhado.Text = roof.WidthMeters.ToString("F2", pt);
+            TxtProjecaoTelhado.Text = roof.ProjectionMeters.ToString("F2", pt);
+            TxtAlturaTelhado.Text = roof.HeightMeters.ToString("F2", pt);
+            ExecutarCalculo();
         }
 
         private void CmbRegiao_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -90,7 +67,9 @@ namespace BahrHidro.UI
             PainelCalhaManual.Visibility = ChkCalhaManual.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void BtnCalcularPluvial_Click(object sender, RoutedEventArgs e)
+        private void BtnCalcularPluvial_Click(object sender, RoutedEventArgs e) => ExecutarCalculo();
+
+        public void ExecutarCalculo()
         {
             try
             {
@@ -150,6 +129,13 @@ namespace BahrHidro.UI
                 LblResCondutor.Text = $"Diâmetro Nominal: {res.DownspoutCount}× Tubo PVC DN {res.RequiredDownspoutDiameterMm} mm";
                 LblResVazaoCondutor.Text = $"Vazão por descida: {res.FlowPerDownspoutLitersPerMinute.ToString("F2", pt)} L/min";
                 LblResCapCondutor.Text = $"Capacidade por tubo: {res.DownspoutMaxCapacityLitersPerMinute.ToString("F2", pt)} L/min";
+
+                LblSugestaoPluvial.Text =
+                    $"• Calha Recomendada: {res.SelectedGutterDescription} em chapa galvanizada nº 24, alumínio ou PVC pluvial (Tigre Aquapluv / Amanco), com suportes a cada 1,0 m.\n" +
+                    $"• Condutores Verticais: {res.DownspoutCount}× Tubo PVC Série Reforçada DN {res.RequiredDownspoutDiameterMm} mm com abraçadeiras metálicas.\n" +
+                    $"• Peças Obrigatórias (NBR 10844): {res.DownspoutCount}× Ralo hemisférico (abacaxi) nas saídas de calha, {res.DownspoutCount}× Caixa de areia (60×60 cm) no pé das descidas, extravasor de segurança e curvas de 45° (raio longo).";
+
+                CalculoAtualizado?.Invoke();
             }
             catch (Exception ex)
             {

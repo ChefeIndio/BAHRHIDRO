@@ -24,7 +24,9 @@ namespace BahrHidro.UI
         int ApplyDiametersToRevit(NetworkCalculationResult result);
         (string ProjectName, string ClientName, string Address, string Author) GetProjectInfo();
         void SaveProjectInfo(string projectName, string clientName, string address, string author);
+        Dictionary<string, int> ImportAllSewerFixturesFromRevit();
         Dictionary<string, int> ImportSewerFixturesFromRevit(Window ownerWindow);
+        RevitRoofData? CaptureAllRoofsFromRevit();
         RevitRoofData? CaptureRoofFromRevit(Window ownerWindow);
         RevitPopulationEstimate EstimateBuildingPopulation();
     }
