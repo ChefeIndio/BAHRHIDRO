@@ -14,25 +14,14 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Background="#172554"
-                CornerRadius="12"
-                Padding="22">
+        <Border Background="#172554" CornerRadius="12" Padding="22">
             <StackPanel>
-                <TextBlock Text="BAHR HIDRO"
-                           Foreground="White"
-                           FontSize="30"
-                           FontWeight="Bold"/>
-                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO | ÁGUA FRIA"
-                           Foreground="#BFDBFE"
-                           FontSize="13"/>
+                <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="30" FontWeight="Bold"/>
+                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO | ÁGUA FRIA E QUENTE" Foreground="#BFDBFE" FontSize="13"/>
             </StackPanel>
         </Border>
 
-        <TabControl Grid.Row="1"
-                    Margin="0,18,0,12"
-                    Background="#F1F5F9"
-                    BorderThickness="0"
-                    FontSize="13">
+        <TabControl Grid.Row="1" Margin="0,18,0,12" Background="#F1F5F9" BorderThickness="0" FontSize="13">
 
             <!-- ABA 1: DIMENSIONAMENTO -->
             <TabItem Header="DIMENSIONAMENTO">
@@ -43,120 +32,31 @@
                         <ColumnDefinition Width="1.1*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
-                            Background="White"
-                            CornerRadius="12"
-                            Padding="24">
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
                         <StackPanel>
-                            <TextBlock Text="PARÂMETROS DO TRECHO"
-                                       FontSize="18"
-                                       FontWeight="Bold"
-                                       Foreground="#172554"/>
-
-                            <TextBlock Text="Vazão de projeto (L/s)"
-                                       Margin="0,28,0,7"
-                                       FontWeight="SemiBold"/>
-
-                            <TextBox x:Name="VazaoTextBox"
-                                     Text="0,30"
-                                     FontSize="20"
-                                     Padding="10"/>
-
-                            <TextBlock Text="Velocidade limite (m/s)"
-                                       Margin="0,22,0,7"
-                                       FontWeight="SemiBold"/>
-
-                            <TextBox x:Name="VelocidadeTextBox"
-                                     Text="2,00"
-                                     FontSize="20"
-                                     Padding="10"/>
-
-                            <Button Content="DIMENSIONAR"
-                                    Click="Calcular_Click"
-                                    Height="48"
-                                    Margin="0,28,0,0"
-                                    Background="#2563EB"
-                                    Foreground="White"
-                                    FontWeight="Bold"
-                                    BorderThickness="0"
-                                    Cursor="Hand"/>
-
-                            <Button x:Name="AbrirCatalogoButton"
-                                    Content="CATÁLOGO DE TUBULAÇÕES"
-                                    Click="AbrirCatalogo_Click"
-                                    Height="44"
-                                    Margin="0,12,0,0"
-                                    Background="#172554"
-                                    Foreground="White"
-                                    FontWeight="Bold"
-                                    BorderThickness="0"
-                                    Cursor="Hand"/>
-
-                            <TextBlock Text="Seleção baseada nos produtos cadastrados no catálogo."
-                                       Foreground="#64748B"
-                                       TextWrapping="Wrap"
-                                       Margin="0,20,0,0"
-                                       FontSize="11"/>
+                            <TextBlock Text="PARÂMETROS DO TRECHO" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            <TextBlock Text="Vazão de projeto (L/s)" Margin="0,28,0,7" FontWeight="SemiBold"/>
+                            <TextBox x:Name="VazaoTextBox" Text="0,30" FontSize="20" Padding="10"/>
+                            <TextBlock Text="Velocidade limite (m/s)" Margin="0,22,0,7" FontWeight="SemiBold"/>
+                            <TextBox x:Name="VelocidadeTextBox" Text="2,00" FontSize="20" Padding="10"/>
+                            <Button Content="DIMENSIONAR" Click="Calcular_Click" Height="48" Margin="0,28,0,0" Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                            <Button x:Name="AbrirCatalogoButton" Content="CATÁLOGO DE TUBULAÇÕES" Click="AbrirCatalogo_Click" Height="44" Margin="0,12,0,0" Background="#172554" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="2"
-                            Background="White"
-                            CornerRadius="12"
-                            Padding="24">
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
                         <StackPanel>
-                            <TextBlock Text="RESULTADO DO DIMENSIONAMENTO"
-                                       FontSize="18"
-                                       FontWeight="Bold"
-                                       Foreground="#172554"/>
-
-                            <TextBlock Text="Diâmetro interno mínimo"
-                                       Foreground="#64748B"
-                                       Margin="0,22,0,3"/>
-
-                            <TextBlock x:Name="DiametroMinimoText"
-                                       Text="--"
-                                       FontSize="25"
-                                       FontWeight="Bold"
-                                       Foreground="#2563EB"/>
-
+                            <TextBlock Text="RESULTADO DO DIMENSIONAMENTO" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            <TextBlock Text="Diâmetro interno mínimo" Foreground="#64748B" Margin="0,22,0,3"/>
+                            <TextBlock x:Name="DiametroMinimoText" Text="--" FontSize="25" FontWeight="Bold" Foreground="#2563EB"/>
                             <Separator Margin="0,14"/>
-
-                            <TextBlock Text="Diâmetro selecionado"
-                                       Foreground="#64748B"/>
-
-                            <TextBlock x:Name="DiametroSelecionadoText"
-                                       Text="--"
-                                       FontSize="30"
-                                       FontWeight="Bold"
-                                       Foreground="#059669"
-                                       Margin="0,3,0,0"/>
-
-                            <TextBlock x:Name="DescricaoTuboText"
-                                       Text="Aguardando cálculo"
-                                       Foreground="#64748B"
-                                       FontSize="12"
-                                       TextWrapping="Wrap"/>
-
+                            <TextBlock Text="Diâmetro selecionado" Foreground="#64748B"/>
+                            <TextBlock x:Name="DiametroSelecionadoText" Text="--" FontSize="30" FontWeight="Bold" Foreground="#059669" Margin="0,3,0,0"/>
+                            <TextBlock x:Name="DescricaoTuboText" Text="Aguardando cálculo" Foreground="#64748B" FontSize="12" TextWrapping="Wrap"/>
                             <Separator Margin="0,14"/>
-
-                            <TextBlock Text="Velocidade real"
-                                       Foreground="#64748B"/>
-
-                            <TextBlock x:Name="VelocidadeRealText"
-                                       Text="--"
-                                       FontSize="24"
-                                       FontWeight="Bold"
-                                       Margin="0,3,0,0"/>
-
-                            <TextBlock Text="Verificação do limite"
-                                       Foreground="#64748B"
-                                       Margin="0,14,0,4"/>
-
-                            <TextBlock x:Name="StatusText"
-                                       Text="Aguardando dimensionamento"
-                                       FontWeight="Bold"
-                                       TextWrapping="Wrap"/>
+                            <TextBlock Text="Velocidade real" Foreground="#64748B"/>
+                            <TextBlock x:Name="VelocidadeRealText" Text="--" FontSize="24" FontWeight="Bold" Margin="0,3,0,0"/>
+                            <TextBlock x:Name="StatusText" Text="Aguardando dimensionamento" FontWeight="Bold" TextWrapping="Wrap" Margin="0,14,0,0"/>
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -171,172 +71,57 @@
                             <ColumnDefinition Width="20"/>
                             <ColumnDefinition Width="1.1*"/>
                         </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0"
-                                Background="White"
-                                CornerRadius="12"
-                                Padding="24">
+                        <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
                             <StackPanel>
-                                <TextBlock Text="PARÂMETROS HIDRÁULICOS"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="#172554"/>
-
-                                <TextBlock Text="Comprimento da tubulação (m)"
-                                           Margin="0,22,0,6"
-                                           FontWeight="SemiBold"/>
-
-                                <TextBox x:Name="ComprimentoTextBox"
-                                         Text="20,00"
-                                         FontSize="18"
-                                         Padding="9"/>
-
-                                <TextBlock Text="Rugosidade absoluta (mm)"
-                                           Margin="0,16,0,6"
-                                           FontWeight="SemiBold"/>
-
-                                <TextBox x:Name="RugosidadeTextBox"
-                                         Text="0,001"
-                                         FontSize="18"
-                                         Padding="9"/>
-
-                                <TextBlock Text="Coeficiente de perdas localizadas (K)"
-                                           Margin="0,16,0,6"
-                                           FontWeight="SemiBold"/>
-
-                                <TextBox x:Name="CoeficienteKTextBox"
-                                         Text="0"
-                                         FontSize="18"
-                                         Padding="9"/>
-
-                                <TextBlock Text="Viscosidade cinemática (m²/s)"
-                                           Margin="0,16,0,6"
-                                           FontWeight="SemiBold"/>
-
-                                <TextBox x:Name="ViscosidadeTextBox"
-                                         Text="0,000001004"
-                                         FontSize="18"
-                                         Padding="9"/>
-
-                                <Button Content="ANALISAR TRECHO"
-                                        Click="AnalisarTrecho_Click"
-                                        Height="48"
-                                        Margin="0,24,0,0"
-                                        Background="#2563EB"
-                                        Foreground="White"
-                                        FontWeight="Bold"
-                                        BorderThickness="0"
-                                        Cursor="Hand"/>
-
-                                <TextBlock Text="Primeiro dimensione o trecho na aba anterior para selecionar o produto do catálogo."
-                                           Foreground="#64748B"
-                                           FontSize="11"
-                                           TextWrapping="Wrap"
-                                           Margin="0,18,0,0"/>
+                                <TextBlock Text="PARÂMETROS HIDRÁULICOS" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                                <TextBlock Text="Comprimento da tubulação (m)" Margin="0,22,0,6" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ComprimentoTextBox" Text="20,00" FontSize="18" Padding="9"/>
+                                <TextBlock Text="Rugosidade absoluta (mm)" Margin="0,16,0,6" FontWeight="SemiBold"/>
+                                <TextBox x:Name="RugosidadeTextBox" Text="0,001" FontSize="18" Padding="9"/>
+                                <TextBlock Text="Coeficiente de perdas localizadas (K)" Margin="0,16,0,6" FontWeight="SemiBold"/>
+                                <TextBox x:Name="CoeficienteKTextBox" Text="0" FontSize="18" Padding="9"/>
+                                <TextBlock Text="Viscosidade cinemática (m²/s)" Margin="0,16,0,6" FontWeight="SemiBold"/>
+                                <TextBox x:Name="ViscosidadeTextBox" Text="0,000001004" FontSize="18" Padding="9"/>
+                                <Button Content="ANALISAR TRECHO" Click="AnalisarTrecho_Click" Height="48" Margin="0,24,0,0" Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                             </StackPanel>
                         </Border>
-
-                        <Border Grid.Column="2"
-                                Background="White"
-                                CornerRadius="12"
-                                Padding="24">
+                        <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
                             <StackPanel>
-                                <TextBlock Text="RESULTADOS DA ANÁLISE"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="#172554"/>
-
-                                <TextBlock Text="Velocidade real"
-                                           Foreground="#64748B"
-                                           Margin="0,18,0,2"/>
-
-                                <TextBlock x:Name="AnaliseVelocidadeText"
-                                           Text="--"
-                                           FontSize="22"
-                                           FontWeight="Bold"/>
-
+                                <TextBlock Text="RESULTADOS DA ANÁLISE" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                                <TextBlock Text="Velocidade real" Foreground="#64748B" Margin="0,18,0,2"/>
+                                <TextBlock x:Name="AnaliseVelocidadeText" Text="--" FontSize="22" FontWeight="Bold"/>
                                 <Separator Margin="0,10"/>
-
-                                <TextBlock Text="Número de Reynolds"
-                                           Foreground="#64748B"/>
-
-                                <TextBlock x:Name="ReynoldsText"
-                                           Text="--"
-                                           FontSize="20"
-                                           FontWeight="Bold"/>
-
-                                <TextBlock Text="Regime de escoamento"
-                                           Foreground="#64748B"
-                                           Margin="0,12,0,2"/>
-
-                                <TextBlock x:Name="RegimeText"
-                                           Text="--"
-                                           FontWeight="Bold"/>
-
+                                <TextBlock Text="Número de Reynolds" Foreground="#64748B"/>
+                                <TextBlock x:Name="ReynoldsText" Text="--" FontSize="20" FontWeight="Bold"/>
+                                <TextBlock x:Name="RegimeText" Text="--" FontWeight="Bold" Margin="0,12,0,2"/>
                                 <Separator Margin="0,10"/>
-
-                                <TextBlock Text="Fator de atrito"
-                                           Foreground="#64748B"/>
-
-                                <TextBlock x:Name="FatorAtritoText"
-                                           Text="--"
-                                           FontSize="20"
-                                           FontWeight="Bold"/>
-
+                                <TextBlock Text="Fator de atrito" Foreground="#64748B"/>
+                                <TextBlock x:Name="FatorAtritoText" Text="--" FontSize="20" FontWeight="Bold"/>
                                 <Separator Margin="0,10"/>
-
-                                <TextBlock Text="Perda distribuída"
-                                           Foreground="#64748B"/>
-
-                                <TextBlock x:Name="PerdaDistribuidaText"
-                                           Text="--"
-                                           FontSize="18"
-                                           FontWeight="Bold"/>
-
-                                <TextBlock Text="Perda localizada"
-                                           Foreground="#64748B"
-                                           Margin="0,10,0,2"/>
-
-                                <TextBlock x:Name="PerdaLocalizadaText"
-                                           Text="--"
-                                           FontSize="18"
-                                           FontWeight="Bold"/>
-
+                                <TextBlock Text="Perda distribuída" Foreground="#64748B"/>
+                                <TextBlock x:Name="PerdaDistribuidaText" Text="--" FontSize="18" FontWeight="Bold"/>
+                                <TextBlock Text="Perda localizada" Foreground="#64748B" Margin="0,10,0,2"/>
+                                <TextBlock x:Name="PerdaLocalizadaText" Text="--" FontSize="18" FontWeight="Bold"/>
                                 <Separator Margin="0,12"/>
-
-                                <TextBlock Text="PERDA TOTAL"
-                                           Foreground="#64748B"
-                                           FontWeight="Bold"/>
-
-                                <TextBlock x:Name="PerdaTotalText"
-                                           Text="--"
-                                           FontSize="27"
-                                           FontWeight="Bold"
-                                           Foreground="#059669"/>
-
-                                <TextBlock Text="Resultados em metros de coluna d'água (m.c.a.)."
-                                           Foreground="#64748B"
-                                           FontSize="11"
-                                           Margin="0,8,0,0"/>
+                                <TextBlock Text="PERDA TOTAL" Foreground="#64748B" FontWeight="Bold"/>
+                                <TextBlock x:Name="PerdaTotalText" Text="--" FontSize="27" FontWeight="Bold" Foreground="#059669"/>
                             </StackPanel>
                         </Border>
                     </Grid>
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ABA 3: REDE HIDRÁULICA (ETAPA 1: NÓS, ETAPA 2: TRECHOS, ETAPA 3: RESULTADOS) -->
+            <!-- ABA 3: REDE HIDRÁULICA -->
             <TabItem Header="REDE HIDRÁULICA">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="4,12">
-
-                        <!-- ETAPA 1: ELEMENTOS DA REDE -->
+                        <!-- ETAPA 1: ELEMENTOS -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="0.85*"/>
                                 <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="1.15*"/>
                             </Grid.ColumnDefinitions>
-
                             <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
                                 <StackPanel>
                                     <TextBlock Text="1. ELEMENTO DA REDE (NÓ / RESERVATÓRIO)" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
@@ -358,7 +143,7 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Cota / Elevação (m)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Cota (m)" Margin="0,0,0,6" FontWeight="SemiBold"/>
                                             <TextBox x:Name="NoCotaTextBox" Text="0,00" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
@@ -371,7 +156,6 @@
                                     <Button x:Name="CancelarEdicaoNoButton" Content="LIMPAR FORMULÁRIO" Click="CancelarEdicaoNo_Click" Height="38" Margin="0,10,0,0" Background="#E2E8F0" Foreground="#1E293B" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
                                 </StackPanel>
                             </Border>
-
                             <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -380,8 +164,8 @@
                                         <RowDefinition Height="*"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="ELEMENTOS CADASTRADOS NA REDE" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
-                                    <TextBlock x:Name="ResumoRedeText" Grid.Row="1" Text="Nenhum elemento cadastrado | Demanda total: 0,000 L/s" Foreground="#64748B" FontSize="12" Margin="0,6,0,12"/>
+                                    <TextBlock Grid.Row="0" Text="ELEMENTOS CADASTRADOS" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    <TextBlock x:Name="ResumoRedeText" Grid.Row="1" Text="Nenhum elemento cadastrado" Foreground="#64748B" FontSize="12" Margin="0,6,0,12"/>
                                     <DataGrid x:Name="NosDataGrid" Grid.Row="2" MinHeight="240" MaxHeight="330" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13" MouseDoubleClick="NosDataGrid_MouseDoubleClick">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="*"/>
@@ -403,21 +187,20 @@
                             </Border>
                         </Grid>
 
-                        <!-- ETAPA 2: TRECHOS DE TUBULAÇÃO -->
+                        <!-- ETAPA 2: TRECHOS -->
                         <Grid Margin="0,20,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="0.85*"/>
                                 <ColumnDefinition Width="20"/>
                                 <ColumnDefinition Width="1.15*"/>
                             </Grid.ColumnDefinitions>
-
                             <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
                                 <StackPanel>
                                     <TextBlock Text="2. TRECHO DE TUBULAÇÃO" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
                                     <Border x:Name="TrechoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="6" Padding="10,6" Margin="0,12,0,0">
                                         <TextBlock x:Name="TrechoModoEdicaoText" Text="Modo: Novo trecho" Foreground="#1D4ED8" FontWeight="SemiBold" FontSize="12"/>
                                     </Border>
-                                    <TextBlock Text="Nome / Identificação do trecho" Margin="0,16,0,6" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Identificação do trecho" Margin="0,16,0,6" FontWeight="SemiBold"/>
                                     <TextBox x:Name="TrechoNomeTextBox" FontSize="16" Padding="9"/>
                                     <Grid Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
@@ -426,11 +209,11 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Nó inicial (montante)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Nó montante" Margin="0,0,0,6" FontWeight="SemiBold"/>
                                             <ComboBox x:Name="TrechoNoInicialComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" FontSize="14" Padding="9,8"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Nó final (jusante)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Nó jusante" Margin="0,0,0,6" FontWeight="SemiBold"/>
                                             <ComboBox x:Name="TrechoNoFinalComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" FontSize="14" Padding="9,8"/>
                                         </StackPanel>
                                     </Grid>
@@ -445,7 +228,7 @@
                                             <TextBox x:Name="TrechoComprimentoTextBox" Text="10,00" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Diâmetro interno (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBlock Text="D int. (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
                                             <TextBox x:Name="TrechoDiametroTextBox" Text="21,60" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                     </Grid>
@@ -456,22 +239,20 @@
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Rugosidade abs. (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Rugosidade (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
                                             <TextBox x:Name="TrechoRugosidadeTextBox" Text="0,001" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Perda localizada (K)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBlock Text="Perda loc. (K)" Margin="0,0,0,6" FontWeight="SemiBold"/>
                                             <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                     </Grid>
-                                    <TextBlock Text="Vazão do trecho (L/s) — opcional" Margin="0,14,0,6" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Vazão (L/s) - opcional" Margin="0,14,0,6" FontWeight="SemiBold"/>
                                     <TextBox x:Name="TrechoVazaoTextBox" FontSize="16" Padding="9"/>
-                                    <TextBlock Text="Deixe em branco para o cálculo automático." Foreground="#64748B" FontSize="11" Margin="0,10,0,0"/>
                                     <Button x:Name="SalvarTrechoButton" Content="ADICIONAR TRECHO" Click="SalvarTrecho_Click" Height="44" Margin="0,18,0,0" Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                                     <Button x:Name="CancelarEdicaoTrechoButton" Content="LIMPAR FORMULÁRIO" Click="CancelarEdicaoTrecho_Click" Height="38" Margin="0,10,0,0" Background="#E2E8F0" Foreground="#1E293B" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
                                 </StackPanel>
                             </Border>
-
                             <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
                                 <Grid>
                                     <Grid.RowDefinitions>
@@ -480,16 +261,16 @@
                                         <RowDefinition Height="*"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    <TextBlock Grid.Row="0" Text="TRECHOS CADASTRADOS NA REDE" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
-                                    <TextBlock x:Name="ResumoTrechosText" Grid.Row="1" Text="Nenhum trecho cadastrado | Extensão total: 0,00 m" Foreground="#64748B" FontSize="12" Margin="0,6,0,12"/>
+                                    <TextBlock Grid.Row="0" Text="TRECHOS CADASTRADOS" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    <TextBlock x:Name="ResumoTrechosText" Grid.Row="1" Text="Nenhum trecho cadastrado" Foreground="#64748B" FontSize="12" Margin="0,6,0,12"/>
                                     <DataGrid x:Name="TrechosDataGrid" Grid.Row="2" MinHeight="280" MaxHeight="420" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13" MouseDoubleClick="TrechosDataGrid_MouseDoubleClick">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="95"/>
-                                            <DataGridTextColumn Header="Montante → Jusante" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                            <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="*"/>
                                             <DataGridTextColumn Header="Comp. (m)" Binding="{Binding LengthDisplay}" Width="85"/>
-                                            <DataGridTextColumn Header="D int (mm)" Binding="{Binding DiameterDisplay}" Width="88"/>
+                                            <DataGridTextColumn Header="D (mm)" Binding="{Binding DiameterDisplay}" Width="88"/>
                                             <DataGridTextColumn Header="K" Binding="{Binding KDisplay}" Width="58"/>
-                                            <DataGridTextColumn Header="Vazão (L/s)" Binding="{Binding FlowDisplay}" Width="90"/>
+                                            <DataGridTextColumn Header="Q (L/s)" Binding="{Binding FlowDisplay}" Width="90"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
                                     <Grid Grid.Row="3" Margin="0,14,0,0">
@@ -505,12 +286,11 @@
                             </Border>
                         </Grid>
 
-                        <!-- ETAPA 3: CÁLCULO E RESULTADOS GLOBAIS -->
+                        <!-- ETAPA 3: RESULTADOS -->
                         <Grid Margin="0,20,0,0">
                             <Border Background="White" CornerRadius="12" Padding="24">
                                 <StackPanel>
                                     <TextBlock Text="3. CÁLCULO E RESULTADOS GLOBAIS" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
-                                    
                                     <Grid Margin="0,16,0,16">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -546,7 +326,6 @@
                                     <DataGrid x:Name="ResultadosNosDataGrid" MinHeight="150" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13">
                                         <DataGrid.RowStyle>
                                             <Style TargetType="DataGridRow">
-                                                <!-- Destaca em vermelho a linha se a pressão for insuficiente (menor que 1 m.c.a) -->
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsLowPressure}" Value="True">
                                                         <Setter Property="Foreground" Value="#DC2626"/>
@@ -572,9 +351,63 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
-
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+
+            <!-- ABA 4: ÁGUA QUENTE / BOILER -->
+            <TabItem Header="ÁGUA QUENTE">
+                <Grid Margin="4,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="1.1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="DIMENSIONAMENTO DO BOILER" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            
+                            <TextBlock Text="Perfil da Edificação (Norma ABNT)" Margin="0,28,0,7" FontWeight="SemiBold"/>
+                            <ComboBox x:Name="BoilerPerfilComboBox" FontSize="15" Padding="10,8" SelectedIndex="0">
+                                <ComboBoxItem Content="Residência Unifamiliar" Tag="ResidenciaUnifamiliar"/>
+                                <ComboBoxItem Content="Apartamento" Tag="Apartamento"/>
+                                <ComboBoxItem Content="Hotel" Tag="Hotel"/>
+                                <ComboBoxItem Content="Hospital" Tag="Hospital"/>
+                                <ComboBoxItem Content="Alojamento" Tag="Alojamento"/>
+                            </ComboBox>
+
+                            <TextBlock Text="Número de ocupantes" Margin="0,22,0,7" FontWeight="SemiBold"/>
+                            <TextBox x:Name="BoilerOcupantesTextBox" Text="4" FontSize="20" Padding="10"/>
+
+                            <TextBlock Text="Pressão disponível da água fria (m.c.a.)" Margin="0,22,0,7" FontWeight="SemiBold"/>
+                            <TextBox x:Name="BoilerPressaoTextBox" Text="6,50" FontSize="20" Padding="10"/>
+                            <TextBlock Text="Insira a pressão do ponto onde o boiler será instalado (obtida na Aba 3 - Rede)." Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"/>
+
+                            <Button Content="DIMENSIONAR BOILER" Click="CalcularBoiler_Click" Height="48" Margin="0,28,0,0" Background="#EA580C" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="RESULTADO DO SISTEMA TÉRMICO" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            
+                            <TextBlock Text="Consumo diário estimado" Foreground="#64748B" Margin="0,22,0,3"/>
+                            <TextBlock x:Name="BoilerConsumoText" Text="--" FontSize="25" FontWeight="Bold" Foreground="#2563EB"/>
+                            <TextBlock Text="Litros de água quente por dia." Foreground="#64748B" FontSize="12"/>
+
+                            <Separator Margin="0,14"/>
+                            
+                            <TextBlock Text="Volume de acumulação (Tamanho do Boiler)" Foreground="#64748B"/>
+                            <TextBlock x:Name="BoilerVolumeText" Text="--" FontSize="30" FontWeight="Bold" Foreground="#059669" Margin="0,3,0,0"/>
+
+                            <Separator Margin="0,14"/>
+                            
+                            <TextBlock Text="Avaliação de pressão e tipo de equipamento" Foreground="#64748B"/>
+                            <TextBlock x:Name="BoilerTipoText" Text="Aguardando cálculo..." FontSize="18" FontWeight="Bold" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </TabItem>
 
         </TabControl>
