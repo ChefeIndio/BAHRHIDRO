@@ -12,6 +12,7 @@ using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
 using BahrHidro.Core.Hydraulic.HotWater;
+using BahrHidro.Core.Hydraulic.Reservoirs; // NOVO: Módulo de Caixas D'Água
 using BahrHidro.Core.Reporting; 
 
 namespace BahrHidro.UI
@@ -276,7 +277,7 @@ namespace BahrHidro.UI
                 
                 _ultimoResultadoDaRede = res;
                 ExportarMemorialButton.IsEnabled = true;
-                DimensionarBombaButton.IsEnabled = true; // ATIVA O BOTÃO DA BOMBA
+                DimensionarBombaButton.IsEnabled = true;
                 
                 ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--", VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
                 ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem { Name = n.NodeName, TypeLabel = FormatarTipoNo(n.NodeType), ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr), PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr), IsLowPressure = n.AvailablePressureMca < 1.0 && n.NodeType != HydraulicNodeType.Reservoir }).ToList();
@@ -284,38 +285,20 @@ namespace BahrHidro.UI
             catch (Exception ex) { MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
-        // =====================================================================
-        // NOVO: ABRIR MÓDULO DE DIMENSIONAMENTO DA BOMBA
-        // =====================================================================
         private void DimensionarBomba_Click(object sender, RoutedEventArgs e)
         {
             if (_ultimoResultadoDaRede == null) return;
-            
             try
             {
                 var resultadoBomba = PumpCalculator.Calculate(_ultimoResultadoDaRede, 1.0, 0.60);
-                
-                if (!resultadoBomba.RequiresPump)
-                {
-                    MessageBox.Show("O sistema atende perfeitamente por gravidade!\n\nNão é necessária a instalação de bomba/pressurizador na rede.", 
-                                    "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
+                if (!resultadoBomba.RequiresPump) { MessageBox.Show("O sistema atende perfeitamente por gravidade!\n\nNão é necessária a instalação de bomba/pressurizador na rede.", "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Information); }
                 else
                 {
-                    string msg = $"Atenção! A rede necessita de PRESSURIZAÇÃO.\n\n" +
-                                 $"Nó mais crítico: {resultadoBomba.CriticalNodeName}\n(Pressão atual: {resultadoBomba.CriticalNodeCurrentPressure:F2} m.c.a)\n\n" +
-                                 $"ESPECIFICAÇÕES RECOMENDADAS PARA A BOMBA:\n" +
-                                 $"- Vazão de Projeto: {resultadoBomba.TotalFlowLitersPerSecond:F2} L/s\n" +
-                                 $"- Altura Manométrica (AMT): {resultadoBomba.RequiredAmtMca:F2} m.c.a.\n" +
-                                 $"- Potência Estimada: {resultadoBomba.EstimatedPowerCv:F2} cv";
-                    
+                    string msg = $"Atenção! A rede necessita de PRESSURIZAÇÃO.\n\nNó mais crítico: {resultadoBomba.CriticalNodeName}\n(Pressão atual: {resultadoBomba.CriticalNodeCurrentPressure:F2} m.c.a)\n\nESPECIFICAÇÕES RECOMENDADAS PARA A BOMBA:\n- Vazão de Projeto: {resultadoBomba.TotalFlowLitersPerSecond:F2} L/s\n- Altura Manométrica (AMT): {resultadoBomba.RequiredAmtMca:F2} m.c.a.\n- Potência Estimada: {resultadoBomba.EstimatedPowerCv:F2} cv";
                     MessageBox.Show(msg, "Dimensionamento de Bomba", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Ocorreu um erro ao dimensionar o sistema de bombagem:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o sistema de bombagem:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private void ExportarMemorial_Click(object sender, RoutedEventArgs e)
@@ -343,6 +326,38 @@ namespace BahrHidro.UI
                 else BoilerTipoText.Foreground = Brushes.ForestGreen;
             }
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}"); }
+        }
+
+        // =====================================================================
+        // NOVO: ABA 5 - RESERVATÓRIOS (CAIXAS D'ÁGUA)
+        // =====================================================================
+        private void CalcularCaixa_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0) return;
+                if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0) return;
+                if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio)) return;
+                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100)
+                {
+                    MessageBox.Show("A percentagem da cisterna deve ser um valor entre 0 e 100.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil)) return;
+
+                // Converte a percentagem (ex: 60) para decimal (0.60) antes de calcular
+                var resultado = ReservoirCalculator.Calculate(perfil, populacao, dias, incendio, percentagem / 100.0);
+
+                CaixaConsumoText.Text = $"{resultado.TotalDailyConsumptionLiters:F0} Litros";
+                CaixaVolumeTotalText.Text = $"{resultado.TotalRequiredVolumeLiters:F0} Litros";
+                CaixaSuperiorText.Text = $"{resultado.UpperReservoirVolumeLiters:F0} Litros";
+                CaixaCisternaText.Text = $"{resultado.LowerReservoirVolumeLiters:F0} Litros";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };

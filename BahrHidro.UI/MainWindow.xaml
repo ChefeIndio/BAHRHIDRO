@@ -315,8 +315,6 @@
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                                             <TextBlock Text="Viscosidade cinemática global (m²/s):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
                                             <TextBox x:Name="RedeViscosidadeTextBox" Text="0,000001004" Width="120" FontSize="15" Padding="6"/>
-                                            
-                                            <!-- ADIÇÃO DO BOTÃO DE DIMENSIONAR BOMBA -->
                                             <Button x:Name="CalcularRedeButton" Content="CALCULAR REDE" Click="CalcularRede_Click" Width="150" Height="44" Margin="10,0,0,0" Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                                             <Button x:Name="DimensionarBombaButton" Content="DIMENSIONAR BOMBA" Click="DimensionarBomba_Click" Width="170" Height="44" Margin="10,0,0,0" Background="#EA580C" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" IsEnabled="False"/>
                                             <Button x:Name="ExportarMemorialButton" Content="EXPORTAR EXCEL" Click="ExportarMemorial_Click" Width="150" Height="44" Margin="10,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" IsEnabled="False"/>
@@ -433,6 +431,124 @@
                             
                             <TextBlock Text="Avaliação de pressão e tipo de equipamento" Foreground="#64748B"/>
                             <TextBlock x:Name="BoilerTipoText" Text="Aguardando cálculo..." FontSize="18" FontWeight="Bold" TextWrapping="Wrap" Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+            
+            <!-- NOVA ABA 5: RESERVATÓRIOS (CISTERNAS) -->
+            <TabItem Header="RESERVATÓRIOS">
+                <Grid Margin="4,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="1.1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="VOLUME DO RESERVATÓRIO (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            
+                            <TextBlock Text="Tipo de Edificação" Margin="0,28,0,7" FontWeight="SemiBold"/>
+                            <ComboBox x:Name="CaixaPerfilComboBox" FontSize="15" Padding="10,8" SelectedIndex="0">
+                                <ComboBoxItem Content="Residência (Casa)" Tag="Residencia"/>
+                                <ComboBoxItem Content="Apartamento (Prédio)" Tag="Apartamento"/>
+                                <ComboBoxItem Content="Escritório" Tag="Escritorio"/>
+                                <ComboBoxItem Content="Hotel" Tag="Hotel"/>
+                                <ComboBoxItem Content="Hospital" Tag="Hospital"/>
+                                <ComboBoxItem Content="Escola" Tag="Escola"/>
+                            </ComboBox>
+
+                            <Grid Margin="0,22,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="População (Pessoas)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="CaixaPopulacaoTextBox" Text="4" FontSize="18" Padding="9"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Dias de Reserva" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="CaixaDiasTextBox" Text="1" FontSize="18" Padding="9"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,22,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Reserva de Incêndio (L)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="CaixaIncendioTextBox" Text="0" FontSize="18" Padding="9"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="% Cisterna Inferior" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="CaixaCisternaTextBox" Text="60" FontSize="18" Padding="9"/>
+                                    <TextBlock Text="Ex: 60% em baixo, 40% em cima." Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Button Content="CALCULAR VOLUMES" Click="CalcularCaixa_Click" Height="48" Margin="0,32,0,0" Background="#0284C7" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="CAPACIDADE DE ARMAZENAMENTO" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            
+                            <Grid Margin="0,22,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Consumo Diário Total" Foreground="#64748B"/>
+                                    <TextBlock x:Name="CaixaConsumoText" Text="--" FontSize="22" FontWeight="Bold" Foreground="#2563EB" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Volume Total Necessário" Foreground="#64748B" FontWeight="Bold"/>
+                                    <TextBlock x:Name="CaixaVolumeTotalText" Text="--" FontSize="24" FontWeight="Bold" Foreground="#172554" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Margin="0,20"/>
+                            
+                            <TextBlock Text="Distribuição Recomendada" Foreground="#1E293B" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                            <Border Background="#F1F5F9" CornerRadius="8" Padding="16" Margin="0,0,0,12" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Reservatório Superior (Caixa d'Água)" FontWeight="SemiBold" Foreground="#0284C7"/>
+                                        <TextBlock Text="Abastece o prédio por gravidade." Foreground="#64748B" FontSize="12" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="CaixaSuperiorText" Grid.Column="1" Text="--" FontSize="22" FontWeight="Bold" Foreground="#0284C7" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="#F1F5F9" CornerRadius="8" Padding="16" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Cisterna (Reservatório Inferior)" FontWeight="SemiBold" Foreground="#0F766E"/>
+                                        <TextBlock Text="Recalca a água para o reservatório superior." Foreground="#64748B" FontSize="12" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="CaixaCisternaText" Grid.Column="1" Text="--" FontSize="22" FontWeight="Bold" Foreground="#0F766E" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            
                         </StackPanel>
                     </Border>
                 </Grid>
