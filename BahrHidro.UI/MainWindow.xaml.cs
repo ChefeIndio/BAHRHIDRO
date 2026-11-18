@@ -12,7 +12,8 @@ using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
 using BahrHidro.Core.Hydraulic.HotWater;
-using BahrHidro.Core.Hydraulic.Reservoirs; // NOVO: Módulo de Caixas D'Água
+using BahrHidro.Core.Hydraulic.Reservoirs; 
+using BahrHidro.Core.Hydraulic.Sewer; // NOVO: Módulo de Esgoto
 using BahrHidro.Core.Reporting; 
 
 namespace BahrHidro.UI
@@ -28,6 +29,9 @@ namespace BahrHidro.UI
         private Guid? _editingNodeId;
         private Guid? _editingSegmentId;
         private NetworkCalculationResult? _ultimoResultadoDaRede;
+        
+        // Memória das peças de Esgoto na tela
+        private readonly List<SewerFixtureViewModel> _sewerFixtures;
 
         public MainWindow()
         {
@@ -41,6 +45,12 @@ namespace BahrHidro.UI
             AtualizarEstadoTipoNo();
             AtualizarListaNos();
             AtualizarListaTrechos();
+
+            // Popula a Aba de Esgoto com as peças do Catálogo do Core
+            _sewerFixtures = SewerFixtureCatalog.GetStandardFixtures()
+                .Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm })
+                .ToList();
+            SewerItemsControl.ItemsSource = _sewerFixtures;
         }
 
         private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
@@ -328,9 +338,6 @@ namespace BahrHidro.UI
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}"); }
         }
 
-        // =====================================================================
-        // NOVO: ABA 5 - RESERVATÓRIOS (CAIXAS D'ÁGUA)
-        // =====================================================================
         private void CalcularCaixa_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -338,15 +345,9 @@ namespace BahrHidro.UI
                 if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0) return;
                 if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0) return;
                 if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio)) return;
-                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100)
-                {
-                    MessageBox.Show("A percentagem da cisterna deve ser um valor entre 0 e 100.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
+                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100) return;
                 if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil)) return;
 
-                // Converte a percentagem (ex: 60) para decimal (0.60) antes de calcular
                 var resultado = ReservoirCalculator.Calculate(perfil, populacao, dias, incendio, percentagem / 100.0);
 
                 CaixaConsumoText.Text = $"{resultado.TotalDailyConsumptionLiters:F0} Litros";
@@ -354,9 +355,48 @@ namespace BahrHidro.UI
                 CaixaSuperiorText.Text = $"{resultado.UpperReservoirVolumeLiters:F0} Litros";
                 CaixaCisternaText.Text = $"{resultado.LowerReservoirVolumeLiters:F0} Litros";
             }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+        }
+
+        // =====================================================================
+        // NOVO: ABA 6 - ESGOTO SANITÁRIO
+        // =====================================================================
+        private void CalcularEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // 1. Soma os UHCs e encontra o maior diâmetro exigido pelas peças ligadas
+                int totalUhc = 0;
+                int maiorDiametroPeca = 0;
+
+                foreach (var item in _sewerFixtures)
+                {
+                    if (item.Quantity > 0)
+                    {
+                        totalUhc += (item.Uhc * item.Quantity);
+                        if (item.MinDiameter > maiorDiametroPeca)
+                            maiorDiametroPeca = item.MinDiameter;
+                    }
+                }
+
+                if (totalUhc == 0)
+                {
+                    MessageBox.Show("Adicione pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 2. Aciona a inteligência do motor de Esgoto
+                var resultado = SewerCalculator.CalculateBranch(totalUhc, maiorDiametroPeca);
+
+                // 3. Exibe os resultados
+                EsgotoUhcText.Text = resultado.TotalUhc.ToString();
+                EsgotoTipoText.Text = resultado.ComponentType;
+                EsgotoDiametroText.Text = $"DN {resultado.RequiredDiameterMm}";
+                EsgotoInclinacaoText.Text = $"{resultado.MinimumSlopePercentage:F1} %";
+            }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -367,5 +407,15 @@ namespace BahrHidro.UI
         private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; }
         private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
         private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }
+        
+        // Classe visual para a grelha de esgoto
+        private class SewerFixtureViewModel
+        {
+            public string Name { get; set; } = "";
+            public int Uhc { get; set; }
+            public int MinDiameter { get; set; }
+            public string UhcDisplay => $"{Uhc} UHC";
+            public int Quantity { get; set; } = 0;
+        }
     }
 }

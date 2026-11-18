@@ -17,14 +17,14 @@
         <Border Background="#172554" CornerRadius="12" Padding="22">
             <StackPanel>
                 <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="30" FontWeight="Bold"/>
-                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO | ÁGUA FRIA E QUENTE" Foreground="#BFDBFE" FontSize="13"/>
+                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO E SANITÁRIO" Foreground="#BFDBFE" FontSize="13"/>
             </StackPanel>
         </Border>
 
         <TabControl Grid.Row="1" Margin="0,18,0,12" Background="#F1F5F9" BorderThickness="0" FontSize="13">
 
-            <!-- ABA 1: DIMENSIONAMENTO -->
-            <TabItem Header="DIMENSIONAMENTO">
+            <!-- ABA 1: DIMENSIONAMENTO (ÁGUA) -->
+            <TabItem Header="DIMENSIONAMENTO (ÁGUA)">
                 <Grid Margin="4,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0.9*"/>
@@ -63,7 +63,7 @@
             </TabItem>
 
             <!-- ABA 2: ANÁLISE HIDRÁULICA -->
-            <TabItem Header="ANÁLISE HIDRÁULICA">
+            <TabItem Header="ANÁLISE">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <Grid Margin="4,12">
                         <Grid.ColumnDefinitions>
@@ -112,7 +112,7 @@
             </TabItem>
 
             <!-- ABA 3: REDE HIDRÁULICA -->
-            <TabItem Header="REDE HIDRÁULICA">
+            <TabItem Header="REDE DE ÁGUA">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="4,12">
                         <!-- ETAPA 1: ELEMENTOS -->
@@ -436,7 +436,7 @@
                 </Grid>
             </TabItem>
             
-            <!-- NOVA ABA 5: RESERVATÓRIOS (CISTERNAS) -->
+            <!-- ABA 5: RESERVATÓRIOS (CAIXAS D'ÁGUA) -->
             <TabItem Header="RESERVATÓRIOS">
                 <Grid Margin="4,12">
                     <Grid.ColumnDefinitions>
@@ -546,6 +546,103 @@
                                         <TextBlock Text="Recalca a água para o reservatório superior." Foreground="#64748B" FontSize="12" Margin="0,2,0,0"/>
                                     </StackPanel>
                                     <TextBlock x:Name="CaixaCisternaText" Grid.Column="1" Text="--" FontSize="22" FontWeight="Bold" Foreground="#0F766E" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- NOVA ABA 6: ESGOTO SANITÁRIO -->
+            <TabItem Header="ESGOTO SANITÁRIO">
+                <Grid Margin="4,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.9*"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="1.1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="DIMENSIONAMENTO DE ESGOTO (NBR 8160)" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            <TextBlock Text="Insira a quantidade de peças contribuintes no ramal." Foreground="#64748B" FontSize="12" Margin="0,8,0,16"/>
+                            
+                            <!-- Lista dinâmica de peças (UHC) gerada pelo código C# -->
+                            <ScrollViewer MaxHeight="380" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="SewerItemsControl">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid Margin="0,4,10,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="#1E293B"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding UhcDisplay}" Foreground="#64748B" VerticalAlignment="Center" FontSize="12"/>
+                                                <TextBox Grid.Column="2" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" TextAlignment="Center" Padding="4" FontSize="14" FontWeight="Bold" Background="#F8FAFC"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <Button Content="DIMENSIONAR RAMAL" Click="CalcularEsgoto_Click" Height="48" Margin="0,20,0,0" Background="#9333EA" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
+                        <StackPanel>
+                            <TextBlock Text="RESULTADO DO RAMAL (ESCOAMENTO LIVRE)" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
+                            
+                            <Grid Margin="0,22,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Total de Unidades (UHC)" Foreground="#64748B"/>
+                                    <TextBlock x:Name="EsgotoUhcText" Text="--" FontSize="22" FontWeight="Bold" Foreground="#64748B" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Classificação do Tubo" Foreground="#64748B"/>
+                                    <TextBlock x:Name="EsgotoTipoText" Text="--" FontSize="20" FontWeight="SemiBold" Foreground="#172554" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Margin="0,20"/>
+                            
+                            <TextBlock Text="Dimensionamento Exigido pela Norma" Foreground="#1E293B" FontWeight="Bold" Margin="0,0,0,16"/>
+
+                            <Border Background="#F3E8FF" CornerRadius="8" Padding="16" Margin="0,0,0,12" BorderBrush="#D8B4FE" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Diâmetro Nominal (DN)" FontWeight="Bold" FontSize="16" Foreground="#7E22CE"/>
+                                        <TextBlock Text="Espessura comercial mínima do tubo." Foreground="#9333EA" FontSize="12" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="EsgotoDiametroText" Grid.Column="1" Text="--" FontSize="32" FontWeight="Bold" Foreground="#7E22CE" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <Border Background="#F1F5F9" CornerRadius="8" Padding="16" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Inclinação Mínima Necessária" FontWeight="SemiBold" Foreground="#475569"/>
+                                        <TextBlock Text="Garante o arraste de sólidos sem entupimentos." Foreground="#64748B" FontSize="12" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="EsgotoInclinacaoText" Grid.Column="1" Text="--" FontSize="22" FontWeight="Bold" Foreground="#475569" VerticalAlignment="Center"/>
                                 </Grid>
                             </Border>
                             
