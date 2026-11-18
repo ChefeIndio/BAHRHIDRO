@@ -253,8 +253,6 @@
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
                                             <TextBlock Text="Perda loc. (K)" Margin="0,0,0,6" FontWeight="SemiBold"/>
-                                            
-                                            <!-- AQUI ENTRA O NOVO BOTÃO "+" -->
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
@@ -263,7 +261,6 @@
                                                 <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0" FontSize="16" Padding="9"/>
                                                 <Button Grid.Column="1" Content="+" Click="CalcularConexoes_Click" Width="38" Margin="4,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="Bold" FontSize="18" BorderThickness="0" Cursor="Hand" ToolTip="Somar conexões automaticamente"/>
                                             </Grid>
-                                            
                                         </StackPanel>
                                     </Grid>
                                     <TextBlock Text="Vazão fixa de bypass (L/s) - opcional" Margin="0,14,0,6" FontWeight="SemiBold"/>
@@ -318,8 +315,11 @@
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                                             <TextBlock Text="Viscosidade cinemática global (m²/s):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
                                             <TextBox x:Name="RedeViscosidadeTextBox" Text="0,000001004" Width="120" FontSize="15" Padding="6"/>
-                                            <Button x:Name="CalcularRedeButton" Content="CALCULAR REDE" Click="CalcularRede_Click" Width="180" Height="44" Margin="20,0,0,0" Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
-                                            <Button x:Name="ExportarMemorialButton" Content="EXPORTAR EXCEL" Click="ExportarMemorial_Click" Width="180" Height="44" Margin="10,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" IsEnabled="False"/>
+                                            
+                                            <!-- ADIÇÃO DO BOTÃO DE DIMENSIONAR BOMBA -->
+                                            <Button x:Name="CalcularRedeButton" Content="CALCULAR REDE" Click="CalcularRede_Click" Width="150" Height="44" Margin="10,0,0,0" Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                            <Button x:Name="DimensionarBombaButton" Content="DIMENSIONAR BOMBA" Click="DimensionarBomba_Click" Width="170" Height="44" Margin="10,0,0,0" Background="#EA580C" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" IsEnabled="False"/>
+                                            <Button x:Name="ExportarMemorialButton" Content="EXPORTAR EXCEL" Click="ExportarMemorial_Click" Width="150" Height="44" Margin="10,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" IsEnabled="False"/>
                                         </StackPanel>
                                     </Grid>
 
