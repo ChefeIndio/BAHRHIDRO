@@ -7,13 +7,14 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Shapes; // NOVO: Para desenhar Linhas e Bolinhas
 using BahrHidro.Core;
 using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
 using BahrHidro.Core.Hydraulic.HotWater;
 using BahrHidro.Core.Hydraulic.Reservoirs; 
-using BahrHidro.Core.Hydraulic.Sewer; // NOVO: Módulo de Esgoto
+using BahrHidro.Core.Hydraulic.Sewer; 
 using BahrHidro.Core.Reporting; 
 
 namespace BahrHidro.UI
@@ -30,14 +31,22 @@ namespace BahrHidro.UI
         private Guid? _editingSegmentId;
         private NetworkCalculationResult? _ultimoResultadoDaRede;
         
-        // Memória das peças de Esgoto na tela
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
+
+        // VARIÁVEIS PARA O NOVO CAD 2D
+        private enum ModoDesenho { Selecionar, DesenharNo, ConectarTrecho }
+        private ModoDesenho _modoAtual = ModoDesenho.Selecionar;
+        private Ellipse? _noInicialParaTrecho = null; // Guarda o primeiro nó clicado ao fazer um tubo
+        
+        // Mapeamentos para o software saber que bolinha corresponde a que Nó na memória
+        private readonly Dictionary<Ellipse, Guid> _mapaNosVisuais = new();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            string catalogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro", "pipe-catalog.json");
+            // CORREÇÃO: System.IO.Path explícito para evitar conflito com System.Windows.Shapes.Path
+            string catalogPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro", "pipe-catalog.json");
             var repository = new PipeCatalogRepository(catalogPath);
             _catalogService = new PipeCatalogService(repository);
             _diameterSelector = new PipeCatalogDiameterSelector(_catalogService);
@@ -46,10 +55,7 @@ namespace BahrHidro.UI
             AtualizarListaNos();
             AtualizarListaTrechos();
 
-            // Popula a Aba de Esgoto com as peças do Catálogo do Core
-            _sewerFixtures = SewerFixtureCatalog.GetStandardFixtures()
-                .Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm })
-                .ToList();
+            _sewerFixtures = SewerFixtureCatalog.GetStandardFixtures().Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm }).ToList();
             SewerItemsControl.ItemsSource = _sewerFixtures;
         }
 
@@ -358,48 +364,142 @@ namespace BahrHidro.UI
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
-        // =====================================================================
-        // NOVO: ABA 6 - ESGOTO SANITÁRIO
-        // =====================================================================
         private void CalcularEsgoto_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // 1. Soma os UHCs e encontra o maior diâmetro exigido pelas peças ligadas
-                int totalUhc = 0;
-                int maiorDiametroPeca = 0;
-
+                int totalUhc = 0; int maiorDiametroPeca = 0;
                 foreach (var item in _sewerFixtures)
                 {
                     if (item.Quantity > 0)
                     {
                         totalUhc += (item.Uhc * item.Quantity);
-                        if (item.MinDiameter > maiorDiametroPeca)
-                            maiorDiametroPeca = item.MinDiameter;
+                        if (item.MinDiameter > maiorDiametroPeca) maiorDiametroPeca = item.MinDiameter;
                     }
                 }
-
-                if (totalUhc == 0)
-                {
-                    MessageBox.Show("Adicione pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
-                }
-
-                // 2. Aciona a inteligência do motor de Esgoto
+                if (totalUhc == 0) { MessageBox.Show("Adicione pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
                 var resultado = SewerCalculator.CalculateBranch(totalUhc, maiorDiametroPeca);
-
-                // 3. Exibe os resultados
-                EsgotoUhcText.Text = resultado.TotalUhc.ToString();
-                EsgotoTipoText.Text = resultado.ComponentType;
-                EsgotoDiametroText.Text = $"DN {resultado.RequiredDiameterMm}";
-                EsgotoInclinacaoText.Text = $"{resultado.MinimumSlopePercentage:F1} %";
+                EsgotoUhcText.Text = resultado.TotalUhc.ToString(); EsgotoTipoText.Text = resultado.ComponentType;
+                EsgotoDiametroText.Text = $"DN {resultado.RequiredDiameterMm}"; EsgotoInclinacaoText.Text = $"{resultado.MinimumSlopePercentage:F1} %";
             }
-            catch (Exception ex)
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+        }
+
+        // =====================================================================
+        // NOVO: INTELIGÊNCIA DO CANVAS 2D (DESENHO DE REDES)
+        // =====================================================================
+        private void ModoDesenho_Changed(object sender, RoutedEventArgs e)
+        {
+            if (RbSelecionar?.IsChecked == true) _modoAtual = ModoDesenho.Selecionar;
+            else if (RbNo?.IsChecked == true) _modoAtual = ModoDesenho.DesenharNo;
+            else if (RbTrecho?.IsChecked == true) _modoAtual = ModoDesenho.ConectarTrecho;
+            
+            // Reseta qualquer clique inacabado
+            if (_noInicialParaTrecho != null)
             {
-                MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                _noInicialParaTrecho.Fill = Brushes.SteelBlue; // Volta à cor normal
+                _noInicialParaTrecho = null;
+            }
+            
+            if (_modoAtual == ModoDesenho.DesenharNo) InstrucaoCanvasText.Text = "Clique em qualquer lugar da tela branca para adicionar um novo Nó.";
+            else if (_modoAtual == ModoDesenho.ConectarTrecho) InstrucaoCanvasText.Text = "Clique num Nó existente (A) e depois clique noutro Nó (B) para traçar um Trecho de tubo entre eles.";
+            else InstrucaoCanvasText.Text = "Clique nos elementos desenhados para ver as suas propriedades na Aba 3.";
+        }
+
+        private void RedeCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Point clique = e.GetPosition(RedeCanvas);
+
+            // 1. MODO: DESENHAR NÓ
+            if (_modoAtual == ModoDesenho.DesenharNo)
+            {
+                // Cria a bolinha gráfica (Ellipse)
+                var visualNo = new Ellipse { Width = 20, Height = 20, Fill = Brushes.SteelBlue, Stroke = Brushes.DarkBlue, StrokeThickness = 2, Cursor = Cursors.Hand };
+                
+                // Posiciona onde o rato clicou (centrando a bolinha de 20x20)
+                Canvas.SetLeft(visualNo, clique.X - 10);
+                Canvas.SetTop(visualNo, clique.Y - 10);
+                RedeCanvas.Children.Add(visualNo);
+
+                // Cria o Nó matemático na memória da rede
+                var novoId = Guid.NewGuid();
+                var node = new HydraulicNode { Id = novoId, Name = $"Nó {_network.Nodes.Count + 1}", Type = HydraulicNodeType.Junction, ElevationMeters = 0, DemandLitersPerSecond = 0, RelativeWeight = 0 };
+                
+                _network.AddNode(node);
+                _mapaNosVisuais[visualNo] = novoId; // Mapeia o visual para a matemática
+                
+                AtualizarListaNos(); // Atualiza a tabela na Aba 3 instantaneamente
+            }
+            
+            // 2. MODO: CONECTAR TRECHO
+            else if (_modoAtual == ModoDesenho.ConectarTrecho)
+            {
+                if (e.OriginalSource is Ellipse noClicado)
+                {
+                    if (_noInicialParaTrecho == null)
+                    {
+                        // Seleciona o primeiro nó (Montante) e pinta de Laranja
+                        _noInicialParaTrecho = noClicado;
+                        _noInicialParaTrecho.Fill = Brushes.DarkOrange; 
+                    }
+                    else
+                    {
+                        // Seleciona o segundo nó (Jusante)
+                        if (_noInicialParaTrecho != noClicado)
+                        {
+                            Guid idMontante = _mapaNosVisuais[_noInicialParaTrecho];
+                            Guid idJusante = _mapaNosVisuais[noClicado];
+
+                            // Desenha o tubo (Line)
+                            var tubo = new Line
+                            {
+                                X1 = Canvas.GetLeft(_noInicialParaTrecho) + 10,
+                                Y1 = Canvas.GetTop(_noInicialParaTrecho) + 10,
+                                X2 = Canvas.GetLeft(noClicado) + 10,
+                                Y2 = Canvas.GetTop(noClicado) + 10,
+                                Stroke = Brushes.Gray,
+                                StrokeThickness = 4,
+                                Cursor = Cursors.Hand
+                            };
+                            
+                            // Insere a linha antes das bolinhas, para ficar por trás
+                            RedeCanvas.Children.Insert(0, tubo);
+
+                            // Cria o Trecho matemático na memória da rede
+                            var pipe = new HydraulicPipeSegment { Id = Guid.NewGuid(), Name = $"T-{_network.Segments.Count + 1}", StartNodeId = idMontante, EndNodeId = idJusante, LengthMeters = 5.0, InternalDiameterMm = null, AbsoluteRoughnessMm = 0.001 };
+                            _network.AddSegment(pipe);
+                            
+                            AtualizarListaTrechos(); // Atualiza a tabela na Aba 3
+                        }
+                        
+                        // Reseta a cor do primeiro nó e limpa a memória temporária
+                        _noInicialParaTrecho.Fill = Brushes.SteelBlue;
+                        _noInicialParaTrecho = null;
+                    }
+                }
+            }
+            
+            // 3. MODO: SELECIONAR (Ver Propriedades)
+            else if (_modoAtual == ModoDesenho.Selecionar)
+            {
+                if (e.OriginalSource is Ellipse noParaEditar)
+                {
+                    // Encontra o ID do nó clicado e joga para a janela de edição da Aba 3
+                    Guid id = _mapaNosVisuais[noParaEditar];
+                    var item = NosDataGrid.Items.OfType<NodeGridItem>().FirstOrDefault(n => n.Id == id);
+                    if (item != null)
+                    {
+                        NosDataGrid.SelectedItem = item;
+                        CarregarNoSelecionadoParaEdicao();
+                        MessageBox.Show($"Selecionou o nó: {item.Name}.\n\nVá até a Aba 'REDE DE ÁGUA' para editar as suas propriedades (cota, pressão, etc).", "Bahr Hidro - CAD", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
+                }
             }
         }
 
+        // =====================================================================
+        // UTILITÁRIOS GERAIS
+        // =====================================================================
         private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };
         private static bool TryParsePtBrDouble(string? text, out double value) { if (string.IsNullOrWhiteSpace(text)) { value = 0; return false; } return double.TryParse(text.Trim().Replace('.', ','), NumberStyles.Float, PtBr, out value); }
 
@@ -407,15 +507,6 @@ namespace BahrHidro.UI
         private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; }
         private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
         private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }
-        
-        // Classe visual para a grelha de esgoto
-        private class SewerFixtureViewModel
-        {
-            public string Name { get; set; } = "";
-            public int Uhc { get; set; }
-            public int MinDiameter { get; set; }
-            public string UhcDisplay => $"{Uhc} UHC";
-            public int Quantity { get; set; } = 0;
-        }
+        private class SewerFixtureViewModel { public string Name { get; set; } = ""; public int Uhc { get; set; } public int MinDiameter { get; set; } public string UhcDisplay => $"{Uhc} UHC"; public int Quantity { get; set; } = 0; }
     }
 }

@@ -17,14 +17,14 @@
         <Border Background="#172554" CornerRadius="12" Padding="22">
             <StackPanel>
                 <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="30" FontWeight="Bold"/>
-                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO E SANITÁRIO" Foreground="#BFDBFE" FontSize="13"/>
+                <TextBlock Text="DIMENSIONAMENTO HIDRÁULICO, SANITÁRIO E CAD" Foreground="#BFDBFE" FontSize="13"/>
             </StackPanel>
         </Border>
 
         <TabControl Grid.Row="1" Margin="0,18,0,12" Background="#F1F5F9" BorderThickness="0" FontSize="13">
 
-            <!-- ABA 1: DIMENSIONAMENTO (ÁGUA) -->
-            <TabItem Header="DIMENSIONAMENTO (ÁGUA)">
+            <!-- ABA 1: DIMENSIONAMENTO -->
+            <TabItem Header="DIMENSIONAMENTO">
                 <Grid Margin="4,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0.9*"/>
@@ -554,8 +554,8 @@
                 </Grid>
             </TabItem>
 
-            <!-- NOVA ABA 6: ESGOTO SANITÁRIO -->
-            <TabItem Header="ESGOTO SANITÁRIO">
+            <!-- ABA 6: ESGOTO SANITÁRIO -->
+            <TabItem Header="ESGOTO">
                 <Grid Margin="4,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0.9*"/>
@@ -568,7 +568,6 @@
                             <TextBlock Text="DIMENSIONAMENTO DE ESGOTO (NBR 8160)" FontSize="18" FontWeight="Bold" Foreground="#172554"/>
                             <TextBlock Text="Insira a quantidade de peças contribuintes no ramal." Foreground="#64748B" FontSize="12" Margin="0,8,0,16"/>
                             
-                            <!-- Lista dinâmica de peças (UHC) gerada pelo código C# -->
                             <ScrollViewer MaxHeight="380" VerticalScrollBarVisibility="Auto">
                                 <ItemsControl x:Name="SewerItemsControl">
                                     <ItemsControl.ItemTemplate>
@@ -647,6 +646,38 @@
                             </Border>
                             
                         </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- NOVA ABA 7: DESENHO 2D (CAD) -->
+            <TabItem Header="DESENHO 2D">
+                <Grid Margin="4,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="260"/>
+                        <ColumnDefinition Width="20"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="FERRAMENTAS CAD" FontSize="18" FontWeight="Bold" Foreground="#172554" Margin="0,0,0,20"/>
+                            
+                            <RadioButton x:Name="RbSelecionar" Content="🖱️ Selecionar" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16" IsChecked="True" Checked="ModoDesenho_Changed"/>
+                            <RadioButton x:Name="RbNo" Content="🔵 Desenhar Nó" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16" Checked="ModoDesenho_Changed"/>
+                            <RadioButton x:Name="RbTrecho" Content="➖ Conectar Trecho" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,16" Checked="ModoDesenho_Changed"/>
+                            
+                            <Separator Margin="0,20,0,20"/>
+                            
+                            <TextBlock Text="INSTRUÇÕES" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="InstrucaoCanvasText" Text="Clique nos elementos desenhados para ver as suas propriedades. Os nós e trechos desenhados aqui aparecem automaticamente na Aba 3 (Rede de Água)." Foreground="#64748B" FontSize="12" TextWrapping="Wrap"/>
+                            
+                        </StackPanel>
+                    </Border>
+                    
+                    <!-- A TELA BRANCA DE DESENHO -->
+                    <Border Grid.Column="2" Background="White" CornerRadius="12" BorderBrush="#CBD5E1" BorderThickness="2" ClipToBounds="True">
+                        <Canvas x:Name="RedeCanvas" Background="Transparent" MouseLeftButtonDown="RedeCanvas_MouseLeftButtonDown"/>
                     </Border>
                 </Grid>
             </TabItem>
