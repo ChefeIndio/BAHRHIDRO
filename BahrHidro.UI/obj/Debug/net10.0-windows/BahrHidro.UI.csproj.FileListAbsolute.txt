@@ -33,3 +33,5 @@
 /workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/ExcelNumberFormat.dll
 /workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/RBush.dll
 /workspaces/BAHRHIDRO/BahrHidro.UI/bin/Debug/net10.0-windows/SixLabors.Fonts.dll
+/workspaces/BAHRHIDRO/BahrHidro.UI/obj/Debug/net10.0-windows/FittingsWindow.baml
+/workspaces/BAHRHIDRO/BahrHidro.UI/obj/Debug/net10.0-windows/FittingsWindow.g.cs

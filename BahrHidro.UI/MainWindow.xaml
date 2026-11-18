@@ -237,8 +237,8 @@
                                             <TextBox x:Name="TrechoComprimentoTextBox" Text="10,00" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="D int. (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoDiametroTextBox" Text="21,60" FontSize="16" Padding="9"/>
+                                            <TextBlock Text="D int. (mm) / 'Auto'" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoDiametroTextBox" Text="Auto" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                     </Grid>
                                     <Grid Margin="0,14,0,0">
@@ -253,7 +253,17 @@
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
                                             <TextBlock Text="Perda loc. (K)" Margin="0,0,0,6" FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0" FontSize="16" Padding="9"/>
+                                            
+                                            <!-- AQUI ENTRA O NOVO BOTÃO "+" -->
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0" FontSize="16" Padding="9"/>
+                                                <Button Grid.Column="1" Content="+" Click="CalcularConexoes_Click" Width="38" Margin="4,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="Bold" FontSize="18" BorderThickness="0" Cursor="Hand" ToolTip="Somar conexões automaticamente"/>
+                                            </Grid>
+                                            
                                         </StackPanel>
                                     </Grid>
                                     <TextBlock Text="Vazão fixa de bypass (L/s) - opcional" Margin="0,14,0,6" FontWeight="SemiBold"/>
@@ -308,8 +318,6 @@
                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                                             <TextBlock Text="Viscosidade cinemática global (m²/s):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
                                             <TextBox x:Name="RedeViscosidadeTextBox" Text="0,000001004" Width="120" FontSize="15" Padding="6"/>
-                                            
-                                            <!-- OS DOIS BOTÕES LADO A LADO -->
                                             <Button x:Name="CalcularRedeButton" Content="CALCULAR REDE" Click="CalcularRede_Click" Width="180" Height="44" Margin="20,0,0,0" Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                                             <Button x:Name="ExportarMemorialButton" Content="EXPORTAR EXCEL" Click="ExportarMemorial_Click" Width="180" Height="44" Margin="10,0,0,0" Background="#1D4ED8" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" IsEnabled="False"/>
                                         </StackPanel>
@@ -320,10 +328,18 @@
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="100"/>
                                             <DataGridTextColumn Header="Montante → Jusante" Binding="{Binding ConnectionDisplay}" Width="*"/>
-                                            <DataGridTextColumn Header="Vazão Real (L/s)" Binding="{Binding FlowDisplay}" Width="110"/>
+                                            <DataGridTextColumn Header="Vazão (L/s)" Binding="{Binding FlowDisplay}" Width="90"/>
+                                            <DataGridTextColumn Header="D Escolhido (mm)" Binding="{Binding DiameterDisplay}" Width="135">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                        <Setter Property="Foreground" Value="#2563EB"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
                                             <DataGridTextColumn Header="Velocidade (m/s)" Binding="{Binding VelocityDisplay}" Width="115"/>
                                             <DataGridTextColumn Header="Reynolds" Binding="{Binding ReynoldsDisplay}" Width="90"/>
-                                            <DataGridTextColumn Header="Perda Total (m.c.a.)" Binding="{Binding HeadLossDisplay}" Width="130">
+                                            <DataGridTextColumn Header="Perda Total (m.c.a.)" Binding="{Binding HeadLossDisplay}" Width="135">
                                                 <DataGridTextColumn.ElementStyle>
                                                     <Style TargetType="TextBlock">
                                                         <Setter Property="FontWeight" Value="SemiBold"/>

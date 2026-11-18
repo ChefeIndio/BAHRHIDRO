@@ -12,7 +12,7 @@ using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
 using BahrHidro.Core.Hydraulic.Network;
 using BahrHidro.Core.Hydraulic.HotWater;
-using BahrHidro.Core.Reporting; // Importa o nosso novo Gerador de Relatórios
+using BahrHidro.Core.Reporting; 
 
 namespace BahrHidro.UI
 {
@@ -21,12 +21,11 @@ namespace BahrHidro.UI
         private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
 
         private readonly PipeCatalogDiameterSelector _diameterSelector;
+        private readonly PipeCatalogService _catalogService; 
         private readonly HydraulicNetwork _network = new HydraulicNetwork("Rede Hidráulica");
 
         private Guid? _editingNodeId;
         private Guid? _editingSegmentId;
-        
-        // Memória para guardar o resultado do último cálculo e permitir a exportação
         private NetworkCalculationResult? _ultimoResultadoDaRede;
 
         public MainWindow()
@@ -35,17 +34,14 @@ namespace BahrHidro.UI
 
             string catalogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro", "pipe-catalog.json");
             var repository = new PipeCatalogRepository(catalogPath);
-            var catalogService = new PipeCatalogService(repository);
-            _diameterSelector = new PipeCatalogDiameterSelector(catalogService);
+            _catalogService = new PipeCatalogService(repository);
+            _diameterSelector = new PipeCatalogDiameterSelector(_catalogService);
 
             AtualizarEstadoTipoNo();
             AtualizarListaNos();
             AtualizarListaTrechos();
         }
 
-        // =====================================================================
-        // ABA 1: DIMENSIONAMENTO E ABA 2: ANÁLISE (INALTERADAS)
-        // =====================================================================
         private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
         {
             var janelaCatalogo = new PipeCatalogWindow { Owner = this };
@@ -114,9 +110,6 @@ namespace BahrHidro.UI
             }
         }
 
-        // =====================================================================
-        // ABA 3: REDE HIDRAULICA
-        // =====================================================================
         private void NoTipoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e) { if (NoDemandaTextBox != null) AtualizarEstadoTipoNo(); }
         private void AtualizarEstadoTipoNo()
         {
@@ -133,11 +126,7 @@ namespace BahrHidro.UI
             }
         }
         private HydraulicNodeType ObterTipoNoSelecionado() => (NoTipoComboBox.SelectedItem is ComboBoxItem item && Enum.TryParse(item.Tag as string, out HydraulicNodeType parsed)) ? parsed : HydraulicNodeType.Junction;
-
-        private void SelecionarTipoNoNoComboBox(HydraulicNodeType type)
-        {
-            foreach (var obj in NoTipoComboBox.Items) if (obj is ComboBoxItem item && string.Equals(item.Tag as string, type.ToString(), StringComparison.Ordinal)) { NoTipoComboBox.SelectedItem = item; break; }
-        }
+        private void SelecionarTipoNoNoComboBox(HydraulicNodeType type) { foreach (var obj in NoTipoComboBox.Items) if (obj is ComboBoxItem item && string.Equals(item.Tag as string, type.ToString(), StringComparison.Ordinal)) { NoTipoComboBox.SelectedItem = item; break; } }
 
         private void SalvarNo_Click(object sender, RoutedEventArgs e)
         {
@@ -156,16 +145,11 @@ namespace BahrHidro.UI
                 }
 
                 var novoNo = new HydraulicNode { Id = _editingNodeId ?? Guid.NewGuid(), Name = nome, Type = tipo, ElevationMeters = cota, DemandLitersPerSecond = demanda, RelativeWeight = peso };
-
-                if (_editingNodeId.HasValue) _network.UpdateNode(novoNo);
-                else _network.AddNode(novoNo);
+                if (_editingNodeId.HasValue) _network.UpdateNode(novoNo); else _network.AddNode(novoNo);
                 
                 LimparFormularioNo(); AtualizarListaNos();
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Não foi possível salvar o elemento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            catch (Exception ex) { MessageBox.Show($"Não foi possível salvar o elemento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private void EditarNo_Click(object sender, RoutedEventArgs e) => CarregarNoSelecionadoParaEdicao();
@@ -176,12 +160,9 @@ namespace BahrHidro.UI
             var node = _network.FindNode(item.Id);
             if (node == null) return;
             _editingNodeId = node.Id;
-            SelecionarTipoNoNoComboBox(node.Type);
-            AtualizarEstadoTipoNo();
-            NoNomeTextBox.Text = node.Name;
-            NoCotaTextBox.Text = node.ElevationMeters.ToString("F2", PtBr);
-            NoDemandaTextBox.Text = node.DemandLitersPerSecond.ToString("F3", PtBr);
-            NoPesoTextBox.Text = node.RelativeWeight.ToString("F2", PtBr);
+            SelecionarTipoNoNoComboBox(node.Type); AtualizarEstadoTipoNo();
+            NoNomeTextBox.Text = node.Name; NoCotaTextBox.Text = node.ElevationMeters.ToString("F2", PtBr);
+            NoDemandaTextBox.Text = node.DemandLitersPerSecond.ToString("F3", PtBr); NoPesoTextBox.Text = node.RelativeWeight.ToString("F2", PtBr);
             NoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
             NoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#B45309"));
             NoModoEdicaoText.Text = $"Modo: Editando '{node.Name}'";
@@ -189,9 +170,7 @@ namespace BahrHidro.UI
         private void ExcluirNo_Click(object sender, RoutedEventArgs e)
         {
             if (NosDataGrid.SelectedItem is not NodeGridItem item) return;
-            _network.RemoveNode(item.Id);
-            if (_editingNodeId == item.Id) LimparFormularioNo();
-            AtualizarListaNos();
+            _network.RemoveNode(item.Id); if (_editingNodeId == item.Id) LimparFormularioNo(); AtualizarListaNos();
         }
         private void CancelarEdicaoNo_Click(object sender, RoutedEventArgs e) => LimparFormularioNo();
         private void LimparFormularioNo()
@@ -205,8 +184,7 @@ namespace BahrHidro.UI
         private void AtualizarListaNos()
         {
             var itens = _network.Nodes.Select(n => new NodeGridItem { Id = n.Id, Name = n.Name, Type = n.Type, TypeLabel = FormatarTipoNo(n.Type), ElevationMeters = n.ElevationMeters, ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), DemandLitersPerSecond = n.DemandLitersPerSecond, DemandDisplay = n.DemandLitersPerSecond.ToString("F3", PtBr), WeightDisplay = n.RelativeWeight.ToString("F2", PtBr) }).ToList();
-            NosDataGrid.ItemsSource = itens;
-            ResumoRedeText.Text = $"Total: {_network.Nodes.Count} elementos";
+            NosDataGrid.ItemsSource = itens; ResumoRedeText.Text = $"Total: {_network.Nodes.Count} elementos";
             AtualizarCombosNosTrecho(itens); AtualizarListaTrechos();
         }
         private void AtualizarCombosNosTrecho(List<NodeGridItem> itens)
@@ -218,16 +196,38 @@ namespace BahrHidro.UI
             if (e.HasValue && itens.Any(i => i.Id == e.Value)) TrechoNoFinalComboBox.SelectedValue = e.Value;
         }
 
+        // =====================================================================
+        // NOVO: ABRIR JANELA DE CÁLCULO DE CONEXÕES (K)
+        // =====================================================================
+        private void CalcularConexoes_Click(object sender, RoutedEventArgs e)
+        {
+            var janelaConexoes = new FittingsWindow { Owner = this };
+            if (janelaConexoes.ShowDialog() == true)
+            {
+                // Injeta automaticamente o resultado calculado na TextBox 
+                TrechoCoeficienteKTextBox.Text = janelaConexoes.TotalK.ToString("F2", PtBr);
+            }
+        }
+
         private void SalvarTrecho_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 string nome = (TrechoNomeTextBox.Text ?? "").Trim();
                 if (string.IsNullOrWhiteSpace(nome) || TrechoNoInicialComboBox.SelectedValue is not Guid start || TrechoNoFinalComboBox.SelectedValue is not Guid end || start == end) return;
-                if (!TryParsePtBrDouble(TrechoComprimentoTextBox.Text, out double comp) || !TryParsePtBrDouble(TrechoDiametroTextBox.Text, out double dia) || !TryParsePtBrDouble(TrechoRugosidadeTextBox.Text, out double rug) || !TryParsePtBrDouble(TrechoCoeficienteKTextBox.Text, out double k)) return;
+                
+                if (!TryParsePtBrDouble(TrechoComprimentoTextBox.Text, out double comp) || !TryParsePtBrDouble(TrechoRugosidadeTextBox.Text, out double rug) || !TryParsePtBrDouble(TrechoCoeficienteKTextBox.Text, out double k)) return;
+                
+                double? dia = null;
+                if (TrechoDiametroTextBox.Text.Trim().Equals("Auto", StringComparison.OrdinalIgnoreCase)) { dia = null; }
+                else if (TryParsePtBrDouble(TrechoDiametroTextBox.Text, out double parsedDia) && parsedDia > 0) { dia = parsedDia; }
+                else { MessageBox.Show("Informe um diâmetro válido ou escreva 'Auto'.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning); return; }
+
                 double? vazao = null; if (TryParsePtBrDouble(TrechoVazaoTextBox.Text, out double v) && v >= 0) vazao = v;
+                
                 var seg = new HydraulicPipeSegment { Id = _editingSegmentId ?? Guid.NewGuid(), Name = nome, StartNodeId = start, EndNodeId = end, LengthMeters = comp, InternalDiameterMm = dia, AbsoluteRoughnessMm = rug, TotalLossCoefficientK = k, FlowLitersPerSecond = vazao };
                 if (_editingSegmentId.HasValue) _network.UpdateSegment(seg); else _network.AddSegment(seg);
+                
                 LimparFormularioTrecho(); AtualizarListaTrechos();
             }
             catch { }
@@ -239,7 +239,8 @@ namespace BahrHidro.UI
             if (TrechosDataGrid.SelectedItem is not SegmentGridItem item) return;
             var seg = _network.FindSegment(item.Id); if (seg == null) return;
             _editingSegmentId = seg.Id; TrechoNomeTextBox.Text = seg.Name; TrechoNoInicialComboBox.SelectedValue = seg.StartNodeId; TrechoNoFinalComboBox.SelectedValue = seg.EndNodeId;
-            TrechoComprimentoTextBox.Text = seg.LengthMeters.ToString("F2", PtBr); TrechoDiametroTextBox.Text = seg.InternalDiameterMm.ToString("F2", PtBr);
+            TrechoComprimentoTextBox.Text = seg.LengthMeters.ToString("F2", PtBr); 
+            TrechoDiametroTextBox.Text = seg.InternalDiameterMm.HasValue ? seg.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto";
             TrechoRugosidadeTextBox.Text = seg.AbsoluteRoughnessMm.ToString("G", PtBr); TrechoCoeficienteKTextBox.Text = seg.TotalLossCoefficientK.ToString("F2", PtBr);
             TrechoVazaoTextBox.Text = seg.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "";
             TrechoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FEF3C7"));
@@ -255,7 +256,7 @@ namespace BahrHidro.UI
         private void LimparFormularioTrecho()
         {
             _editingSegmentId = null; TrechoNomeTextBox.Text = ""; TrechoNoInicialComboBox.SelectedIndex = -1; TrechoNoFinalComboBox.SelectedIndex = -1;
-            TrechoComprimentoTextBox.Text = "10,00"; TrechoDiametroTextBox.Text = "21,60"; TrechoRugosidadeTextBox.Text = "0,001"; TrechoCoeficienteKTextBox.Text = "0"; TrechoVazaoTextBox.Text = "";
+            TrechoComprimentoTextBox.Text = "10,00"; TrechoDiametroTextBox.Text = "Auto"; TrechoRugosidadeTextBox.Text = "0,001"; TrechoCoeficienteKTextBox.Text = "0"; TrechoVazaoTextBox.Text = "";
             TrechoModoEdicaoBadge.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#EFF6FF"));
             TrechoModoEdicaoText.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1D4ED8"));
             TrechoModoEdicaoText.Text = "Modo: Novo trecho";
@@ -263,68 +264,40 @@ namespace BahrHidro.UI
         private void AtualizarListaTrechos()
         {
             if (TrechosDataGrid == null) return;
-            TrechosDataGrid.ItemsSource = _network.Segments.Select(s => new SegmentGridItem { Id = s.Id, Name = s.Name, ConnectionDisplay = $"{_network.FindNode(s.StartNodeId)?.Name ?? "?"} → {_network.FindNode(s.EndNodeId)?.Name ?? "?"}", LengthDisplay = s.LengthMeters.ToString("F2", PtBr), DiameterDisplay = s.InternalDiameterMm.ToString("F2", PtBr), KDisplay = s.TotalLossCoefficientK.ToString("F2", PtBr), FlowDisplay = s.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "Auto" }).ToList();
+            TrechosDataGrid.ItemsSource = _network.Segments.Select(s => new SegmentGridItem { Id = s.Id, Name = s.Name, ConnectionDisplay = $"{_network.FindNode(s.StartNodeId)?.Name ?? "?"} → {_network.FindNode(s.EndNodeId)?.Name ?? "?"}", LengthDisplay = s.LengthMeters.ToString("F2", PtBr), DiameterDisplay = s.InternalDiameterMm.HasValue ? s.InternalDiameterMm.Value.ToString("F2", PtBr) : "Auto", KDisplay = s.TotalLossCoefficientK.ToString("F2", PtBr), FlowDisplay = s.FlowLitersPerSecond?.ToString("F3", PtBr) ?? "Auto" }).ToList();
             ResumoTrechosText.Text = $"Total: {_network.Segments.Count} trecho(s)";
         }
 
-        private void CalcularRede_Click(object sender, RoutedEventArgs e)
+        private async void CalcularRede_Click(object sender, RoutedEventArgs e)
         {
             try
             {
                 if (!TryParsePtBrDouble(RedeViscosidadeTextBox.Text, out double viscosidade)) return;
+                var produtosNoCatalogo = await _catalogService.GetAllAsync();
+                var opcoesDiametro = produtosNoCatalogo.Select(p => new PipeDiameterOption($"{p.Manufacturer} {p.NominalDesignation}", (double)p.InternalDiameterMm)).ToList();
+
+                var res = HydraulicNetworkSolver.Solve(_network, viscosidade, opcoesDiametro, 3.0);
                 
-                // O Core orquestra a rede inteira (pesos, perdas, pressões)
-                var res = HydraulicNetworkSolver.Solve(_network, viscosidade);
-                
-                // Guardamos o resultado em memória para permitir a exportação
                 _ultimoResultadoDaRede = res;
                 ExportarMemorialButton.IsEnabled = true;
                 
-                ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
+                ResultadosTrechosDataGrid.ItemsSource = res.Segments.Select(s => new ResultadoTrechoGridItem { Name = s.SegmentName, ConnectionDisplay = s.Connection, FlowDisplay = s.FlowLitersPerSecond.ToString("F3", PtBr), DiameterDisplay = s.SelectedDiameterMm > 0 ? s.SelectedDiameterMm.ToString("F2", PtBr) : "--", VelocityDisplay = s.VelocityMetersPerSecond.ToString("F3", PtBr), ReynoldsDisplay = s.ReynoldsNumber.ToString("F0", PtBr), HeadLossDisplay = s.TotalHeadLossMeters.ToString("F4", PtBr) }).ToList();
                 ResultadosNosDataGrid.ItemsSource = res.Nodes.Select(n => new ResultadoNoGridItem { Name = n.NodeName, TypeLabel = FormatarTipoNo(n.NodeType), ElevationDisplay = n.ElevationMeters.ToString("F2", PtBr), HeadDisplay = n.PiezometricHeadMeters.ToString("F3", PtBr), PressureDisplay = n.AvailablePressureMca.ToString("F3", PtBr), IsLowPressure = n.AvailablePressureMca < 1.0 && n.NodeType != HydraulicNodeType.Reservoir }).ToList();
             }
-            catch (Exception ex) { MessageBox.Show($"Erro:\n{ex.Message}"); }
+            catch (Exception ex) { MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
-        // =====================================================================
-        // NOVO: EXPORTAÇÃO DE RELATÓRIO PARA EXCEL
-        // =====================================================================
         private void ExportarMemorial_Click(object sender, RoutedEventArgs e)
         {
-            if (_ultimoResultadoDaRede == null)
-            {
-                MessageBox.Show("Por favor, calcule a rede antes de exportar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
-            // Abre a janela nativa do Windows para o utilizador escolher onde guardar
-            var dialog = new Microsoft.Win32.SaveFileDialog
-            {
-                FileName = "Memorial_Hidraulico_BahrHidro",
-                DefaultExt = ".xlsx",
-                Filter = "Ficheiro Excel (.xlsx)|*.xlsx"
-            };
-
+            if (_ultimoResultadoDaRede == null) return;
+            var dialog = new Microsoft.Win32.SaveFileDialog { FileName = "Memorial_Hidraulico_BahrHidro", DefaultExt = ".xlsx", Filter = "Ficheiro Excel (.xlsx)|*.xlsx" };
             if (dialog.ShowDialog() == true)
             {
-                try
-                {
-                    // Chama o nosso novo gerador no Core
-                    ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName);
-                    
-                    MessageBox.Show("Memorial de cálculo exportado com sucesso!\n\nVerifique o ficheiro Excel no local escolhido.", 
-                                    "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Ocorreu um erro ao gerar o ficheiro Excel:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                try { ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName); MessageBox.Show("Memorial exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information); }
+                catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao gerar o Excel:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
             }
         }
 
-        // =====================================================================
-        // ABA 4: ÁGUA QUENTE / BOILER
-        // =====================================================================
         private void CalcularBoiler_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -332,13 +305,8 @@ namespace BahrHidro.UI
                 if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0) return;
                 if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao)) return;
                 if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil)) return;
-
                 var resultado = BoilerCalculator.Calculate(perfil, ocupantes, pressao);
-
-                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L";
-                BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L";
-                BoilerTipoText.Text = resultado.RecommendedPressureType;
-
+                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L"; BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L"; BoilerTipoText.Text = resultado.RecommendedPressureType;
                 if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA")) BoilerTipoText.Foreground = Brushes.DarkRed;
                 else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO")) BoilerTipoText.Foreground = Brushes.DarkOrange;
                 else BoilerTipoText.Foreground = Brushes.ForestGreen;
@@ -346,15 +314,12 @@ namespace BahrHidro.UI
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}"); }
         }
 
-        // =====================================================================
-        // UTILITÁRIOS
-        // =====================================================================
         private static string FormatarTipoNo(HydraulicNodeType type) => type switch { HydraulicNodeType.Reservoir => "Reservatório", HydraulicNodeType.Junction => "Nó", HydraulicNodeType.ConsumptionPoint => "Consumo", _ => type.ToString() };
         private static bool TryParsePtBrDouble(string? text, out double value) { if (string.IsNullOrWhiteSpace(text)) { value = 0; return false; } return double.TryParse(text.Trim().Replace('.', ','), NumberStyles.Float, PtBr, out value); }
 
         private sealed class NodeGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public HydraulicNodeType Type { get; init; } public string TypeLabel { get; init; } = ""; public double ElevationMeters { get; init; } public string ElevationDisplay { get; init; } = ""; public double DemandLitersPerSecond { get; init; } public string DemandDisplay { get; init; } = ""; public string WeightDisplay { get; init; } = ""; }
         private sealed class SegmentGridItem { public Guid Id { get; init; } public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string LengthDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string KDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; }
-        private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
+        private sealed class ResultadoTrechoGridItem { public string Name { get; init; } = ""; public string ConnectionDisplay { get; init; } = ""; public string FlowDisplay { get; init; } = ""; public string DiameterDisplay { get; init; } = ""; public string VelocityDisplay { get; init; } = ""; public string ReynoldsDisplay { get; init; } = ""; public string HeadLossDisplay { get; init; } = ""; }
         private sealed class ResultadoNoGridItem { public string Name { get; init; } = ""; public string TypeLabel { get; init; } = ""; public string ElevationDisplay { get; init; } = ""; public string HeadDisplay { get; init; } = ""; public string PressureDisplay { get; init; } = ""; public bool IsLowPressure { get; init; } }
     }
 }

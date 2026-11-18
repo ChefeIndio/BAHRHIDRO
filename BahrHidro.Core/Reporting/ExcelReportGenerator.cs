@@ -8,20 +8,14 @@ namespace BahrHidro.Core.Reporting
     {
         public static void GenerateNetworkReport(NetworkCalculationResult result, string filePath)
         {
-            if (result == null) 
-                throw new ArgumentNullException(nameof(result));
-                
-            if (string.IsNullOrWhiteSpace(filePath)) 
-                throw new ArgumentException("Caminho do ficheiro inválido.");
+            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("Caminho do ficheiro inválido.");
 
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Memorial Hidráulico");
 
-            // ==========================================
-            // 1. TÍTULO E CABEÇALHO DO RELATÓRIO
-            // ==========================================
             ws.Cell("A1").Value = "BAHR HIDRO - MEMORIAL DE CÁLCULO DE REDE";
-            var titleRange = ws.Range("A1:G1");
+            var titleRange = ws.Range("A1:H1");
             titleRange.Merge();
             titleRange.Style.Font.SetBold().Font.FontSize = 14;
             titleRange.Style.Font.SetFontColor(XLColor.White);
@@ -31,15 +25,13 @@ namespace BahrHidro.Core.Reporting
             ws.Cell("A2").Value = $"Gerado automaticamente em: {DateTime.Now:dd/MM/yyyy HH:mm}";
             ws.Cell("A2").Style.Font.SetItalic();
 
-            // ==========================================
-            // 2. TABELA DE DIMENSIONAMENTO DOS TRECHOS
-            // ==========================================
             int row = 4;
             ws.Cell(row, 1).Value = "1. DIMENSIONAMENTO DOS TRECHOS DE TUBULAÇÃO";
             ws.Cell(row, 1).Style.Font.SetBold().Font.FontSize = 12;
             row++;
 
-            string[] headersTrechos = { "Trecho", "Ligação", "Vazão (L/s)", "Velocidade (m/s)", "Reynolds", "Fator Atrito", "Perda Total (m.c.a)" };
+            // NOVA COLUNA ADICIONADA AQUI: "D. Escolhido (mm)"
+            string[] headersTrechos = { "Trecho", "Ligação", "Vazão (L/s)", "D. Escolhido (mm)", "Velocidade (m/s)", "Reynolds", "Fator Atrito", "Perda Total (m.c.a)" };
             for (int i = 0; i < headersTrechos.Length; i++)
             {
                 var cell = ws.Cell(row, i + 1);
@@ -54,16 +46,22 @@ namespace BahrHidro.Core.Reporting
                 ws.Cell(row, 1).Value = seg.SegmentName;
                 ws.Cell(row, 2).Value = seg.Connection;
                 ws.Cell(row, 3).Value = Math.Round(seg.FlowLitersPerSecond, 3);
-                ws.Cell(row, 4).Value = Math.Round(seg.VelocityMetersPerSecond, 3);
-                ws.Cell(row, 5).Value = Math.Round(seg.ReynoldsNumber, 0);
-                ws.Cell(row, 6).Value = Math.Round(seg.FrictionFactor, 5);
-                ws.Cell(row, 7).Value = Math.Round(seg.TotalHeadLossMeters, 4);
+                
+                // Exibe o diâmetro escolhido
+                if (seg.SelectedDiameterMm > 0)
+                {
+                    ws.Cell(row, 4).Value = Math.Round(seg.SelectedDiameterMm, 2);
+                    ws.Cell(row, 4).Style.Font.SetBold().Font.SetFontColor(XLColor.Blue);
+                }
+                else ws.Cell(row, 4).Value = "--";
+
+                ws.Cell(row, 5).Value = Math.Round(seg.VelocityMetersPerSecond, 3);
+                ws.Cell(row, 6).Value = Math.Round(seg.ReynoldsNumber, 0);
+                ws.Cell(row, 7).Value = Math.Round(seg.FrictionFactor, 5);
+                ws.Cell(row, 8).Value = Math.Round(seg.TotalHeadLossMeters, 4);
                 row++;
             }
 
-            // ==========================================
-            // 3. TABELA DE VERIFICAÇÃO DE PRESSÕES (NÓS)
-            // ==========================================
             row += 2;
             ws.Cell(row, 1).Value = "2. VERIFICAÇÃO DE PRESSÕES NOS NÓS";
             ws.Cell(row, 1).Style.Font.SetBold().Font.FontSize = 12;
@@ -82,11 +80,8 @@ namespace BahrHidro.Core.Reporting
             foreach (var node in result.Nodes)
             {
                 ws.Cell(row, 1).Value = node.NodeName;
-                
-                string tipo = node.NodeType == HydraulicNodeType.Reservoir ? "Reservatório" :
-                              node.NodeType == HydraulicNodeType.Junction ? "Nó" : "Consumo";
+                string tipo = node.NodeType == HydraulicNodeType.Reservoir ? "Reservatório" : node.NodeType == HydraulicNodeType.Junction ? "Nó" : "Consumo";
                 ws.Cell(row, 2).Value = tipo;
-                
                 ws.Cell(row, 3).Value = Math.Round(node.ElevationMeters, 2);
                 ws.Cell(row, 4).Value = Math.Round(node.PiezometricHeadMeters, 3);
                 
@@ -94,31 +89,18 @@ namespace BahrHidro.Core.Reporting
                 pressaoCell.Value = Math.Round(node.AvailablePressureMca, 3);
                 
                 var statusCell = ws.Cell(row, 6);
-                
-                // Validação de Pressão Baixa (< 1.0 m.c.a da norma)
                 if (node.NodeType != HydraulicNodeType.Reservoir && node.AvailablePressureMca < 1.0)
                 {
                     statusCell.Value = "PRESSÃO BAIXA";
                     statusCell.Style.Font.SetBold().Font.SetFontColor(XLColor.DarkRed);
                     pressaoCell.Style.Font.SetBold().Font.SetFontColor(XLColor.DarkRed);
                 }
-                else if (node.NodeType == HydraulicNodeType.Reservoir)
-                {
-                    statusCell.Value = "ORIGEM";
-                    statusCell.Style.Font.SetFontColor(XLColor.Gray);
-                }
-                else
-                {
-                    statusCell.Value = "OK";
-                    statusCell.Style.Font.SetBold().Font.SetFontColor(XLColor.ForestGreen);
-                }
+                else if (node.NodeType == HydraulicNodeType.Reservoir) { statusCell.Value = "ORIGEM"; statusCell.Style.Font.SetFontColor(XLColor.Gray); }
+                else { statusCell.Value = "OK"; statusCell.Style.Font.SetBold().Font.SetFontColor(XLColor.ForestGreen); }
                 row++;
             }
 
-            // Ajustar largura das colunas automaticamente para o texto caber
-            ws.Columns(1, 7).AdjustToContents();
-
-            // Guardar o ficheiro no disco
+            ws.Columns(1, 8).AdjustToContents();
             workbook.SaveAs(filePath);
         }
     }
