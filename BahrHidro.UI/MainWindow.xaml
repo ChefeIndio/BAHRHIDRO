@@ -2,8 +2,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Bahr Hidro | Dimensionamento"
-        Height="780" Width="1100"
-        MinHeight="700" MinWidth="950"
+        Height="850" Width="1150"
+        MinHeight="750" MinWidth="1000"
         WindowStartupLocation="CenterScreen"
         Background="#F1F5F9">
 
@@ -324,12 +324,12 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- ABA 3: REDE HIDRÁULICA (ETAPA 1: NÓS/RESERVATÓRIOS | ETAPA 2: TRECHOS) -->
+            <!-- ABA 3: REDE HIDRÁULICA (ETAPA 1: NÓS, ETAPA 2: TRECHOS, ETAPA 3: RESULTADOS) -->
             <TabItem Header="REDE HIDRÁULICA">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="4,12">
 
-                        <!-- ETAPA 1: ELEMENTOS DA REDE (NÓS E RESERVATÓRIOS) -->
+                        <!-- ETAPA 1: ELEMENTOS DA REDE -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="0.85*"/>
@@ -337,118 +337,42 @@
                                 <ColumnDefinition Width="1.15*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- COLUNA ESQUERDA: FORMULÁRIO DE CADASTRO / EDIÇÃO DE NÓS -->
-                            <Border Grid.Column="0"
-                                    Background="White"
-                                    CornerRadius="12"
-                                    Padding="24">
+                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
                                 <StackPanel>
-                                    <TextBlock Text="1. ELEMENTO DA REDE (NÓ / RESERVATÓRIO)"
-                                               FontSize="17"
-                                               FontWeight="Bold"
-                                               Foreground="#172554"/>
-
-                                    <Border x:Name="NoModoEdicaoBadge"
-                                            Background="#EFF6FF"
-                                            CornerRadius="6"
-                                            Padding="10,6"
-                                            Margin="0,12,0,0">
-                                        <TextBlock x:Name="NoModoEdicaoText"
-                                                   Text="Modo: Novo elemento"
-                                                   Foreground="#1D4ED8"
-                                                   FontWeight="SemiBold"
-                                                   FontSize="12"/>
+                                    <TextBlock Text="1. ELEMENTO DA REDE (NÓ / RESERVATÓRIO)" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    <Border x:Name="NoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="6" Padding="10,6" Margin="0,12,0,0">
+                                        <TextBlock x:Name="NoModoEdicaoText" Text="Modo: Novo elemento" Foreground="#1D4ED8" FontWeight="SemiBold" FontSize="12"/>
                                     </Border>
-
-                                    <TextBlock Text="Tipo de elemento"
-                                               Margin="0,16,0,6"
-                                               FontWeight="SemiBold"/>
-
-                                    <ComboBox x:Name="NoTipoComboBox"
-                                              FontSize="15"
-                                              Padding="10,8"
-                                              SelectionChanged="NoTipoComboBox_SelectionChanged">
-                                        <ComboBoxItem Content="Reservatório"
-                                                      Tag="Reservoir"
-                                                      IsSelected="True"/>
-                                        <ComboBoxItem Content="Nó de Distribuição"
-                                                      Tag="Junction"/>
-                                        <ComboBoxItem Content="Ponto de Consumo"
-                                                      Tag="ConsumptionPoint"/>
+                                    <TextBlock Text="Tipo de elemento" Margin="0,16,0,6" FontWeight="SemiBold"/>
+                                    <ComboBox x:Name="NoTipoComboBox" FontSize="15" Padding="10,8" SelectionChanged="NoTipoComboBox_SelectionChanged">
+                                        <ComboBoxItem Content="Reservatório" Tag="Reservoir" IsSelected="True"/>
+                                        <ComboBoxItem Content="Nó de Distribuição" Tag="Junction"/>
+                                        <ComboBoxItem Content="Ponto de Consumo" Tag="ConsumptionPoint"/>
                                     </ComboBox>
-
-                                    <TextBlock Text="Nome / Identificação"
-                                               Margin="0,14,0,6"
-                                               FontWeight="SemiBold"/>
-
-                                    <TextBox x:Name="NoNomeTextBox"
-                                             FontSize="16"
-                                             Padding="9"/>
-
+                                    <TextBlock Text="Nome / Identificação" Margin="0,14,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="NoNomeTextBox" FontSize="16" Padding="9"/>
                                     <Grid Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Cota / Elevação (m)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <TextBox x:Name="NoCotaTextBox"
-                                                     Text="0,00"
-                                                     FontSize="16"
-                                                     Padding="9"/>
+                                            <TextBlock Text="Cota / Elevação (m)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="NoCotaTextBox" Text="0,00" FontSize="16" Padding="9"/>
                                         </StackPanel>
-
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Demanda (L/s)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <TextBox x:Name="NoDemandaTextBox"
-                                                     Text="0,00"
-                                                     FontSize="16"
-                                                     Padding="9"/>
+                                            <TextBlock Text="Demanda (L/s)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="NoDemandaTextBox" Text="0,00" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                     </Grid>
-
-                                    <TextBlock x:Name="NoAjudaTipoText"
-                                               Text="Reservatório: define a cota piezométrica de origem da rede (demanda fixa em 0,00 L/s)."
-                                               Foreground="#64748B"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Margin="0,12,0,0"/>
-
-                                    <Button x:Name="SalvarNoButton"
-                                            Content="ADICIONAR ELEMENTO"
-                                            Click="SalvarNo_Click"
-                                            Height="44"
-                                            Margin="0,18,0,0"
-                                            Background="#2563EB"
-                                            Foreground="White"
-                                            FontWeight="Bold"
-                                            BorderThickness="0"
-                                            Cursor="Hand"/>
-
-                                    <Button x:Name="CancelarEdicaoNoButton"
-                                            Content="LIMPAR FORMULÁRIO"
-                                            Click="CancelarEdicaoNo_Click"
-                                            Height="38"
-                                            Margin="0,10,0,0"
-                                            Background="#E2E8F0"
-                                            Foreground="#1E293B"
-                                            FontWeight="SemiBold"
-                                            BorderThickness="0"
-                                            Cursor="Hand"/>
+                                    <TextBlock x:Name="NoAjudaTipoText" Text="Reservatório: define a cota piezométrica de origem." Foreground="#64748B" FontSize="11" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                                    <Button x:Name="SalvarNoButton" Content="ADICIONAR ELEMENTO" Click="SalvarNo_Click" Height="44" Margin="0,18,0,0" Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                    <Button x:Name="CancelarEdicaoNoButton" Content="LIMPAR FORMULÁRIO" Click="CancelarEdicaoNo_Click" Height="38" Margin="0,10,0,0" Background="#E2E8F0" Foreground="#1E293B" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- COLUNA DIREITA: LISTA DE ELEMENTOS CADASTRADOS -->
-                            <Border Grid.Column="2"
-                                    Background="White"
-                                    CornerRadius="12"
-                                    Padding="24">
+                            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -456,90 +380,30 @@
                                         <RowDefinition Height="*"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0"
-                                               Text="ELEMENTOS CADASTRADOS NA REDE"
-                                               FontSize="17"
-                                               FontWeight="Bold"
-                                               Foreground="#172554"/>
-
-                                    <TextBlock x:Name="ResumoRedeText"
-                                               Grid.Row="1"
-                                               Text="Nenhum elemento cadastrado | Demanda total: 0,000 L/s"
-                                               Foreground="#64748B"
-                                               FontSize="12"
-                                               Margin="0,6,0,12"/>
-
-                                    <DataGrid x:Name="NosDataGrid"
-                                              Grid.Row="2"
-                                              MinHeight="240"
-                                              MaxHeight="330"
-                                              AutoGenerateColumns="False"
-                                              IsReadOnly="True"
-                                              SelectionMode="Single"
-                                              CanUserAddRows="False"
-                                              CanUserDeleteRows="False"
-                                              CanUserResizeRows="False"
-                                              HeadersVisibility="Column"
-                                              GridLinesVisibility="Horizontal"
-                                              HorizontalGridLinesBrush="#E2E8F0"
-                                              Background="White"
-                                              BorderBrush="#CBD5E1"
-                                              BorderThickness="1"
-                                              RowHeight="32"
-                                              FontSize="13"
-                                              MouseDoubleClick="NosDataGrid_MouseDoubleClick">
+                                    <TextBlock Grid.Row="0" Text="ELEMENTOS CADASTRADOS NA REDE" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    <TextBlock x:Name="ResumoRedeText" Grid.Row="1" Text="Nenhum elemento cadastrado | Demanda total: 0,000 L/s" Foreground="#64748B" FontSize="12" Margin="0,6,0,12"/>
+                                    <DataGrid x:Name="NosDataGrid" Grid.Row="2" MinHeight="240" MaxHeight="330" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13" MouseDoubleClick="NosDataGrid_MouseDoubleClick">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Nome"
-                                                                Binding="{Binding Name}"
-                                                                Width="*"/>
-                                            <DataGridTextColumn Header="Tipo"
-                                                                Binding="{Binding TypeLabel}"
-                                                                Width="150"/>
-                                            <DataGridTextColumn Header="Cota (m)"
-                                                                Binding="{Binding ElevationDisplay}"
-                                                                Width="95"/>
-                                            <DataGridTextColumn Header="Demanda (L/s)"
-                                                                Binding="{Binding DemandDisplay}"
-                                                                Width="115"/>
+                                            <DataGridTextColumn Header="Nome" Binding="{Binding Name}" Width="*"/>
+                                            <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="150"/>
+                                            <DataGridTextColumn Header="Cota (m)" Binding="{Binding ElevationDisplay}" Width="95"/>
+                                            <DataGridTextColumn Header="Demanda (L/s)" Binding="{Binding DemandDisplay}" Width="115"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
-
-                                    <Grid Grid.Row="3"
-                                          Margin="0,14,0,0">
+                                    <Grid Grid.Row="3" Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-
-                                        <Button x:Name="EditarNoButton"
-                                                Grid.Column="0"
-                                                Content="EDITAR ELEMENTO"
-                                                Click="EditarNo_Click"
-                                                Height="40"
-                                                Background="#172554"
-                                                Foreground="White"
-                                                FontWeight="Bold"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
-
-                                        <Button x:Name="ExcluirNoButton"
-                                                Grid.Column="2"
-                                                Content="EXCLUIR ELEMENTO"
-                                                Click="ExcluirNo_Click"
-                                                Height="40"
-                                                Background="#DC2626"
-                                                Foreground="White"
-                                                FontWeight="Bold"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
+                                        <Button x:Name="EditarNoButton" Grid.Column="0" Content="EDITAR ELEMENTO" Click="EditarNo_Click" Height="40" Background="#172554" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                        <Button x:Name="ExcluirNoButton" Grid.Column="2" Content="EXCLUIR ELEMENTO" Click="ExcluirNo_Click" Height="40" Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
                                     </Grid>
                                 </Grid>
                             </Border>
                         </Grid>
 
-                        <!-- ETAPA 2: TRECHOS DE TUBULAÇÃO ENTRE NÓS -->
+                        <!-- ETAPA 2: TRECHOS DE TUBULAÇÃO -->
                         <Grid Margin="0,20,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="0.85*"/>
@@ -547,267 +411,165 @@
                                 <ColumnDefinition Width="1.15*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- COLUNA ESQUERDA: FORMULÁRIO DE CADASTRO / EDIÇÃO DE TRECHOS -->
-                            <Border Grid.Column="0"
-                                    Background="White"
-                                    CornerRadius="12"
-                                    Padding="24">
+                            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="24">
                                 <StackPanel>
-                                    <TextBlock Text="2. TRECHO DE TUBULAÇÃO"
-                                               FontSize="17"
-                                               FontWeight="Bold"
-                                               Foreground="#172554"/>
-
-                                    <Border x:Name="TrechoModoEdicaoBadge"
-                                            Background="#EFF6FF"
-                                            CornerRadius="6"
-                                            Padding="10,6"
-                                            Margin="0,12,0,0">
-                                        <TextBlock x:Name="TrechoModoEdicaoText"
-                                                   Text="Modo: Novo trecho"
-                                                   Foreground="#1D4ED8"
-                                                   FontWeight="SemiBold"
-                                                   FontSize="12"/>
+                                    <TextBlock Text="2. TRECHO DE TUBULAÇÃO" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    <Border x:Name="TrechoModoEdicaoBadge" Background="#EFF6FF" CornerRadius="6" Padding="10,6" Margin="0,12,0,0">
+                                        <TextBlock x:Name="TrechoModoEdicaoText" Text="Modo: Novo trecho" Foreground="#1D4ED8" FontWeight="SemiBold" FontSize="12"/>
                                     </Border>
-
-                                    <TextBlock Text="Nome / Identificação do trecho"
-                                               Margin="0,16,0,6"
-                                               FontWeight="SemiBold"/>
-
-                                    <TextBox x:Name="TrechoNomeTextBox"
-                                             FontSize="16"
-                                             Padding="9"/>
-
+                                    <TextBlock Text="Nome / Identificação do trecho" Margin="0,16,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="TrechoNomeTextBox" FontSize="16" Padding="9"/>
                                     <Grid Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Nó inicial (montante)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <ComboBox x:Name="TrechoNoInicialComboBox"
-                                                      DisplayMemberPath="Name"
-                                                      SelectedValuePath="Id"
-                                                      FontSize="14"
-                                                      Padding="9,8"/>
+                                            <TextBlock Text="Nó inicial (montante)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="TrechoNoInicialComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" FontSize="14" Padding="9,8"/>
                                         </StackPanel>
-
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Nó final (jusante)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <ComboBox x:Name="TrechoNoFinalComboBox"
-                                                      DisplayMemberPath="Name"
-                                                      SelectedValuePath="Id"
-                                                      FontSize="14"
-                                                      Padding="9,8"/>
+                                            <TextBlock Text="Nó final (jusante)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <ComboBox x:Name="TrechoNoFinalComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" FontSize="14" Padding="9,8"/>
                                         </StackPanel>
                                     </Grid>
-
                                     <Grid Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Comprimento (m)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoComprimentoTextBox"
-                                                     Text="10,00"
-                                                     FontSize="16"
-                                                     Padding="9"/>
+                                            <TextBlock Text="Comprimento (m)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoComprimentoTextBox" Text="10,00" FontSize="16" Padding="9"/>
                                         </StackPanel>
-
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Diâmetro interno (mm)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoDiametroTextBox"
-                                                     Text="21,60"
-                                                     FontSize="16"
-                                                     Padding="9"/>
+                                            <TextBlock Text="Diâmetro interno (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoDiametroTextBox" Text="21,60" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                     </Grid>
-
                                     <Grid Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-
                                         <StackPanel Grid.Column="0">
-                                            <TextBlock Text="Rugosidade abs. (mm)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoRugosidadeTextBox"
-                                                     Text="0,001"
-                                                     FontSize="16"
-                                                     Padding="9"/>
+                                            <TextBlock Text="Rugosidade abs. (mm)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoRugosidadeTextBox" Text="0,001" FontSize="16" Padding="9"/>
                                         </StackPanel>
-
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="Perda localizada (K)"
-                                                       Margin="0,0,0,6"
-                                                       FontWeight="SemiBold"/>
-                                            <TextBox x:Name="TrechoCoeficienteKTextBox"
-                                                     Text="0"
-                                                     FontSize="16"
-                                                     Padding="9"/>
+                                            <TextBlock Text="Perda localizada (K)" Margin="0,0,0,6" FontWeight="SemiBold"/>
+                                            <TextBox x:Name="TrechoCoeficienteKTextBox" Text="0" FontSize="16" Padding="9"/>
                                         </StackPanel>
                                     </Grid>
-
-                                    <TextBlock Text="Vazão do trecho (L/s) — opcional"
-                                               Margin="0,14,0,6"
-                                               FontWeight="SemiBold"/>
-
-                                    <TextBox x:Name="TrechoVazaoTextBox"
-                                             FontSize="16"
-                                             Padding="9"/>
-
-                                    <TextBlock Text="Deixe a vazão em branco para o cálculo automático a partir das demandas dos pontos de consumo na próxima etapa."
-                                               Foreground="#64748B"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Margin="0,10,0,0"/>
-
-                                    <Button x:Name="SalvarTrechoButton"
-                                            Content="ADICIONAR TRECHO"
-                                            Click="SalvarTrecho_Click"
-                                            Height="44"
-                                            Margin="0,18,0,0"
-                                            Background="#2563EB"
-                                            Foreground="White"
-                                            FontWeight="Bold"
-                                            BorderThickness="0"
-                                            Cursor="Hand"/>
-
-                                    <Button x:Name="CancelarEdicaoTrechoButton"
-                                            Content="LIMPAR FORMULÁRIO"
-                                            Click="CancelarEdicaoTrecho_Click"
-                                            Height="38"
-                                            Margin="0,10,0,0"
-                                            Background="#E2E8F0"
-                                            Foreground="#1E293B"
-                                            FontWeight="SemiBold"
-                                            BorderThickness="0"
-                                            Cursor="Hand"/>
+                                    <TextBlock Text="Vazão do trecho (L/s) — opcional" Margin="0,14,0,6" FontWeight="SemiBold"/>
+                                    <TextBox x:Name="TrechoVazaoTextBox" FontSize="16" Padding="9"/>
+                                    <TextBlock Text="Deixe em branco para o cálculo automático." Foreground="#64748B" FontSize="11" Margin="0,10,0,0"/>
+                                    <Button x:Name="SalvarTrechoButton" Content="ADICIONAR TRECHO" Click="SalvarTrecho_Click" Height="44" Margin="0,18,0,0" Background="#2563EB" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                    <Button x:Name="CancelarEdicaoTrechoButton" Content="LIMPAR FORMULÁRIO" Click="CancelarEdicaoTrecho_Click" Height="38" Margin="0,10,0,0" Background="#E2E8F0" Foreground="#1E293B" FontWeight="SemiBold" BorderThickness="0" Cursor="Hand"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- COLUNA DIREITA: LISTA DE TRECHOS CADASTRADOS -->
-                            <Border Grid.Column="2"
-                                    Background="White"
-                                    CornerRadius="12"
-                                    Padding="24">
+                            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="24">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="*"/>
                                         <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-
-                                    <TextBlock Grid.Row="0"
-                                               Text="TRECHOS CADASTRADOS NA REDE"
-                                               FontSize="17"
-                                               FontWeight="Bold"
-                                               Foreground="#172554"/>
-
-                                    <TextBlock x:Name="ResumoTrechosText"
-                                               Grid.Row="1"
-                                               Text="Nenhum trecho cadastrado | Extensão total: 0,00 m"
-                                               Foreground="#64748B"
-                                               FontSize="12"
-                                               Margin="0,6,0,12"/>
-
-                                    <DataGrid x:Name="TrechosDataGrid"
-                                              Grid.Row="2"
-                                              MinHeight="280"
-                                              MaxHeight="420"
-                                              AutoGenerateColumns="False"
-                                              IsReadOnly="True"
-                                              SelectionMode="Single"
-                                              CanUserAddRows="False"
-                                              CanUserDeleteRows="False"
-                                              CanUserResizeRows="False"
-                                              HeadersVisibility="Column"
-                                              GridLinesVisibility="Horizontal"
-                                              HorizontalGridLinesBrush="#E2E8F0"
-                                              Background="White"
-                                              BorderBrush="#CBD5E1"
-                                              BorderThickness="1"
-                                              RowHeight="32"
-                                              FontSize="13"
-                                              MouseDoubleClick="TrechosDataGrid_MouseDoubleClick">
+                                    <TextBlock Grid.Row="0" Text="TRECHOS CADASTRADOS NA REDE" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    <TextBlock x:Name="ResumoTrechosText" Grid.Row="1" Text="Nenhum trecho cadastrado | Extensão total: 0,00 m" Foreground="#64748B" FontSize="12" Margin="0,6,0,12"/>
+                                    <DataGrid x:Name="TrechosDataGrid" Grid.Row="2" MinHeight="280" MaxHeight="420" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13" MouseDoubleClick="TrechosDataGrid_MouseDoubleClick">
                                         <DataGrid.Columns>
-                                            <DataGridTextColumn Header="Trecho"
-                                                                Binding="{Binding Name}"
-                                                                Width="95"/>
-                                            <DataGridTextColumn Header="Montante → Jusante"
-                                                                Binding="{Binding ConnectionDisplay}"
-                                                                Width="*"/>
-                                            <DataGridTextColumn Header="Comp. (m)"
-                                                                Binding="{Binding LengthDisplay}"
-                                                                Width="85"/>
-                                            <DataGridTextColumn Header="D int (mm)"
-                                                                Binding="{Binding DiameterDisplay}"
-                                                                Width="88"/>
-                                            <DataGridTextColumn Header="K"
-                                                                Binding="{Binding KDisplay}"
-                                                                Width="58"/>
-                                            <DataGridTextColumn Header="Vazão (L/s)"
-                                                                Binding="{Binding FlowDisplay}"
-                                                                Width="90"/>
+                                            <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="95"/>
+                                            <DataGridTextColumn Header="Montante → Jusante" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                            <DataGridTextColumn Header="Comp. (m)" Binding="{Binding LengthDisplay}" Width="85"/>
+                                            <DataGridTextColumn Header="D int (mm)" Binding="{Binding DiameterDisplay}" Width="88"/>
+                                            <DataGridTextColumn Header="K" Binding="{Binding KDisplay}" Width="58"/>
+                                            <DataGridTextColumn Header="Vazão (L/s)" Binding="{Binding FlowDisplay}" Width="90"/>
                                         </DataGrid.Columns>
                                     </DataGrid>
-
-                                    <Grid Grid.Row="3"
-                                          Margin="0,14,0,0">
+                                    <Grid Grid.Row="3" Margin="0,14,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="12"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
+                                        <Button x:Name="EditarTrechoButton" Grid.Column="0" Content="EDITAR TRECHO" Click="EditarTrecho_Click" Height="40" Background="#172554" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                        <Button x:Name="ExcluirTrechoButton" Grid.Column="2" Content="EXCLUIR TRECHO" Click="ExcluirTrecho_Click" Height="40" Background="#DC2626" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </Grid>
 
-                                        <Button x:Name="EditarTrechoButton"
-                                                Grid.Column="0"
-                                                Content="EDITAR TRECHO"
-                                                Click="EditarTrecho_Click"
-                                                Height="40"
-                                                Background="#172554"
-                                                Foreground="White"
-                                                FontWeight="Bold"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
-
-                                        <Button x:Name="ExcluirTrechoButton"
-                                                Grid.Column="2"
-                                                Content="EXCLUIR TRECHO"
-                                                Click="ExcluirTrecho_Click"
-                                                Height="40"
-                                                Background="#DC2626"
-                                                Foreground="White"
-                                                FontWeight="Bold"
-                                                BorderThickness="0"
-                                                Cursor="Hand"/>
+                        <!-- ETAPA 3: CÁLCULO E RESULTADOS GLOBAIS -->
+                        <Grid Margin="0,20,0,0">
+                            <Border Background="White" CornerRadius="12" Padding="24">
+                                <StackPanel>
+                                    <TextBlock Text="3. CÁLCULO E RESULTADOS GLOBAIS" FontSize="17" FontWeight="Bold" Foreground="#172554"/>
+                                    
+                                    <Grid Margin="0,16,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                            <TextBlock Text="Viscosidade cinemática global (m²/s):" VerticalAlignment="Center" FontWeight="SemiBold" Margin="0,0,10,0"/>
+                                            <TextBox x:Name="RedeViscosidadeTextBox" Text="0,000001004" Width="120" FontSize="15" Padding="6"/>
+                                            <Button x:Name="CalcularRedeButton" Content="CALCULAR REDE COMPLETA" Click="CalcularRede_Click" Width="280" Height="44" Margin="20,0,0,0" Background="#059669" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand"/>
+                                        </StackPanel>
                                     </Grid>
 
-                                    <TextBlock Grid.Row="4"
-                                               Text="Dica: cadastre pelo menos dois elementos acima para interligá-los. Nós conectados a trechos ficam protegidos contra exclusão acidental."
-                                               Foreground="#64748B"
-                                               FontSize="11"
-                                               TextWrapping="Wrap"
-                                               Margin="0,12,0,0"/>
-                                </Grid>
+                                    <TextBlock Text="FÍSICA DOS TRECHOS DE TUBULAÇÃO" FontWeight="Bold" Foreground="#1E293B" Margin="0,10,0,6"/>
+                                    <DataGrid x:Name="ResultadosTrechosDataGrid" MinHeight="150" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="100"/>
+                                            <DataGridTextColumn Header="Montante → Jusante" Binding="{Binding ConnectionDisplay}" Width="*"/>
+                                            <DataGridTextColumn Header="Vazão Real (L/s)" Binding="{Binding FlowDisplay}" Width="110"/>
+                                            <DataGridTextColumn Header="Velocidade (m/s)" Binding="{Binding VelocityDisplay}" Width="115"/>
+                                            <DataGridTextColumn Header="Reynolds" Binding="{Binding ReynoldsDisplay}" Width="90"/>
+                                            <DataGridTextColumn Header="Perda Total (m.c.a.)" Binding="{Binding HeadLossDisplay}" Width="130">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                        <Setter Property="Foreground" Value="#059669"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+
+                                    <TextBlock Text="PRESSÕES NOS NÓS E PONTOS DE CONSUMO" FontWeight="Bold" Foreground="#1E293B" Margin="0,20,0,6"/>
+                                    <DataGrid x:Name="ResultadosNosDataGrid" MinHeight="150" AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserAddRows="False" CanUserDeleteRows="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="32" FontSize="13">
+                                        <DataGrid.RowStyle>
+                                            <Style TargetType="DataGridRow">
+                                                <!-- Destaca em vermelho a linha se a pressão for insuficiente (menor que 1 m.c.a) -->
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLowPressure}" Value="True">
+                                                        <Setter Property="Foreground" Value="#DC2626"/>
+                                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </DataGrid.RowStyle>
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Nó / Ponto" Binding="{Binding Name}" Width="150"/>
+                                            <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="*"/>
+                                            <DataGridTextColumn Header="Cota (m)" Binding="{Binding ElevationDisplay}" Width="100"/>
+                                            <DataGridTextColumn Header="Cota Piezométrica" Binding="{Binding HeadDisplay}" Width="130"/>
+                                            <DataGridTextColumn Header="Pressão Disp. (m.c.a.)" Binding="{Binding PressureDisplay}" Width="150">
+                                                <DataGridTextColumn.ElementStyle>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                            </DataGridTextColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
                             </Border>
                         </Grid>
 
@@ -817,11 +579,6 @@
 
         </TabControl>
 
-        <TextBlock Grid.Row="2"
-                   Text="BAHR HIDRO"
-                   Foreground="#64748B"
-                   FontSize="11"
-                   FontWeight="SemiBold"
-                   HorizontalAlignment="Center"/>
+        <TextBlock Grid.Row="2" Text="BAHR HIDRO" Foreground="#64748B" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"/>
     </Grid>
 </Window>
