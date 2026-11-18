@@ -354,8 +354,64 @@ namespace BahrHidro.UI
             var dialog = new Microsoft.Win32.SaveFileDialog { FileName = "Memorial_Hidraulico_BahrHidro", DefaultExt = ".xlsx", Filter = "Ficheiro Excel (.xlsx)|*.xlsx" };
             if (dialog.ShowDialog() == true)
             {
-                try { ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName); MessageBox.Show("Memorial exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information); }
-                catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao gerar o Excel:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+                try
+                {
+                    if (_revitBridge != null)
+                        GerarExcelIsoladoNoRevit(_ultimoResultadoDaRede, dialog.FileName);
+                    else
+                        ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName);
+
+                    MessageBox.Show("Memorial exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    var detalhe = ex.InnerException?.Message ?? ex.Message;
+                    MessageBox.Show($"Ocorreu um erro ao gerar o Excel:\n{detalhe}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private static void GerarExcelIsoladoNoRevit(NetworkCalculationResult resultado, string caminhoArquivo)
+        {
+            string coreDllPath = typeof(ExcelReportGenerator).Assembly.Location;
+            string pluginDir = System.IO.Path.GetDirectoryName(coreDllPath)!;
+            string json = System.Text.Json.JsonSerializer.Serialize(resultado);
+
+            var alc = new IsolatedExcelLoadContext(pluginDir);
+            try
+            {
+                var coreAsm = alc.LoadFromAssemblyPath(coreDllPath);
+                var resultType = coreAsm.GetType(typeof(NetworkCalculationResult).FullName!)!;
+                var generatorType = coreAsm.GetType(typeof(ExcelReportGenerator).FullName!)!;
+
+                object? isolatedResult = System.Text.Json.JsonSerializer.Deserialize(json, resultType);
+                var method = generatorType.GetMethod(nameof(ExcelReportGenerator.GenerateNetworkReport))!;
+                method.Invoke(null, new[] { isolatedResult, caminhoArquivo });
+            }
+            finally
+            {
+                alc.Unload();
+            }
+        }
+
+        private sealed class IsolatedExcelLoadContext : System.Runtime.Loader.AssemblyLoadContext
+        {
+            private readonly string _baseDir;
+
+            public IsolatedExcelLoadContext(string baseDir) : base("BahrHidroExcelContext", isCollectible: true)
+            {
+                _baseDir = baseDir;
+            }
+
+            protected override System.Reflection.Assembly? Load(System.Reflection.AssemblyName assemblyName)
+            {
+                if (!string.IsNullOrEmpty(assemblyName.Name))
+                {
+                    string candidatePath = System.IO.Path.Combine(_baseDir, assemblyName.Name + ".dll");
+                    if (System.IO.File.Exists(candidatePath))
+                        return LoadFromAssemblyPath(candidatePath);
+                }
+                return null;
             }
         }
 
