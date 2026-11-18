@@ -1,6 +1,7 @@
 ﻿<Window x:Class="BahrHidro.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:BahrHidro.UI"
         Title="Bahr Hidro - Engenharia Hidráulica e BIM"
         Height="780" Width="1220"
         WindowStartupLocation="CenterScreen"
@@ -668,6 +669,11 @@
                         <Canvas x:Name="RedeCanvas" Background="White" ClipToBounds="True" MouseLeftButtonDown="RedeCanvas_MouseLeftButtonDown"/>
                     </Border>
                 </DockPanel>
+            </TabItem>
+
+            <!-- ABA 8: ÁGUAS PLUVIAIS (NBR 10844) -->
+            <TabItem Header="8. ÁGUAS PLUVIAIS">
+                <local:RainwaterView />
             </TabItem>
 
         </TabControl>

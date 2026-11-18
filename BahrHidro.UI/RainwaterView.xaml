@@ -1,0 +1,237 @@
+<UserControl x:Class="BahrHidro.UI.RainwaterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F8FAFC">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.15*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="0.85*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- COLUNA ESQUERDA: PARÂMETROS DE ENTRADA -->
+            <StackPanel Grid.Column="0">
+                <!-- 1. REGIÃO E PLUVIOMETRIA -->
+                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="1. REGIÃO E ÍNDICE PLUVIOMÉTRICO (ABNT NBR 10844)"
+                                   FontWeight="Bold" FontSize="13" Foreground="#1E3A8A" Margin="0,0,0,10"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.4*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="0.8*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Cidade / Região:" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="CmbRegiao" Height="30" DisplayMemberPath="DisplayName"
+                                          SelectionChanged="CmbRegiao_SelectionChanged"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Período de Retorno (T):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="CmbPeriodoRetorno" Height="30" SelectedIndex="1"
+                                          SelectionChanged="CmbPeriodoRetorno_SelectionChanged">
+                                    <ComboBoxItem Content="1 ano (Áreas pavimentadas)" Tag="1"/>
+                                    <ComboBoxItem Content="5 anos (Coberturas / Telhados)" Tag="5"/>
+                                    <ComboBoxItem Content="25 anos (Sem extravasamento)" Tag="25"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Chuva I (mm/h):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtIntensidade" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="148"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 2. GEOMETRIA DA COBERTURA -->
+                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="2. GEOMETRIA DA COBERTURA E ÁREA DE CONTRIBUIÇÃO"
+                                   FontWeight="Bold" FontSize="13" Foreground="#1E3A8A" Margin="0,0,0,10"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Comp. Calha b (m):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtLarguraTelhado" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="10,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Projeção Horiz. a (m):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtProjecaoTelhado" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="6,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Altura Telhado h (m):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtAlturaTelhado" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="1,5"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="6">
+                                <TextBlock Text="Parede Interc. (m²):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtParedeInterceptante" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="0,0"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- 3. CALHAS E CONDUTORES VERTICAIS -->
+                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="3. CONFIGURAÇÃO DA CALHA E CONDUTORES VERTICAIS"
+                                   FontWeight="Bold" FontSize="13" Foreground="#1E3A8A" Margin="0,0,0,10"/>
+
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1.3*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="0.7*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Formato da Calha:" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="CmbFormatoCalha" Height="30" SelectedIndex="0">
+                                    <ComboBoxItem Content="Retangular" Tag="Rectangular"/>
+                                    <ComboBoxItem Content="Semicircular" Tag="Semicircular"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Material (Rugosidade n):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="CmbMaterialCalha" Height="30" SelectedIndex="0">
+                                    <ComboBoxItem Content="PVC / Alumínio / Zinco (n = 0,011)" Tag="PvcOrMetal"/>
+                                    <ComboBoxItem Content="Ferro Fundido / Concreto Alisado (n = 0,012)" Tag="CastIronOrSmoothConcrete"/>
+                                    <ComboBoxItem Content="Cerâmica / Concreto Áspero (n = 0,013)" Tag="CeramicOrRoughConcrete"/>
+                                    <ComboBoxItem Content="Alvenaria sem Revestimento (n = 0,015)" Tag="UnplasteredBrick"/>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Declividade (%):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtDeclividade" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="0,5"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <CheckBox x:Name="ChkCalhaManual" Content="Verificar seção manual da calha (desmarque para dimensionar automaticamente)"
+                                  FontSize="12" Foreground="#334155" Margin="0,4,0,8"
+                                  Checked="ChkCalhaManual_Changed" Unchecked="ChkCalhaManual_Changed"/>
+
+                        <Grid x:Name="PainelCalhaManual" Visibility="Collapsed" Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Largura ou Diâmetro (mm):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtLarguraManual" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="150"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Altura da Calha Retangular (mm):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtAlturaManual" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="100"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Separator Margin="0,6,0,10"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="0.8*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="1.2*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Nº Descidas:" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtQtdCondutores" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="1"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Altura Tubo (m):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtAlturaCondutor" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="3,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="4">
+                                <TextBlock Text="Lâmina Saída (mm):" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <TextBox x:Name="TxtLaminaSaida" Height="30" VerticalContentAlignment="Center" Padding="6,0" Text="50"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="6">
+                                <TextBlock Text="Tipo de Saída:" FontSize="12" Foreground="#334155" Margin="0,0,0,4"/>
+                                <ComboBox x:Name="CmbTipoSaida" Height="30" SelectedIndex="0">
+                                    <ComboBoxItem Content="Aresta Viva" Tag="SharpEdge"/>
+                                    <ComboBoxItem Content="Com Funil" Tag="Funnel"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Button Content="DIMENSIONAR CALHAS E CONDUTORES (NBR 10844)"
+                        Height="40" Background="#1E3A8A" Foreground="White" FontWeight="Bold" FontSize="13"
+                        Cursor="Hand" Click="BtnCalcularPluvial_Click"/>
+            </StackPanel>
+
+            <!-- COLUNA DIREITA: RESULTADOS DIMENSIONADOS -->
+            <Border Grid.Column="2" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="RESULTADOS DO DIMENSIONAMENTO"
+                               FontWeight="Bold" FontSize="14" Foreground="#1E3A8A" Margin="0,0,0,14"/>
+
+                    <!-- Card Vazão e Área -->
+                    <Border Background="#F1F5F9" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="VAZÃO DE PROJETO E CONTRIBUIÇÃO" FontWeight="Bold" FontSize="11" Foreground="#475569" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="LblResRegiao" Text="Região: --" FontSize="12" Foreground="#1E293B" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="LblResArea" Text="Área de Contribuição: -- m²" FontSize="12" Foreground="#1E293B" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="LblResVazao" Text="Vazão Total (Q): -- L/min (-- L/s)" FontWeight="Bold" FontSize="14" Foreground="#1E3A8A" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Card Calha -->
+                    <Border Background="#F1F5F9" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="CALHA DIMENSIONADA (MANNING-STRICKLER)" FontWeight="Bold" FontSize="11" Foreground="#475569" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="LblResCalha" Text="Seção Comercial: --" FontWeight="Bold" FontSize="14" Foreground="#0F172A" Margin="0,0,0,4"/>
+                            <TextBlock x:Name="LblResCapacidadeCalha" Text="Capacidade Máxima: -- L/min" FontSize="12" Foreground="#1E293B" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="LblResOcupacaoCalha" Text="Taxa de Ocupação: -- % | Velocidade: -- m/s" FontSize="12" Foreground="#1E293B" Margin="0,0,0,4"/>
+                            <TextBlock x:Name="LblStatusCalha" Text="Status: Aguardando cálculo" FontWeight="Bold" FontSize="12" Foreground="#475569"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Card Condutor Vertical -->
+                    <Border Background="#F1F5F9" CornerRadius="6" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="CONDUTORES VERTICAIS (DESCIDAS)" FontWeight="Bold" FontSize="11" Foreground="#475569" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="LblResCondutor" Text="Diâmetro Nominal: --" FontWeight="Bold" FontSize="14" Foreground="#0F172A" Margin="0,0,0,4"/>
+                            <TextBlock x:Name="LblResVazaoCondutor" Text="Vazão por descida: -- L/min" FontSize="12" Foreground="#1E293B" Margin="0,0,0,3"/>
+                            <TextBlock x:Name="LblResCapCondutor" Text="Capacidade por tubo: -- L/min" FontSize="12" Foreground="#1E293B"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
