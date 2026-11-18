@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Shapes; // NOVO: Para desenhar Linhas e Bolinhas
+using System.Windows.Shapes; 
 using BahrHidro.Core;
 using BahrHidro.Core.Catalog;
 using BahrHidro.Core.Hydraulic;
@@ -33,31 +33,82 @@ namespace BahrHidro.UI
         
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
 
-        // VARIÁVEIS PARA O NOVO CAD 2D
+        // VARIÁVEIS PARA O CAD 2D
         private enum ModoDesenho { Selecionar, DesenharNo, ConectarTrecho }
         private ModoDesenho _modoAtual = ModoDesenho.Selecionar;
-        private Ellipse? _noInicialParaTrecho = null; // Guarda o primeiro nó clicado ao fazer um tubo
-        
-        // Mapeamentos para o software saber que bolinha corresponde a que Nó na memória
+        private Ellipse? _noInicialParaTrecho = null;
         private readonly Dictionary<Ellipse, Guid> _mapaNosVisuais = new();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            // CORREÇÃO: System.IO.Path explícito para evitar conflito com System.Windows.Shapes.Path
-            string catalogPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro", "pipe-catalog.json");
+            // 1. Garante pasta e arquivo local do catálogo
+            string catalogDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro");
+            if (!System.IO.Directory.Exists(catalogDir)) 
+                System.IO.Directory.CreateDirectory(catalogDir);
+            
+            string catalogPath = System.IO.Path.Combine(catalogDir, "pipe-catalog.json");
+            if (!System.IO.File.Exists(catalogPath)) 
+                System.IO.File.WriteAllText(catalogPath, "[]");
+
             var repository = new PipeCatalogRepository(catalogPath);
             _catalogService = new PipeCatalogService(repository);
             _diameterSelector = new PipeCatalogDiameterSelector(_catalogService);
+
+            // 2. Popula automaticamente os ComboBoxes com os Enums reais do BahrHidro.Core
+            CarregarPerfisEdificacao();
 
             AtualizarEstadoTipoNo();
             AtualizarListaNos();
             AtualizarListaTrechos();
 
-            _sewerFixtures = SewerFixtureCatalog.GetStandardFixtures().Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm }).ToList();
+            _sewerFixtures = SewerFixtureCatalog.GetStandardFixtures()
+                .Select(f => new SewerFixtureViewModel { Name = f.Name, Uhc = f.UhcValue, MinDiameter = f.MinimumDiameterMm })
+                .ToList();
             SewerItemsControl.ItemsSource = _sewerFixtures;
         }
+
+        private void CarregarPerfisEdificacao()
+        {
+            BoilerPerfilComboBox.Items.Clear();
+            foreach (BuildingProfile perfil in Enum.GetValues(typeof(BuildingProfile)))
+            {
+                BoilerPerfilComboBox.Items.Add(new ComboBoxItem
+                {
+                    Content = TraduzirPerfil(perfil.ToString()),
+                    Tag = perfil.ToString()
+                });
+            }
+            if (BoilerPerfilComboBox.Items.Count > 0) BoilerPerfilComboBox.SelectedIndex = 0;
+
+            CaixaPerfilComboBox.Items.Clear();
+            foreach (BuildingCategory categoria in Enum.GetValues(typeof(BuildingCategory)))
+            {
+                CaixaPerfilComboBox.Items.Add(new ComboBoxItem
+                {
+                    Content = TraduzirPerfil(categoria.ToString()),
+                    Tag = categoria.ToString()
+                });
+            }
+            if (CaixaPerfilComboBox.Items.Count > 0) CaixaPerfilComboBox.SelectedIndex = 0;
+        }
+
+        private static string TraduzirPerfil(string nomeEnum) => nomeEnum switch
+        {
+            "ResidentialHigh" or "HighStandardResidential" or "ResidencialAlto" => "Residencial Padrão Alto",
+            "ResidentialMedium" or "MediumStandardResidential" or "ResidencialMedio" => "Residencial Padrão Médio",
+            "ResidentialLow" or "LowStandardResidential" or "ResidencialPopular" => "Residencial Padrão Popular",
+            "SingleFamilyResidential" or "SingleFamily" or "House" or "Casa" => "Residência Unifamiliar",
+            "MultiFamilyResidential" or "MultiFamily" or "Apartment" or "Apartamento" => "Edifício Multifamiliar (Apartamentos)",
+            "Residential" or "Residencial" => "Residencial",
+            "Commercial" or "Office" or "Comercial" => "Edifício Comercial / Escritórios",
+            "Hotel" => "Hotel / Pousada",
+            "Hospital" => "Hospital / Clínica",
+            "School" or "Escola" => "Escola",
+            "Gym" or "Academia" => "Academia / Vestiário",
+            _ => nomeEnum
+        };
 
         private void AbrirCatalogo_Click(object sender, RoutedEventArgs e)
         {
@@ -332,27 +383,60 @@ namespace BahrHidro.UI
         {
             try
             {
-                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0) return;
-                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao)) return;
-                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil)) return;
+                if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0)
+                {
+                    MessageBox.Show("Informe um número válido de ocupantes.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao) || pressao <= 0)
+                {
+                    MessageBox.Show("Informe uma pressão de trabalho válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil))
+                    return;
+
                 var resultado = BoilerCalculator.Calculate(perfil, ocupantes, pressao);
-                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L"; BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L"; BoilerTipoText.Text = resultado.RecommendedPressureType;
-                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA")) BoilerTipoText.Foreground = Brushes.DarkRed;
-                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO")) BoilerTipoText.Foreground = Brushes.DarkOrange;
-                else BoilerTipoText.Foreground = Brushes.ForestGreen;
+                BoilerConsumoText.Text = $"{resultado.DailyConsumptionLiters:F0} L";
+                BoilerVolumeText.Text = $"{resultado.RequiredAccumulationVolumeLiters:F0} L";
+                BoilerTipoText.Text = resultado.RecommendedPressureType;
+
+                if (resultado.RecommendedPressureType.Contains("INSUFICIENTE") || resultado.RecommendedPressureType.Contains("EXCESSIVA"))
+                    BoilerTipoText.Foreground = Brushes.DarkRed;
+                else if (resultado.RecommendedPressureType.Contains("ALTA PRESSÃO"))
+                    BoilerTipoText.Foreground = Brushes.DarkOrange;
+                else
+                    BoilerTipoText.Foreground = Brushes.ForestGreen;
             }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}"); }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private void CalcularCaixa_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0) return;
-                if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0) return;
-                if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio)) return;
-                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100) return;
-                if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil)) return;
+                if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0)
+                {
+                    MessageBox.Show("Informe uma população válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0)
+                {
+                    MessageBox.Show("Informe uma autonomia (dias) válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio) || incendio < 0)
+                {
+                    MessageBox.Show("Informe um valor válido para reserva de incêndio.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100)
+                {
+                    MessageBox.Show("Informe um percentual entre 0 e 100 para a cisterna.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil))
+                    return;
 
                 var resultado = ReservoirCalculator.Calculate(perfil, populacao, dias, incendio, percentagem / 100.0);
 
@@ -386,7 +470,7 @@ namespace BahrHidro.UI
         }
 
         // =====================================================================
-        // NOVO: INTELIGÊNCIA DO CANVAS 2D (DESENHO DE REDES)
+        // CAD 2D (DESENHO DE REDES)
         // =====================================================================
         private void ModoDesenho_Changed(object sender, RoutedEventArgs e)
         {
@@ -394,10 +478,9 @@ namespace BahrHidro.UI
             else if (RbNo?.IsChecked == true) _modoAtual = ModoDesenho.DesenharNo;
             else if (RbTrecho?.IsChecked == true) _modoAtual = ModoDesenho.ConectarTrecho;
             
-            // Reseta qualquer clique inacabado
             if (_noInicialParaTrecho != null)
             {
-                _noInicialParaTrecho.Fill = Brushes.SteelBlue; // Volta à cor normal
+                _noInicialParaTrecho.Fill = Brushes.SteelBlue;
                 _noInicialParaTrecho = null;
             }
             
@@ -410,47 +493,36 @@ namespace BahrHidro.UI
         {
             Point clique = e.GetPosition(RedeCanvas);
 
-            // 1. MODO: DESENHAR NÓ
             if (_modoAtual == ModoDesenho.DesenharNo)
             {
-                // Cria a bolinha gráfica (Ellipse)
                 var visualNo = new Ellipse { Width = 20, Height = 20, Fill = Brushes.SteelBlue, Stroke = Brushes.DarkBlue, StrokeThickness = 2, Cursor = Cursors.Hand };
-                
-                // Posiciona onde o rato clicou (centrando a bolinha de 20x20)
                 Canvas.SetLeft(visualNo, clique.X - 10);
                 Canvas.SetTop(visualNo, clique.Y - 10);
                 RedeCanvas.Children.Add(visualNo);
 
-                // Cria o Nó matemático na memória da rede
                 var novoId = Guid.NewGuid();
                 var node = new HydraulicNode { Id = novoId, Name = $"Nó {_network.Nodes.Count + 1}", Type = HydraulicNodeType.Junction, ElevationMeters = 0, DemandLitersPerSecond = 0, RelativeWeight = 0 };
                 
                 _network.AddNode(node);
-                _mapaNosVisuais[visualNo] = novoId; // Mapeia o visual para a matemática
-                
-                AtualizarListaNos(); // Atualiza a tabela na Aba 3 instantaneamente
+                _mapaNosVisuais[visualNo] = novoId;
+                AtualizarListaNos();
             }
-            
-            // 2. MODO: CONECTAR TRECHO
             else if (_modoAtual == ModoDesenho.ConectarTrecho)
             {
                 if (e.OriginalSource is Ellipse noClicado)
                 {
                     if (_noInicialParaTrecho == null)
                     {
-                        // Seleciona o primeiro nó (Montante) e pinta de Laranja
                         _noInicialParaTrecho = noClicado;
                         _noInicialParaTrecho.Fill = Brushes.DarkOrange; 
                     }
                     else
                     {
-                        // Seleciona o segundo nó (Jusante)
                         if (_noInicialParaTrecho != noClicado)
                         {
                             Guid idMontante = _mapaNosVisuais[_noInicialParaTrecho];
                             Guid idJusante = _mapaNosVisuais[noClicado];
 
-                            // Desenha o tubo (Line)
                             var tubo = new Line
                             {
                                 X1 = Canvas.GetLeft(_noInicialParaTrecho) + 10,
@@ -461,30 +533,21 @@ namespace BahrHidro.UI
                                 StrokeThickness = 4,
                                 Cursor = Cursors.Hand
                             };
-                            
-                            // Insere a linha antes das bolinhas, para ficar por trás
                             RedeCanvas.Children.Insert(0, tubo);
 
-                            // Cria o Trecho matemático na memória da rede
                             var pipe = new HydraulicPipeSegment { Id = Guid.NewGuid(), Name = $"T-{_network.Segments.Count + 1}", StartNodeId = idMontante, EndNodeId = idJusante, LengthMeters = 5.0, InternalDiameterMm = null, AbsoluteRoughnessMm = 0.001 };
                             _network.AddSegment(pipe);
-                            
-                            AtualizarListaTrechos(); // Atualiza a tabela na Aba 3
+                            AtualizarListaTrechos();
                         }
-                        
-                        // Reseta a cor do primeiro nó e limpa a memória temporária
                         _noInicialParaTrecho.Fill = Brushes.SteelBlue;
                         _noInicialParaTrecho = null;
                     }
                 }
             }
-            
-            // 3. MODO: SELECIONAR (Ver Propriedades)
             else if (_modoAtual == ModoDesenho.Selecionar)
             {
                 if (e.OriginalSource is Ellipse noParaEditar)
                 {
-                    // Encontra o ID do nó clicado e joga para a janela de edição da Aba 3
                     Guid id = _mapaNosVisuais[noParaEditar];
                     var item = NosDataGrid.Items.OfType<NodeGridItem>().FirstOrDefault(n => n.Id == id);
                     if (item != null)

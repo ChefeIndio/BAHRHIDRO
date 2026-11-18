@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "dgSpecHash": "eUl/fMysOJk=",
+  "success": true,
+  "projectFilePath": "/workspaces/BAHRHIDRO/BahrHidro.Revit/BahrHidro.Revit.csproj",
+  "expectedPackageFiles": [
+    "/home/codespace/.nuget/packages/closedxml/0.105.1/closedxml.0.105.1.nupkg.sha512",
+    "/home/codespace/.nuget/packages/closedxml.parser/2.0.0/closedxml.parser.2.0.0.nupkg.sha512",
+    "/home/codespace/.nuget/packages/documentformat.openxml/3.1.1/documentformat.openxml.3.1.1.nupkg.sha512",
+    "/home/codespace/.nuget/packages/documentformat.openxml.framework/3.1.1/documentformat.openxml.framework.3.1.1.nupkg.sha512",
+    "/home/codespace/.nuget/packages/excelnumberformat/1.1.0/excelnumberformat.1.1.0.nupkg.sha512",
+    "/home/codespace/.nuget/packages/rbush.signed/4.0.0/rbush.signed.4.0.0.nupkg.sha512",
+    "/home/codespace/.nuget/packages/revit_all_main_versions_api_x64/2026.0.0/revit_all_main_versions_api_x64.2026.0.0.nupkg.sha512",
+    "/home/codespace/.nuget/packages/sixlabors.fonts/1.0.0/sixlabors.fonts.1.0.0.nupkg.sha512",
+    "/home/codespace/.nuget/packages/system.io.packaging/8.0.1/system.io.packaging.8.0.1.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.netcore.app.ref/8.0.33/microsoft.netcore.app.ref.8.0.33.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.windowsdesktop.app.ref/8.0.33/microsoft.windowsdesktop.app.ref.8.0.33.nupkg.sha512",
+    "/home/codespace/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.33/microsoft.aspnetcore.app.ref.8.0.33.nupkg.sha512"
+  ],
+  "logs": []
+}

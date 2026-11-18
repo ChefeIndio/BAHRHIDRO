@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="BahrHidro.Core/BahrHidro.Core.csproj" />
+  <Project Path="BahrHidro.Revit/BahrHidro.Revit.csproj" />
   <Project Path="BahrHidro.Teste/BahrHidro.Teste.csproj" />
   <Project Path="BahrHidro.UI/BahrHidro.UI.csproj" />
 </Solution>

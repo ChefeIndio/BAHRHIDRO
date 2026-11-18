@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Command">
+    <Name>Bahr Hidro - Dimensionamento BIM</Name>
+    <Assembly>BahrHidro.Revit.dll</Assembly>
+    <AddInId>12345678-ABCD-1234-ABCD-1234567890AB</AddInId>
+    <FullClassName>BahrHidro.Revit.MainCommand</FullClassName>
+    <VendorId>BAHR</VendorId>
+    <VendorDescription>Bahr Engenharia, www.bahrengenharia.com</VendorDescription>
+  </AddIn>
+</RevitAddIns>
