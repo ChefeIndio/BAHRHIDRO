@@ -163,7 +163,8 @@ namespace BahrHidro.Revit
             }
             finally
             {
-                ownerWindow.ShowDialog();
+                ownerWindow.Show();
+                ownerWindow.Activate();
             }
         }
 

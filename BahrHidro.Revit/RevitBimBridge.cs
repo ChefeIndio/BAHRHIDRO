@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,17 +18,36 @@ namespace BahrHidro.Revit
 {
     public class RevitBimBridge : IRevitBimBridge
     {
-        private readonly UIDocument _uidoc;
-        private readonly Document _doc;
+        
+        
         private RevitNetworkExtractionResult? _ultimaExtracao;
 
-        public RevitBimBridge(UIDocument uidoc)
+        
+        private readonly RevitExternalEventRunner _runner;
+        private UIDocument _uidoc = null!;
+        private Document _doc = null!;
+
+        public RevitBimBridge(UIApplication uiApp, RevitExternalEventRunner runner)
         {
-            _uidoc = uidoc;
-            _doc = uidoc.Document;
+            _runner = runner ?? throw new ArgumentNullException(nameof(runner));
+            if (uiApp.ActiveUIDocument != null)
+            {
+                _uidoc = uiApp.ActiveUIDocument;
+                _doc = _uidoc.Document;
+            }
         }
 
-        public (string ProjectName, string ClientName, string Address, string Author) GetProjectInfo()
+        public Task<(string ProjectName, string ClientName, string Address, string Author)> GetProjectInfo()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                return GetProjectInfoCore();
+            });
+        }
+
+        private (string ProjectName, string ClientName, string Address, string Author) GetProjectInfoCore()
         {
             var info = _doc.ProjectInformation;
             if (info == null) return ("", "", "", "");
@@ -37,10 +57,15 @@ namespace BahrHidro.Revit
                 info.Address ?? "",
                 info.Author ?? ""
             );
-        }
+        
+                    }
 
-        public void SaveProjectInfo(string projectName, string clientName, string address, string author)
+        public Task SaveProjectInfo(string projectName, string clientName, string address, string author)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             using (Transaction tx = new Transaction(_doc, "Bahr Hidro - Atualizar Dados do Projeto"))
             {
                 tx.Start();
@@ -54,10 +79,17 @@ namespace BahrHidro.Revit
                 }
                 tx.Commit();
             }
+        
+                return true;
+            });
         }
 
-        public string GetModelOverviewSummary()
+        public Task<string> GetModelOverviewSummary()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             try
             {
                 int tubos = new FilteredElementCollector(_doc).OfClass(typeof(Pipe)).WhereElementIsNotElementType().GetElementCount();
@@ -70,19 +102,31 @@ namespace BahrHidro.Revit
             {
                 return "Modelo Revit pronto para detecção automática.";
             }
+        
+            });
         }
 
-        public RevitNetworkImportData ImportNetworkAutomaticallyFromRevit()
+        public Task<RevitNetworkImportData> ImportNetworkAutomaticallyFromRevit()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             _ultimaExtracao = RevitNetworkExtractor.ExtractAutomaticFromDocument(_doc);
             return new RevitNetworkImportData(
                 _ultimaExtracao.Network,
                 _ultimaExtracao.OriginalDiametersMmBySegmentId,
                 _ultimaExtracao.DetectionSummary);
+        
+            });
         }
 
-        public void ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported)
+        public Task ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             try
             {
                 ownerWindow.Hide();
@@ -106,10 +150,17 @@ namespace BahrHidro.Revit
             {
                 ownerWindow.ShowDialog();
             }
+        
+                return true;
+            });
         }
 
-        public int ApplyDiametersToRevit(NetworkCalculationResult result)
+        public Task<int> ApplyDiametersToRevit(NetworkCalculationResult result)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             if (_ultimaExtracao == null)
                 throw new InvalidOperationException("Importe uma rede do modelo 3D do Revit antes de aplicar os diâmetros.");
 
@@ -141,10 +192,16 @@ namespace BahrHidro.Revit
             }
 
             return tubosAtualizados;
+        
+            });
         }
 
-        public Dictionary<string, int> ImportAllSewerFixturesFromRevit()
+        public Task<Dictionary<string, int>> ImportAllSewerFixturesFromRevit()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             var contagem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             var fixtures = new FilteredElementCollector(_doc)
@@ -165,10 +222,16 @@ namespace BahrHidro.Revit
             }
 
             return contagem;
+        
+            });
         }
 
-        public Dictionary<string, int> ImportSewerFixturesFromRevit(Window ownerWindow)
+        public Task<Dictionary<string, int>> ImportSewerFixturesFromRevit(Window ownerWindow)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             var contagem = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             try
@@ -204,10 +267,16 @@ namespace BahrHidro.Revit
             }
 
             return contagem;
+        
+            });
         }
 
-        public RevitRoofData? CaptureAllRoofsFromRevit()
+        public Task<RevitRoofData?> CaptureAllRoofsFromRevit()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             var roofs = new FilteredElementCollector(_doc)
                 .OfCategory(BuiltInCategory.OST_Roofs)
                 .WhereElementIsNotElementType()
@@ -246,10 +315,16 @@ namespace BahrHidro.Revit
                 Math.Round(maiorLarguraM, 2),
                 projM,
                 Math.Round(maiorAlturaM, 2));
+        
+            });
         }
 
-        public RevitRoofData? CaptureRoofFromRevit(Window ownerWindow)
+        public Task<RevitRoofData?> CaptureRoofFromRevit(Window ownerWindow)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             try
             {
                 ownerWindow.Hide();
@@ -298,91 +373,193 @@ namespace BahrHidro.Revit
             {
                 ownerWindow.ShowDialog();
             }
+        
+            });
         }
 
-        public RevitTemplateRoutingOptions GetRoutingTemplateOptions()
+        public Task<RevitTemplateRoutingOptions> GetRoutingTemplateOptions()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitAutoRouter.GetTemplateOptions(_doc);
+        
+            });
         }
 
-        public List<DetectedRoutingPoint> DetectRoutingPointsFromModel(long? levelId)
+        public Task<List<DetectedRoutingPoint>> DetectRoutingPointsFromModel(long? levelId)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitAutoRouter.DetectAllPoints(_doc, levelId);
+        
+            });
         }
 
-        public DetectedRoutingPoint? PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId)
+        public Task<DetectedRoutingPoint?> PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitAutoRouter.PickManualPoint(_uidoc, ownerWindow, fixtureCategory, levelId);
+        
+            });
         }
 
-        public (int TaggedCount, string Message) TagPipesInActiveView()
+        public Task<(int TaggedCount, string Message)> TagPipesInActiveView()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitDocumentationGenerator.TagPipesInActiveView(_uidoc);
+        
+            });
         }
 
-        public ClashCheckSummaryResult RunHydraulicClashCheck()
+        public Task<ClashCheckSummaryResult> RunHydraulicClashCheck()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitClashAndSheetGenerator.RunHydraulicClashCheck(_doc);
+        
+            });
         }
 
-        public (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateHydraulicWallElevations()
+        public Task<(int ViewsCreated, int TotalTagsPlaced, string Summary)> GenerateHydraulicWallElevations()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitDocumentationGenerator.GenerateHydraulicWallElevations(_uidoc);
+        
+            });
         }
 
-        public VisualAuditSummaryResult ApplyHydraulicVisualAudit(NetworkCalculationResult result)
+        public Task<VisualAuditSummaryResult> ApplyHydraulicVisualAudit(NetworkCalculationResult result)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitVisualAuditManager.ApplyOverrides(_uidoc, result, new Dictionary<Guid, ElementId>());
+        
+            });
         }
 
-        public LsfPunchingAuditResult AuditLsfStudPunching()
+        public Task<LsfPunchingAuditResult> AuditLsfStudPunching()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitLsfFabricationManager.RunLsfPunchingAudit(_doc);
+        
+            });
         }
 
-        public MultilevelRiserResult GenerateMultilevelRisers()
+        public Task<MultilevelRiserResult> GenerateMultilevelRisers()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitMultilevelRiserManager.GenerateMultilevelRisers(_doc);
+        
+            });
         }
 
-        public (int ViewsAnnotated, int CalloutsPlaced, string Summary) ApplyFabricationCoordinatesToElevations()
+        public Task<(int ViewsAnnotated, int CalloutsPlaced, string Summary)> ApplyFabricationCoordinatesToElevations()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitLsfFabricationManager.ApplyFabricationCoordinatesToElevations(_uidoc);
+        
+            });
         }
 
-        public (int ClearedCount, string Summary) ClearHydraulicVisualAudit()
+        public Task<(int ClearedCount, string Summary)> ClearHydraulicVisualAudit()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitVisualAuditManager.ClearOverrides(_uidoc);
+        
+            });
         }
 
-        public (int DeletedCount, string Summary) ClearGeneratedRouting(string disciplineMode)
+        public Task<(int DeletedCount, string Summary)> ClearGeneratedRouting(string disciplineMode)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitDocumentationGenerator.ClearGeneratedRouting(_doc, disciplineMode);
+        
+            });
         }
 
-        public SheetGenerationResult GenerateHydraulicSheets()
+        public Task<SheetGenerationResult> GenerateHydraulicSheets()
         {
-            var info = GetProjectInfo();
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+            var info = GetProjectInfoCore();
             return RevitClashAndSheetGenerator.GenerateHydraulicSheets(_uidoc, info.ProjectName);
+        
+            });
         }
 
-        public (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews()
+        public Task<(int ViewsCreated, int TotalTagsPlaced, string Summary)> GenerateWetZoneIsometricViews()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitDocumentationGenerator.GenerateWetZoneIsometricViews(_uidoc);
+        
+            });
         }
 
-        public BimMaterialTakeoff ExtractBomFromRevit(string projectName, double wasteMarginPercent)
+        public Task<BimMaterialTakeoff> ExtractBomFromRevit(string projectName, double wasteMarginPercent)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitBomExtractor.ExtractFromDocument(_doc, projectName, wasteMarginPercent);
+        
+            });
         }
 
-        public RevitAutoRoutingResult ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request)
+        public Task<RevitAutoRoutingResult> ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request)
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             return RevitAutoRouter.ExecuteRouting(_doc, request);
+        
+            });
         }
 
-        public RevitPopulationEstimate EstimateBuildingPopulation()
+        public Task<RevitPopulationEstimate> EstimateBuildingPopulation()
         {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
             var rooms = new FilteredElementCollector(_doc)
                 .OfCategory(BuiltInCategory.OST_Rooms)
                 .WhereElementIsNotElementType()
@@ -416,6 +593,8 @@ namespace BahrHidro.Revit
                 : $"Encontrados {rooms.Count} ambiente(s) no modelo (sem dormitórios nomeados).\nPopulação estimada: {pessoas} pessoas.";
 
             return new RevitPopulationEstimate(pessoas, dormitorios, rooms.Count, resumo);
+        
+            });
         }
 
         private static string MapearAparelhoEsgoto(string nomeBruto)

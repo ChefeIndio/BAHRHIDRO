@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Interop;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
@@ -10,31 +11,40 @@ namespace BahrHidro.Revit
     [Transaction(TransactionMode.Manual)]
     public class MainCommand : IExternalCommand
     {
+        private static MainWindow? _activeWindow;
+        private static RevitExternalEventRunner? _eventRunner;
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             try
             {
-                UIDocument uidoc = commandData.Application.ActiveUIDocument;
-                if (uidoc == null || uidoc.Document == null)
+                if (_activeWindow != null && _activeWindow.IsLoaded)
                 {
-                    TaskDialog.Show("Bahr Hidro BIM", "Abra um projeto no Revit antes de iniciar o Bahr Hidro.");
-                    return Result.Cancelled;
+                    if (_activeWindow.WindowState == WindowState.Minimized)
+                        _activeWindow.WindowState = WindowState.Normal;
+
+                    _activeWindow.Activate();
+                    return Result.Succeeded;
                 }
 
-                var bridge = new RevitBimBridge(uidoc);
-                var janela = new MainWindow(bridge);
-                new WindowInteropHelper(janela)
+                _eventRunner ??= new RevitExternalEventRunner();
+                var bridge = new RevitBimBridge(commandData.Application, _eventRunner);
+
+                var window = new MainWindow(bridge);
+                new WindowInteropHelper(window)
                 {
                     Owner = commandData.Application.MainWindowHandle
                 };
 
-                janela.ShowDialog();
+                window.Closed += (_, _) => _activeWindow = null;
+                _activeWindow = window;
+                window.Show();
+
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
                 message = ex.Message;
-                TaskDialog.Show("Bahr Hidro BIM - Erro", $"Falha ao abrir a interface:\n{ex.Message}");
                 return Result.Failed;
             }
         }

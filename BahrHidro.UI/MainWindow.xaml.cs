@@ -65,31 +65,39 @@ namespace BahrHidro.UI
 
         public MainWindow(IRevitBimBridge revitBridge) : this()
         {
-            _revitBridge = revitBridge;
 
-            BtnImportarInicioRevit.Visibility = Visibility.Visible;
-            HeaderActionsTracado3D.Visibility = Visibility.Visible;
-            HeaderActionsAguaFria.Visibility = Visibility.Visible;
-            CarregarOpcoesTemplateTracado();
-            HeaderActionsAguaQuente.Visibility = Visibility.Visible;
-            HeaderActionsReservatorios.Visibility = Visibility.Visible;
-            HeaderActionsEsgoto.Visibility = Visibility.Visible;
-            HeaderActionsPluvial.Visibility = Visibility.Visible;
-            SalvarDadosRevitButton.Visibility = Visibility.Visible;
-            BtnExtrairBom3D.Visibility = Visibility.Visible;
-            BtnPintarAuditoria3D.Visibility = Visibility.Visible;
-            BtnLimparAuditoria3D.Visibility = Visibility.Visible;
+            this.Loaded += async (_, _) =>
+            {
+                try
+                {
+                _revitBridge = revitBridge;
 
-            var info = _revitBridge.GetProjectInfo();
-            MemObraTextBox.Text = info.ProjectName;
-            MemClienteTextBox.Text = info.ClientName;
-            MemEnderecoTextBox.Text = info.Address;
-            MemEngenheiroTextBox.Text = info.Author;
+                BtnImportarInicioRevit.Visibility = Visibility.Visible;
+                HeaderActionsTracado3D.Visibility = Visibility.Visible;
+                HeaderActionsAguaFria.Visibility = Visibility.Visible;
+                await CarregarOpcoesTemplateTracado();
+                HeaderActionsAguaQuente.Visibility = Visibility.Visible;
+                HeaderActionsReservatorios.Visibility = Visibility.Visible;
+                HeaderActionsEsgoto.Visibility = Visibility.Visible;
+                HeaderActionsPluvial.Visibility = Visibility.Visible;
+                SalvarDadosRevitButton.Visibility = Visibility.Visible;
+                BtnExtrairBom3D.Visibility = Visibility.Visible;
+                BtnPintarAuditoria3D.Visibility = Visibility.Visible;
+                BtnLimparAuditoria3D.Visibility = Visibility.Visible;
 
-            string raioX = _revitBridge.GetModelOverviewSummary();
-            InicioProjetoStatusText.Text = !string.IsNullOrWhiteSpace(info.ProjectName)
-                ? $"Projeto: {info.ProjectName} — {raioX}"
-                : raioX;
+                var info = await _revitBridge.GetProjectInfo();
+                MemObraTextBox.Text = info.ProjectName;
+                MemClienteTextBox.Text = info.ClientName;
+                MemEnderecoTextBox.Text = info.Address;
+                MemEngenheiroTextBox.Text = info.Author;
+
+                string raioX = await _revitBridge.GetModelOverviewSummary();
+                InicioProjetoStatusText.Text = !string.IsNullOrWhiteSpace(info.ProjectName)
+                    ? $"Projeto: {info.ProjectName} — {raioX}"
+                    : raioX;
+                }
+                catch { }
+            };
         }
 
         private async Task AtualizarStatusCatalogoInicioAsync()
@@ -625,12 +633,12 @@ namespace BahrHidro.UI
         // =====================================================================
         // INTEGRAÇÃO REVIT 3D (PADRONIZADA)
         // =====================================================================
-        private void DetectarRedeAutoRevit_Click(object sender, RoutedEventArgs e)
+        private async void DetectarRedeAutoRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var importData = _revitBridge.ImportNetworkAutomaticallyFromRevit();
+                var importData = await _revitBridge.ImportNetworkAutomaticallyFromRevit();
                 CarregarRedeImportadaNaTela(importData);
                 if (!string.IsNullOrWhiteSpace(importData.Summary))
                     MessageBox.Show(importData.Summary, "Bahr Hidro - Detecção Automática 3D", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -641,12 +649,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ImportarRevit_Click(object sender, RoutedEventArgs e)
+        private async void ImportarRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                _revitBridge.ImportNetworkFromRevit(this, importData =>
+                await _revitBridge.ImportNetworkFromRevit(this, importData =>
                 {
                     CarregarRedeImportadaNaTela(importData);
                 });
@@ -692,7 +700,7 @@ namespace BahrHidro.UI
                     }
         }
 
-        private void AplicarRevit_Click(object sender, RoutedEventArgs e)
+        private async void AplicarRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             if (_ultimoResultadoDaRede == null)
@@ -703,7 +711,7 @@ namespace BahrHidro.UI
 
             try
             {
-                int atualizados = _revitBridge.ApplyDiametersToRevit(_ultimoResultadoDaRede);
+                int atualizados = await _revitBridge.ApplyDiametersToRevit(_ultimoResultadoDaRede);
                 MessageBox.Show($"{atualizados} tubo(s) atualizado(s) com sucesso no modelo 3D do Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -712,12 +720,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void EstimarPopulacaoRevit_Click(object sender, RoutedEventArgs e)
+        private async void EstimarPopulacaoRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var est = _revitBridge.EstimateBuildingPopulation();
+                var est = await _revitBridge.EstimateBuildingPopulation();
                 CaixaPopulacaoTextBox.Text = est.EstimatedPeople.ToString();
                 BoilerOcupantesTextBox.Text = est.EstimatedPeople.ToString();
                 MessageBox.Show(est.Summary, "Bahr Hidro BIM - Ambientes Revit", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -728,12 +736,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ImportarEsgotoAutoRevit_Click(object sender, RoutedEventArgs e)
+        private async void ImportarEsgotoAutoRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var mapeados = _revitBridge.ImportAllSewerFixturesFromRevit();
+                var mapeados = await _revitBridge.ImportAllSewerFixturesFromRevit();
                 AplicarAparelhosEsgoto(mapeados, sender, e);
             }
             catch (Exception ex)
@@ -742,12 +750,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ImportarEsgotoRevit_Click(object sender, RoutedEventArgs e)
+        private async void ImportarEsgotoRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var mapeados = _revitBridge.ImportSewerFixturesFromRevit(this);
+                var mapeados = await _revitBridge.ImportSewerFixturesFromRevit(this);
                 AplicarAparelhosEsgoto(mapeados, sender, e);
             }
             catch (Exception ex)
@@ -777,12 +785,12 @@ namespace BahrHidro.UI
             MessageBox.Show($"{totalPecas} aparelho(s) sanitário(s) lido(s) do Revit e dimensionados!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void ImportarPluvialAutoRevit_Click(object sender, RoutedEventArgs e)
+        private async void ImportarPluvialAutoRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var roof = _revitBridge.CaptureAllRoofsFromRevit();
+                var roof = await _revitBridge.CaptureAllRoofsFromRevit();
                 if (roof == null)
                 {
                     MessageBox.Show("Nenhum telhado (Roof) encontrado no modelo Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -797,12 +805,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ImportarPluvialRevit_Click(object sender, RoutedEventArgs e)
+        private async void ImportarPluvialRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var roof = _revitBridge.CaptureRoofFromRevit(this);
+                var roof = await _revitBridge.CaptureRoofFromRevit(this);
                 if (roof == null) return;
                 RainwaterViewControl.AplicarDadosTelhadoRevit(roof);
                 MessageBox.Show($"Telhado '{roof.RoofName}' capturado!\nÁrea medida: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -813,7 +821,7 @@ namespace BahrHidro.UI
             }
         }
 
-        private void SalvarDadosRevit_Click(object sender, RoutedEventArgs e)
+        private async void SalvarDadosRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
@@ -822,7 +830,7 @@ namespace BahrHidro.UI
                     ? MemEngenheiroTextBox.Text.Trim()
                     : $"{MemEngenheiroTextBox.Text.Trim()} ({MemCreaTextBox.Text.Trim()})";
 
-                _revitBridge.SaveProjectInfo(
+                await _revitBridge.SaveProjectInfo(
                     MemObraTextBox.Text.Trim(),
                     MemClienteTextBox.Text.Trim(),
                     MemEnderecoTextBox.Text.Trim(),
@@ -836,13 +844,13 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ExtrairBomRevit_Click(object sender, RoutedEventArgs e)
+        private async void ExtrairBomRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
                 double margem = TryParsePtBrDouble(MemMargemPerdaTextBox.Text, out double m) && m >= 0 ? m : 10.0;
-                _ultimoBomExtraido = _revitBridge.ExtractBomFromRevit(MemObraTextBox.Text.Trim(), margem);
+                _ultimoBomExtraido = await _revitBridge.ExtractBomFromRevit(MemObraTextBox.Text.Trim(), margem);
 
                 double totalMetros = _ultimoBomExtraido.Pipes.Sum(p => p.TotalLengthWithWasteMeters);
                 int totalVaras = _ultimoBomExtraido.Pipes.Sum(p => p.CommercialBars6m);
@@ -857,14 +865,14 @@ namespace BahrHidro.UI
             }
         }
 
-        private void ExportarMemorialAba_Click(object sender, RoutedEventArgs e)
+        private async void ExportarMemorialAba_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge != null)
             {
                 try
                 {
                     double margem = TryParsePtBrDouble(MemMargemPerdaTextBox.Text, out double m) && m >= 0 ? m : 10.0;
-                    _ultimoBomExtraido = _revitBridge.ExtractBomFromRevit(MemObraTextBox.Text.Trim(), margem);
+                    _ultimoBomExtraido = await _revitBridge.ExtractBomFromRevit(MemObraTextBox.Text.Trim(), margem);
                 }
                 catch { }
             }
@@ -1131,12 +1139,12 @@ namespace BahrHidro.UI
         }
 
 
-        private void CarregarOpcoesTemplateTracado()
+        private async Task CarregarOpcoesTemplateTracado()
         {
             if (_revitBridge == null) return;
             try
             {
-                var opts = _revitBridge.GetRoutingTemplateOptions();
+                var opts = await _revitBridge.GetRoutingTemplateOptions();
                 TracadoPipeTypeComboBox.ItemsSource = opts.PipeTypes;
                 if (opts.PipeTypes.Count > 0)
                 {
@@ -1259,7 +1267,7 @@ namespace BahrHidro.UI
             TracadoOffsetTextBox.Text = tag == "Bottom" ? "-0,15" : "2,60";
         }
 
-        private void DetectarPontosTracado_Click(object sender, RoutedEventArgs e)
+        private async void DetectarPontosTracado_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null)
             {
@@ -1270,7 +1278,7 @@ namespace BahrHidro.UI
             try
             {
                 long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
-                var encontrados = _revitBridge.DetectRoutingPointsFromModel(levelId);
+                var encontrados = await _revitBridge.DetectRoutingPointsFromModel(levelId);
 
                 _pontosTracadoDetectados.Clear();
                 _pontosTracadoDetectados.AddRange(encontrados);
@@ -1296,7 +1304,7 @@ namespace BahrHidro.UI
             }
         }
 
-        private void AdicionarPontoManualDwg_Click(object sender, RoutedEventArgs e)
+        private async void AdicionarPontoManualDwg_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
@@ -1304,7 +1312,7 @@ namespace BahrHidro.UI
                 string categoria = (TracadoPontoManualTipoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Lavatório";
                 long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
 
-                var novoPonto = _revitBridge.PickManualRoutingPoint(this, categoria, levelId);
+                var novoPonto = await _revitBridge.PickManualRoutingPoint(this, categoria, levelId);
                 if (novoPonto != null)
                 {
                     int num = _pontosTracadoDetectados.Count(p => p.FixtureCategory == novoPonto.FixtureCategory) + 1;
@@ -1333,7 +1341,7 @@ namespace BahrHidro.UI
             TracadoPontosDataGrid.ItemsSource = _pontosTracadoDetectados;
         }
 
-        private void ExecutarTracado3D_Click(object sender, RoutedEventArgs e)
+        private async void ExecutarTracado3D_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null)
             {
@@ -1393,12 +1401,12 @@ namespace BahrHidro.UI
                     insertValves,
                     _pontosTracadoDetectados.ToList());
 
-                var res = _revitBridge.ExecuteAutomaticPipeRouting(req);
+                var res = await _revitBridge.ExecuteAutomaticPipeRouting(req);
 
                 TracadoResumoGeracaoText.Text = res.Summary;
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Logs);
 
-                InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
+                InicioProjetoStatusText.Text = await _revitBridge.GetModelOverviewSummary();
                 MessageBox.Show(res.Summary, "Bahr Hidro - Traçado Automático 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -1407,12 +1415,12 @@ namespace BahrHidro.UI
             }
         }
     
-        private void GerarIsometricos3D_Click(object sender, RoutedEventArgs e)
+        private async void GerarIsometricos3D_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.GenerateWetZoneIsometricViews();
+                var res = await _revitBridge.GenerateWetZoneIsometricViews();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 MessageBox.Show(res.Summary, "Bahr Hidro - Vistas Isométricas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -1422,12 +1430,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void TaggearTubosVistaAtual_Click(object sender, RoutedEventArgs e)
+        private async void TaggearTubosVistaAtual_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.TagPipesInActiveView();
+                var res = await _revitBridge.TagPipesInActiveView();
                 MessageBox.Show(res.Message, "Bahr Hidro - Identificação de Tubulações", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -1437,12 +1445,12 @@ namespace BahrHidro.UI
         }
 
 
-        private void VerificarColisoesSteelFrame_Click(object sender, RoutedEventArgs e)
+        private async void VerificarColisoesSteelFrame_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.RunHydraulicClashCheck();
+                var res = await _revitBridge.RunHydraulicClashCheck();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.ClashDetails);
                 MessageBox.Show(
@@ -1457,12 +1465,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void GerarPranchasPlotagem_Click(object sender, RoutedEventArgs e)
+        private async void GerarPranchasPlotagem_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.GenerateHydraulicSheets();
+                var res = await _revitBridge.GenerateHydraulicSheets();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 MessageBox.Show(res.Summary, "Bahr Hidro - Pranchas de Plotagem", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -1473,7 +1481,7 @@ namespace BahrHidro.UI
         }
 
 
-        private void LimparTracadoDisciplina_Click(object sender, RoutedEventArgs e)
+        private async void LimparTracadoDisciplina_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
@@ -1489,9 +1497,9 @@ namespace BahrHidro.UI
 
                 if (confirm != MessageBoxResult.Yes) return;
 
-                var res = _revitBridge.ClearGeneratedRouting(discipline);
+                var res = await _revitBridge.ClearGeneratedRouting(discipline);
                 TracadoResumoGeracaoText.Text = res.Summary;
-                InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
+                InicioProjetoStatusText.Text = await _revitBridge.GetModelOverviewSummary();
                 MessageBox.Show(res.Summary, "Bahr Hidro - Limpeza Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -1500,12 +1508,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void GerarElevacoesParede_Click(object sender, RoutedEventArgs e)
+        private async void GerarElevacoesParede_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.GenerateHydraulicWallElevations();
+                var res = await _revitBridge.GenerateHydraulicWallElevations();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 MessageBox.Show(res.Summary, "Bahr Hidro - Elevações de Parede (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -1516,7 +1524,7 @@ namespace BahrHidro.UI
         }
 
 
-        private void PintarAuditoria3D_Click(object sender, RoutedEventArgs e)
+        private async void PintarAuditoria3D_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             if (_ultimoResultadoDaRede == null)
@@ -1527,7 +1535,7 @@ namespace BahrHidro.UI
 
             try
             {
-                var res = _revitBridge.ApplyHydraulicVisualAudit(_ultimoResultadoDaRede);
+                var res = await _revitBridge.ApplyHydraulicVisualAudit(_ultimoResultadoDaRede);
                 MessageBox.Show(
                     $"{res.Summary}\n\nLegenda aplicada na vista:\n• Verde: Pressão >= 1,0 m.c.a. e Velocidade <= 3,0 m/s\n• Laranja: Velocidade > 3,0 m/s\n• Vermelho: Pressão < 1,0 m.c.a. (10 kPa)",
                     "Bahr Hidro - Auditoria Visual 3D",
@@ -1540,12 +1548,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void LimparAuditoria3D_Click(object sender, RoutedEventArgs e)
+        private async void LimparAuditoria3D_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.ClearHydraulicVisualAudit();
+                var res = await _revitBridge.ClearHydraulicVisualAudit();
                 MessageBox.Show(res.Summary, "Bahr Hidro - Cores Restauradas", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -1555,12 +1563,12 @@ namespace BahrHidro.UI
         }
 
 
-        private void AuditarFuracaoLsf_Click(object sender, RoutedEventArgs e)
+        private async void AuditarFuracaoLsf_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.AuditLsfStudPunching();
+                var res = await _revitBridge.AuditLsfStudPunching();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.HoleDetails);
                 MessageBox.Show(
@@ -1575,12 +1583,12 @@ namespace BahrHidro.UI
             }
         }
 
-        private void CotasFabricacaoElevacoes_Click(object sender, RoutedEventArgs e)
+        private async void CotasFabricacaoElevacoes_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.ApplyFabricationCoordinatesToElevations();
+                var res = await _revitBridge.ApplyFabricationCoordinatesToElevations();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 MessageBox.Show(res.Summary, "Bahr Hidro - Cotas de Fabricação X e H (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
@@ -1591,15 +1599,15 @@ namespace BahrHidro.UI
         }
 
 
-        private void GerarPrumadasMultinivel_Click(object sender, RoutedEventArgs e)
+        private async void GerarPrumadasMultinivel_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
             try
             {
-                var res = _revitBridge.GenerateMultilevelRisers();
+                var res = await _revitBridge.GenerateMultilevelRisers();
                 TracadoResumoGeracaoText.Text = res.Summary;
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Details);
-                InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
+                InicioProjetoStatusText.Text = await _revitBridge.GetModelOverviewSummary();
                 MessageBox.Show(res.Summary, "Bahr Hidro - Prumadas Multinível (AF / AQ / TQ / CV)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
