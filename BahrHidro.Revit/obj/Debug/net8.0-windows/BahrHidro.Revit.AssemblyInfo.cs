@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BahrHidro.Revit")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+694f2a2e601795a3a7c18c68df9a17f47df6dd9a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ca22375a666e87f5ba740cc454bb1bf0b0d571e2")]
 [assembly: System.Reflection.AssemblyProductAttribute("BahrHidro.Revit")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BahrHidro.Revit")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
