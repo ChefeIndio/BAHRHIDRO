@@ -18,9 +18,19 @@ namespace BahrHidro.Core.Reporting
         string SizeDescription,
         int Quantity);
 
+    public sealed record KitTakeoffItem(
+        string KitName,
+        string SystemName,
+        string ItemCategory,
+        string Description,
+        string SizeDescription,
+        double Quantity,
+        string Unit);
+
     public sealed record BimMaterialTakeoff(
         string ProjectName,
         double WasteMarginPercent,
         IReadOnlyList<PipeTakeoffItem> Pipes,
-        IReadOnlyList<FittingTakeoffItem> Fittings);
+        IReadOnlyList<FittingTakeoffItem> Fittings,
+        IReadOnlyList<KitTakeoffItem> Kits);
 }

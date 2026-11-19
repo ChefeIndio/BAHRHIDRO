@@ -51,7 +51,7 @@ namespace BahrHidro.UI
     }
 
     public sealed record RevitAutoRoutingRequest(
-        string DisciplineMode, // "ColdWater" ou "SanitarySewer"
+        string DisciplineMode,
         long PipeTypeId,
         long PipingSystemTypeId,
         long? LevelId,
@@ -59,6 +59,7 @@ namespace BahrHidro.UI
         double TrunkOffsetMeters,
         double InitialDiameterMm,
         bool AvoidSteelFrameClashes,
+        bool InsertValvesAutomatically,
         List<DetectedRoutingPoint> Points);
 
     public sealed record RevitAutoRoutingResult(

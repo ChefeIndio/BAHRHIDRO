@@ -124,7 +124,7 @@ namespace BahrHidro.Core.Reporting
             {
                 if (takeoff != null)
                 {
-                    // Aba de Tubulações (BOM)
+                    // 1. Aba de Tubulações (BOM)
                     var wsTubos = workbook.Worksheets.Add("Lista de Tubos (BOM 3D)");
                     wsTubos.Cell(1, 1).Value = "LISTA EXECUTIVA DE TUBULAÇÕES — QUANTITATIVO BIM 3D";
                     wsTubos.Cell(1, 1).Style.Font.Bold = true;
@@ -180,8 +180,8 @@ namespace BahrHidro.Core.Reporting
 
                     wsTubos.Columns().AdjustToContents();
 
-                    // Aba de Conexões e Acessórios (BOM)
-                    var wsConexoes = workbook.Worksheets.Add("Conexoes e Acessorios (3D)");
+                    // 2. Aba de Conexões e Registros (BOM)
+                    var wsConexoes = workbook.Worksheets.Add("Conexoes e Registros (3D)");
                     wsConexoes.Cell(1, 1).Value = "LISTA DE CONEXÕES, REGISTROS E ACESSÓRIOS — QUANTITATIVO BIM 3D";
                     wsConexoes.Cell(1, 1).Style.Font.Bold = true;
                     wsConexoes.Cell(1, 1).Style.Font.FontSize = 14;
@@ -224,6 +224,47 @@ namespace BahrHidro.Core.Reporting
                     }
 
                     wsConexoes.Columns().AdjustToContents();
+
+                    // 3. Aba de Kits Hidráulicos por Ambiente (Pré-Montagem Steel Frame)
+                    var wsKits = workbook.Worksheets.Add("Kits por Ambiente (LSF)");
+                    wsKits.Cell(1, 1).Value = "SEPARAÇÃO DE MATERIAIS POR KIT / AMBIENTE (PRÉ-MONTAGEM STEEL FRAME)";
+                    wsKits.Cell(1, 1).Style.Font.Bold = true;
+                    wsKits.Cell(1, 1).Style.Font.FontSize = 14;
+
+                    string[] headersKits =
+                    {
+                        "Kit / Ambiente",
+                        "Sistema",
+                        "Tipo",
+                        "Material / Peça",
+                        "Bitola",
+                        "Quantidade",
+                        "Unidade"
+                    };
+
+                    for (int c = 0; c < headersKits.Length; c++)
+                    {
+                        var cell = wsKits.Cell(3, c + 1);
+                        cell.Value = headersKits[c];
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#166534");
+                        cell.Style.Font.FontColor = XLColor.White;
+                    }
+
+                    int rowK = 4;
+                    foreach (var k in takeoff.Kits)
+                    {
+                        wsKits.Cell(rowK, 1).Value = k.KitName;
+                        wsKits.Cell(rowK, 2).Value = k.SystemName;
+                        wsKits.Cell(rowK, 3).Value = k.ItemCategory;
+                        wsKits.Cell(rowK, 4).Value = k.Description;
+                        wsKits.Cell(rowK, 5).Value = k.SizeDescription;
+                        wsKits.Cell(rowK, 6).Value = Math.Round(k.Quantity, 2);
+                        wsKits.Cell(rowK, 7).Value = k.Unit;
+                        rowK++;
+                    }
+
+                    wsKits.Columns().AdjustToContents();
                 }
 
                 workbook.SaveAs(filePath);

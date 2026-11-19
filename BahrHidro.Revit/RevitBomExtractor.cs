@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.DB.Plumbing;
 using BahrHidro.Core.Reporting;
 
@@ -14,14 +15,48 @@ namespace BahrHidro.Revit
             double safeWaste = Math.Max(0, wasteMarginPercent);
             double factor = 1.0 + (safeWaste / 100.0);
 
-            // 1. Extração de Tubos (Pipe)
             var allPipes = new FilteredElementCollector(doc)
                 .OfClass(typeof(Pipe))
                 .WhereElementIsNotElementType()
                 .Cast<Pipe>()
                 .ToList();
 
+            var fittingCategories = new[] { BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeAccessory };
+            var fittings = new FilteredElementCollector(doc)
+                .WherePasses(new ElementMulticategoryFilter(fittingCategories))
+                .WhereElementIsNotElementType()
+                .OfType<FamilyInstance>()
+                .ToList();
+
+            // Mapeia agrupamentos espaciais (Kits) caso não existam Rooms nativos no modelo
+            var spatialCenters = new List<(XYZ Pt, string KitName)>();
+            double clusterRadiusFeet = UnitUtils.ConvertToInternalUnits(2.50, UnitTypeId.Meters);
+
+            string ResolveKitName(XYZ point)
+            {
+                try
+                {
+                    Room? room = doc.GetRoomAtPoint(point);
+                    if (room != null && !string.IsNullOrWhiteSpace(room.Name))
+                        return $"Kit {room.Name}";
+                }
+                catch { }
+
+                foreach (var sc in spatialCenters)
+                {
+                    double distXY = Math.Sqrt(Math.Pow(sc.Pt.X - point.X, 2) + Math.Pow(sc.Pt.Y - point.Y, 2));
+                    if (distXY <= clusterRadiusFeet && Math.Abs(sc.Pt.Z - point.Z) <= UnitUtils.ConvertToInternalUnits(3.5, UnitTypeId.Meters))
+                        return sc.KitName;
+                }
+
+                string newKit = $"Kit Ambiente {spatialCenters.Count + 1:D2}";
+                spatialCenters.Add((point, newKit));
+                return newKit;
+            }
+
+            // 1. Tubos Globais + Kits
             var pipeGroups = new Dictionary<(string Sys, string TypeName, double DiaMm), double>();
+            var kitPipeGroups = new Dictionary<(string Kit, string Sys, string TypeName, double DiaMm), double>();
 
             foreach (Pipe p in allPipes)
             {
@@ -42,6 +77,11 @@ namespace BahrHidro.Revit
 
                 var key = (sysName, typeName, diaMm);
                 pipeGroups[key] = pipeGroups.TryGetValue(key, out double current) ? current + lenM : lenM;
+
+                XYZ midPt = p.Location is LocationCurve lc ? lc.Curve.Evaluate(0.5, true) : XYZ.Zero;
+                string kitName = ResolveKitName(midPt);
+                var kKey = (kitName, sysName, typeName, diaMm);
+                kitPipeGroups[kKey] = kitPipeGroups.TryGetValue(kKey, out double kCur) ? kCur + lenM : lenM;
             }
 
             var pipeItems = pipeGroups
@@ -64,21 +104,15 @@ namespace BahrHidro.Revit
                 })
                 .ToList();
 
-            // 2. Extração de Conexões (OST_PipeFitting) e Acessórios/Registros (OST_PipeAccessory)
-            var fittingCategories = new[] { BuiltInCategory.OST_PipeFitting, BuiltInCategory.OST_PipeAccessory };
-            var fittings = new FilteredElementCollector(doc)
-                .WherePasses(new ElementMulticategoryFilter(fittingCategories))
-                .WhereElementIsNotElementType()
-                .OfType<FamilyInstance>()
-                .ToList();
-
+            // 2. Conexões e Registros Globais + Kits
             var fittingGroups = new Dictionary<(string Sys, string Cat, string Name, string Size), int>();
+            var kitFittingGroups = new Dictionary<(string Kit, string Sys, string Cat, string Name, string Size), int>();
 
             foreach (FamilyInstance fi in fittings)
             {
                 string sysName = fi.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM)?.AsValueString() ?? "Geral";
                 string catLabel = fi.Category?.Id.Value == (long)BuiltInCategory.OST_PipeAccessory
-                    ? "Acessório / Registro"
+                    ? "Registro / Acessório"
                     : "Conexão Hidráulica";
 
                 string famName = fi.Symbol?.FamilyName ?? "";
@@ -87,12 +121,15 @@ namespace BahrHidro.Revit
 
                 string sizeStr = fi.get_Parameter(BuiltInParameter.RBS_CALCULATED_SIZE)?.AsString() ?? "";
                 if (string.IsNullOrWhiteSpace(sizeStr))
-                {
                     sizeStr = ReadConnectorSizes(fi);
-                }
 
                 var key = (sysName, catLabel, fullName, sizeStr);
                 fittingGroups[key] = fittingGroups.TryGetValue(key, out int qty) ? qty + 1 : 1;
+
+                XYZ locPt = fi.Location is LocationPoint lp ? lp.Point : XYZ.Zero;
+                string kitName = ResolveKitName(locPt);
+                var kKey = (kitName, sysName, catLabel, fullName, sizeStr);
+                kitFittingGroups[kKey] = kitFittingGroups.TryGetValue(kKey, out int kQty) ? kQty + 1 : 1;
             }
 
             var fittingItems = fittingGroups
@@ -108,11 +145,39 @@ namespace BahrHidro.Revit
                     kv.Value))
                 .ToList();
 
+            // 3. Consolida Lista de Kits por Ambiente
+            var kitItems = new List<KitTakeoffItem>();
+            foreach (var kv in kitPipeGroups.OrderBy(x => x.Key.Kit).ThenBy(x => x.Key.Sys).ThenBy(x => x.Key.DiaMm))
+            {
+                double withWaste = Math.Round(kv.Value * factor, 2);
+                kitItems.Add(new KitTakeoffItem(
+                    kv.Key.Kit,
+                    kv.Key.Sys,
+                    "Tubulação",
+                    kv.Key.TypeName,
+                    $"DN {kv.Key.DiaMm:F0} mm",
+                    withWaste,
+                    "m"));
+            }
+
+            foreach (var kv in kitFittingGroups.OrderBy(x => x.Key.Kit).ThenBy(x => x.Key.Sys).ThenBy(x => x.Key.Name))
+            {
+                kitItems.Add(new KitTakeoffItem(
+                    kv.Key.Kit,
+                    kv.Key.Sys,
+                    kv.Key.Cat,
+                    kv.Key.Name,
+                    kv.Key.Size,
+                    kv.Value,
+                    "un"));
+            }
+
             return new BimMaterialTakeoff(
                 string.IsNullOrWhiteSpace(projectName) ? "Projeto BIM Revit" : projectName,
                 safeWaste,
                 pipeItems,
-                fittingItems);
+                fittingItems,
+                kitItems);
         }
 
         private static string ReadConnectorSizes(FamilyInstance fi)

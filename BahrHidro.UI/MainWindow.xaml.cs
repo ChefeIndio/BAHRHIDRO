@@ -1153,7 +1153,23 @@ namespace BahrHidro.UI
                 if (opts.Levels.Count > 0)
                     TracadoNivelComboBox.SelectedIndex = 0;
 
-                TracadoTemplateStatusText.Text = $"Template: {opts.PipeTypes.Count} tubo(s), {opts.PipingSystemTypes.Count} sistema(s). Clique em 'Detectar (IFC / DWG)'.";
+                var officeProfile = OfficeProfileManager.Load();
+                if (!string.IsNullOrWhiteSpace(officeProfile.PreferredPipeTypeName))
+                {
+                    var savedPipe = opts.PipeTypes.FirstOrDefault(p => p.Name.Equals(officeProfile.PreferredPipeTypeName, StringComparison.OrdinalIgnoreCase));
+                    if (savedPipe != null) TracadoPipeTypeComboBox.SelectedItem = savedPipe;
+                }
+                if (!string.IsNullOrWhiteSpace(officeProfile.PreferredSystemTypeName))
+                {
+                    var savedSys = opts.PipingSystemTypes.FirstOrDefault(s => s.Name.Equals(officeProfile.PreferredSystemTypeName, StringComparison.OrdinalIgnoreCase));
+                    if (savedSys != null) TracadoSystemTypeComboBox.SelectedItem = savedSys;
+                }
+                TracadoOffsetTextBox.Text = officeProfile.DefaultTopOffsetMeters.ToString("F2", PtBr);
+                MemMargemPerdaTextBox.Text = officeProfile.DefaultWasteMarginPercent.ToString("F0", PtBr);
+                ChkDesviarSteelFrame.IsChecked = officeProfile.AvoidSteelFrameClashes;
+                ChkInserirRegistrosAuto.IsChecked = officeProfile.InsertValvesAutomatically;
+
+                TracadoTemplateStatusText.Text = $"Template + Padrão do Escritório carregados ({opts.PipeTypes.Count} tubo(s)). Clique em 'Detectar (IFC / DWG)'.";
             }
             catch (Exception ex)
             {
@@ -1352,6 +1368,16 @@ namespace BahrHidro.UI
                 bool routeFromAbove = ((TracadoPlanoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Top") == "Top";
                 double initDia = double.TryParse((TracadoDiametroComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(), out double d) ? d : 25.0;
                 bool avoidSteel = ChkDesviarSteelFrame.IsChecked == true;
+                bool insertValves = ChkInserirRegistrosAuto.IsChecked == true;
+
+                var profile = OfficeProfileManager.Load();
+                profile.PreferredPipeTypeName = (TracadoPipeTypeComboBox.SelectedItem as RevitLookupItem)?.Name;
+                profile.PreferredSystemTypeName = (TracadoSystemTypeComboBox.SelectedItem as RevitLookupItem)?.Name;
+                if (routeFromAbove) profile.DefaultTopOffsetMeters = offsetM;
+                else profile.DefaultBottomOffsetMeters = offsetM;
+                profile.AvoidSteelFrameClashes = avoidSteel;
+                profile.InsertValvesAutomatically = insertValves;
+                OfficeProfileManager.Save(profile);
 
                 var req = new RevitAutoRoutingRequest(
                     discipline,
@@ -1362,6 +1388,7 @@ namespace BahrHidro.UI
                     offsetM,
                     initDia,
                     avoidSteel,
+                    insertValves,
                     _pontosTracadoDetectados.ToList());
 
                 var res = _revitBridge.ExecuteAutomaticPipeRouting(req);

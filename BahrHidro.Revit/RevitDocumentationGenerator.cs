@@ -224,6 +224,14 @@ namespace BahrHidro.Revit
                                     tagPos);
 
                                 totalTagsPlaced++;
+
+                                string comment = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? "";
+                                if (comment.Contains("|H=", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    XYZ bendPt = midPt + new XYZ(0.25, 0.25, 0.20);
+                                    XYZ endPt = bendPt + new XYZ(0.35, 0, 0);
+                                    doc.Create.NewSpotElevation(isoView, new Reference(pipe), midPt, bendPt, endPt, midPt, hasLeader: true);
+                                }
                             }
                             catch { }
                         }

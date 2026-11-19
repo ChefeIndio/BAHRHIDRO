@@ -327,7 +327,21 @@ namespace BahrHidro.Revit
                         pipesCreated += branchPipes.Count;
                         totalLengthFeet += branchPipes.Sum(GetPipeLengthFeet);
 
-                        SetPipeComment(branchPipes[0], $"BahrHidro|{pt.Name}|{pt.Weight.ToString("F2", CultureInfo.InvariantCulture)}");
+                        SetPipeComment(branchPipes[0], $"BahrHidro|{pt.Name}|{pt.Weight.ToString("F2", CultureInfo.InvariantCulture)}|H={pt.PointHeightMeters.ToString("F2", CultureInfo.InvariantCulture)}m");
+
+                        // Inserção automática de Registo de Pressão na descida de Chuveiro (H = 1,10 m)
+                        if (request.InsertValvesAutomatically &&
+                            (pt.FixtureCategory.Contains("Chuveiro", StringComparison.OrdinalIgnoreCase) ||
+                             pt.FixtureCategory.Contains("Ducha", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            double valveZFeet = baseLevel.Elevation + UnitUtils.ConvertToInternalUnits(1.10, UnitTypeId.Meters);
+                            Pipe? verticalPipe = branchPipes.FirstOrDefault(bp => IsVerticalPipeCoveringZ(bp, valveZFeet));
+                            if (verticalPipe != null && TryInsertValveOnPipe(doc, verticalPipe, new XYZ(dropXFeet, dropYFeet, valveZFeet), baseLevel, preferPressureValve: true, out string valveName))
+                            {
+                                fittingsCreated++;
+                                logs.Add($"[NBR 5626] Registo de Pressão ('{valveName}') inserido a H = 1,10 m para '{pt.Name}'.");
+                            }
+                        }
 
                         if (pt.HostElementId.HasValue && doc.GetElement(new ElementId(pt.HostElementId.Value)) is FamilyInstance hostFi)
                         {
@@ -388,7 +402,23 @@ namespace BahrHidro.Revit
                     logs.Insert(0, "Origem da linha tronco criada a 0,80 m do primeiro ramal.");
                 }
 
-                ConnectTrunkSegments(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, trunkJunctions, ref pipesCreated, ref fittingsCreated, ref totalLengthFeet);
+                var createdTrunkSegments = ConnectTrunkSegments(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, trunkJunctions, ref pipesCreated, ref fittingsCreated, ref totalLengthFeet);
+
+                // Inserção automática de Registo de Gaveta no início da distribuição do núcleo/pavimento
+                if (request.InsertValvesAutomatically && createdTrunkSegments.Count > 0)
+                {
+                    Pipe firstTrunk = createdTrunkSegments[0];
+                    if (firstTrunk.Location is LocationCurve tlc && tlc.Curve.Length >= UnitUtils.ConvertToInternalUnits(0.30, UnitTypeId.Meters))
+                    {
+                        XYZ gatePos = tlc.Curve.Evaluate(0.25, normalized: true);
+                        if (TryInsertValveOnPipe(doc, firstTrunk, gatePos, baseLevel, preferPressureValve: false, out string gateName))
+                        {
+                            fittingsCreated++;
+                            logs.Add($"[NBR 5626] Registo de Gaveta de manutenção ('{gateName}') inserido na linha de distribuição.");
+                        }
+                    }
+                }
+
                 tx.Commit();
             }
 
@@ -1639,7 +1669,7 @@ namespace BahrHidro.Revit
             catch { }
         }
 
-        private static void ConnectTrunkSegments(
+        private static List<Pipe> ConnectTrunkSegments(
             Document doc,
             ElementId systemTypeId,
             ElementId pipeTypeId,
@@ -1697,6 +1727,107 @@ namespace BahrHidro.Revit
                     }
                     catch { }
                 }
+            }
+            return trunkSegments;
+        }
+
+        private static bool IsVerticalPipeCoveringZ(Pipe pipe, double targetZFeet)
+        {
+            if (pipe.Location is not LocationCurve lc) return false;
+            XYZ p0 = lc.Curve.GetEndPoint(0);
+            XYZ p1 = lc.Curve.GetEndPoint(1);
+            double horiz = Math.Sqrt(Math.Pow(p1.X - p0.X, 2) + Math.Pow(p1.Y - p0.Y, 2));
+            if (horiz > 0.05) return false;
+
+            double minZ = Math.Min(p0.Z, p1.Z) + UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters);
+            double maxZ = Math.Max(p0.Z, p1.Z) - UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters);
+            return targetZFeet >= minZ && targetZFeet <= maxZ;
+        }
+
+        private static bool TryInsertValveOnPipe(
+            Document doc,
+            Pipe pipe,
+            XYZ breakPoint,
+            Level baseLevel,
+            bool preferPressureValve,
+            out string valveFamilyName)
+        {
+            valveFamilyName = "";
+            try
+            {
+                var symbols = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_PipeAccessory)
+                    .WhereElementIsElementType()
+                    .OfType<FamilySymbol>()
+                    .ToList();
+
+                if (symbols.Count == 0) return false;
+
+                FamilySymbol? chosen = preferPressureValve
+                    ? symbols.FirstOrDefault(s => RemoverAcentos($"{s.FamilyName} {s.Name}").ToLowerInvariant().Contains("pressao")) ??
+                      symbols.FirstOrDefault(s => RemoverAcentos($"{s.FamilyName} {s.Name}").ToLowerInvariant().Contains("chuveiro")) ??
+                      symbols.FirstOrDefault(s => RemoverAcentos($"{s.FamilyName} {s.Name}").ToLowerInvariant().Contains("registro")) ??
+                      symbols.FirstOrDefault()
+                    : symbols.FirstOrDefault(s => RemoverAcentos($"{s.FamilyName} {s.Name}").ToLowerInvariant().Contains("gaveta")) ??
+                      symbols.FirstOrDefault(s => RemoverAcentos($"{s.FamilyName} {s.Name}").ToLowerInvariant().Contains("esfera")) ??
+                      symbols.FirstOrDefault(s => RemoverAcentos($"{s.FamilyName} {s.Name}").ToLowerInvariant().Contains("registro")) ??
+                      symbols.FirstOrDefault();
+
+                if (chosen == null) return false;
+                if (!chosen.IsActive) chosen.Activate();
+
+                if (pipe.Location is not LocationCurve lc) return false;
+                XYZ pStart = lc.Curve.GetEndPoint(0);
+                XYZ pEnd = lc.Curve.GetEndPoint(1);
+                XYZ pipeDir = (pEnd - pStart).Normalize();
+
+                ElementId secondId = PlumbingUtils.BreakCurve(doc, pipe.Id, breakPoint);
+                if (doc.GetElement(secondId) is not Pipe secondPipe) return false;
+
+                FamilyInstance valve = doc.Create.NewFamilyInstance(breakPoint, chosen, baseLevel, StructuralType.NonStructural);
+
+                var valveConns = new List<Connector>();
+                if (valve.MEPModel?.ConnectorManager?.Connectors != null)
+                {
+                    foreach (Connector c in valve.MEPModel.ConnectorManager.Connectors)
+                    {
+                        if (c.Domain == Domain.DomainPiping)
+                            valveConns.Add(c);
+                    }
+                }
+
+                if (valveConns.Count >= 2)
+                {
+                    XYZ connDir = (valveConns[1].Origin - valveConns[0].Origin);
+                    if (connDir.GetLength() > 1e-5)
+                    {
+                        connDir = connDir.Normalize();
+                        XYZ rotAxis = connDir.CrossProduct(pipeDir);
+                        double angle = connDir.AngleTo(pipeDir);
+                        if (rotAxis.GetLength() > 1e-5 && angle > 1e-4)
+                        {
+                            Line axisLine = Line.CreateBound(breakPoint, breakPoint + rotAxis.Normalize());
+                            ElementTransformUtils.RotateElement(doc, valve.Id, axisLine, angle);
+                        }
+                    }
+
+                    Connector? p1Conn = GetClosestConnector(pipe, breakPoint);
+                    Connector? p2Conn = GetClosestConnector(secondPipe, breakPoint);
+                    Connector vConn1 = valveConns.OrderBy(c => c.Origin.DistanceTo(pStart)).First();
+                    Connector vConn2 = valveConns.OrderBy(c => c.Origin.DistanceTo(pEnd)).First();
+
+                    if (p1Conn != null && !p1Conn.IsConnected && !vConn1.IsConnected)
+                        try { p1Conn.ConnectTo(vConn1); } catch { }
+                    if (p2Conn != null && !p2Conn.IsConnected && !vConn2.IsConnected)
+                        try { p2Conn.ConnectTo(vConn2); } catch { }
+                }
+
+                valveFamilyName = $"{chosen.FamilyName} ({chosen.Name})";
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
