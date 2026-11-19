@@ -205,7 +205,7 @@
 
         <DockPanel>
         <!-- CABEÇALHO GLOBAL SUPERIOR -->
-        <Border DockPanel.Dock="Top" Background="#0F172A" Padding="20,12">
+        <Border DockPanel.Dock="Top" Background="#0F172A" Padding="20,12" Visibility="Collapsed">
             <Grid>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="20" FontWeight="Bold"/>
@@ -274,34 +274,34 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- Card 1: Catálogo -->
-                            <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18,16" VerticalAlignment="Stretch" Margin="0,0,6,0">
                                 <StackPanel>
-                                    <TextBlock Text="1. CATÁLOGO DE TUBULAÇÕES" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock TextWrapping="Wrap" Text="1. CATÁLOGO DE TUBULAÇÕES" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                     <TextBlock x:Name="InicioCatalogoStatusText" Text="Verificando bitolas cadastradas..." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button Content="Abrir Catálogo de Tubos" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="AbrirCatalogo_Click"/>
-                                    <Button Content="Carregar Padrão NBR 5648 (DN 20-110)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnCarregarPadraoInicio_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" Content="Abrir Catálogo de Tubos" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch"  Click="AbrirCatalogo_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" Content="Carregar Padrão NBR 5648 (DN 20-110)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnCarregarPadraoInicio_Click"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Card 2: Rede BIM 3D -->
-                            <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18,16" VerticalAlignment="Stretch" Margin="6,0,6,0">
                                 <StackPanel Background="#0F172A">
-                                    <TextBlock Text="2. REDE HIDRÁULICA BIM 3D" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock TextWrapping="Wrap" Text="2. REDE HIDRÁULICA BIM 3D" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                     <TextBlock x:Name="InicioRedeStatusText" Text="Nenhuma rede carregada. Importe do modelo 3D do Revit para dimensionar." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button x:Name="BtnImportarInicioRevit" Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Height="36" Visibility="Collapsed" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="DetectarRedeAutoRevit_Click"/>
-                                    <Button Content="Traçado Automático de Tubos 3D" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrTracado3D_Click"/>
-                <Button x:Name="NavConfiguracoesBtn" Content="⚙ Configurações" Style="{StaticResource SecondaryButton}" Height="36" Margin="0,0,0,8" Click="NavConfiguracoes_Click"/>
-                                    <Button Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" x:Name="BtnImportarInicioRevit" Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}"  Visibility="Collapsed" HorizontalAlignment="Stretch"  Click="DetectarRedeAutoRevit_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" Content="Traçado Automático de Tubos 3D" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch"  Click="BtnIrTracado3D_Click"/>
+                <Button Margin="0,0,0,8" MinHeight="32" x:Name="NavConfiguracoesBtn" Content="⚙ Configurações" Style="{StaticResource SecondaryButton}"   Click="NavConfiguracoes_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
                                 </StackPanel>
                             </Border>
 
                             <!-- Card 3: Leitura Automática & Steel Frame -->
-                            <Border Grid.Column="4" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18,16" VerticalAlignment="Stretch" Margin="6,0,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="3. LEITURA AUTOMÁTICA &amp; LSF" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock TextWrapping="Wrap" Text="3. LEITURA AUTOMÁTICA &amp; LSF" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                     <TextBlock Text="Leitura automática de aparelhos sanitários, coberturas e ambientes já integrada. Próxima etapa: traçado automático para Light Steel Framing." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrEsgoto_Click"/>
-                                    <Button Content="Abrir Memorial Executivo" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrMemorial_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch"  Click="BtnIrEsgoto_Click"/>
+                                    <Button Margin="0,0,0,8" MinHeight="32" Content="Abrir Memorial Executivo" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrMemorial_Click"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
