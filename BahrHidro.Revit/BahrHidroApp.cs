@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using Autodesk.Revit.UI;
 
@@ -8,40 +9,51 @@ namespace BahrHidro.Revit
     {
         public Result OnStartup(UIControlledApplication application)
         {
-            const string tabName = "Bahr Hidro";
-            try { application.CreateRibbonTab(tabName); } catch { }
-
-            RibbonPanel panel = application.CreateRibbonPanel(tabName, "Hidráulica & LSF");
-            string asmPath = Assembly.GetExecutingAssembly().Location;
-
-            panel.AddItem(new PushButtonData("BahrHidro_Main", "Abrir\nBahr Hidro", asmPath, "BahrHidro.Revit.MainCommand")
+            try
             {
-                ToolTip = "Abre o painel flutuante do Bahr Hidro (Dimensionamento, Traçado LSF, Auditoria 3D e Pranchas)."
-            });
+                const string tabName = "Bahr Hidro";
+                try { application.CreateRibbonTab(tabName); } catch { }
 
-            panel.AddSeparator();
+                RibbonPanel panel = application.CreateRibbonPanel(tabName, "Hidráulica & LSF");
+                Assembly asm = Assembly.GetExecutingAssembly();
+                string asmPath = asm.Location;
 
-            panel.AddItem(new PushButtonData("BahrHidro_QuickAudit", "Auditoria 3D\nPressão/Vel.", asmPath, "BahrHidro.Revit.QuickVisualAuditCommand")
+                var mainCmd = asm.GetTypes().FirstOrDefault(t =>
+                    typeof(IExternalCommand).IsAssignableFrom(t) &&
+                    !t.IsAbstract &&
+                    t.IsPublic &&
+                    !t.Name.StartsWith("Quick"));
+
+                if (mainCmd != null)
+                {
+                    panel.AddItem(new PushButtonData("BahrHidro_Main", "Abrir\nBahr Hidro", asmPath, mainCmd.FullName!)
+                    {
+                        ToolTip = "Abre o painel flutuante do Bahr Hidro."
+                    });
+                }
+
+                var quickBtns = new[]
+                {
+                    ("BahrHidro_QuickAudit", "Auditoria 3D\nPressão/Vel.", "BahrHidro.Revit.QuickVisualAuditCommand", "Auditoria visual NBR 5626."),
+                    ("BahrHidro_QuickLsf", "Validar\nFuração LSF", "BahrHidro.Revit.QuickLsfPunchingCommand", "Valida furação em montantes LSF."),
+                    ("BahrHidro_QuickSheets", "Gerar Pranchas\n(1:20 / 1:25)", "BahrHidro.Revit.QuickExecutiveSheetsCommand", "Gera elevações 1:20 e pranchas.")
+                };
+
+                bool addedSep = false;
+                foreach (var (id, label, cls, tip) in quickBtns)
+                {
+                    if (asm.GetType(cls) == null) continue;
+                    if (!addedSep && mainCmd != null) { panel.AddSeparator(); addedSep = true; }
+                    panel.AddItem(new PushButtonData(id, label, asmPath, cls) { ToolTip = tip });
+                }
+            }
+            catch (Exception ex)
             {
-                ToolTip = "Pinta os tubos da vista ativa conforme velocidade e pressão dinâmica da NBR 5626."
-            });
-
-            panel.AddItem(new PushButtonData("BahrHidro_QuickLsf", "Validar\nFuração LSF", asmPath, "BahrHidro.Revit.QuickLsfPunchingCommand")
-            {
-                ToolTip = "Audita os cruzamentos em montantes Steel Frame usando o cache espacial 2D."
-            });
-
-            panel.AddItem(new PushButtonData("BahrHidro_QuickSheets", "Gerar Pranchas\n(1:20 / 1:25)", asmPath, "BahrHidro.Revit.QuickExecutiveSheetsCommand")
-            {
-                ToolTip = "Gera automaticamente as vistas de elevação frontal (1:20), isométricos (1:25) e pranchas executivas."
-            });
-
+                TaskDialog.Show("Bahr Hidro - Inicialização", ex.Message);
+            }
             return Result.Succeeded;
         }
 
-        public Result OnShutdown(UIControlledApplication application)
-        {
-            return Result.Succeeded;
-        }
+        public Result OnShutdown(UIControlledApplication application) => Result.Succeeded;
     }
 }
