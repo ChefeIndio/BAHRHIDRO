@@ -104,5 +104,7 @@ namespace BahrHidro.UI
         (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews();
         ClashCheckSummaryResult RunHydraulicClashCheck();
         SheetGenerationResult GenerateHydraulicSheets();
+        (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateHydraulicWallElevations();
+        (int DeletedCount, string Summary) ClearGeneratedRouting(string disciplineMode);
     }
 }

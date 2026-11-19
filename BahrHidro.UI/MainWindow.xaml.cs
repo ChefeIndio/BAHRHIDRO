@@ -1470,5 +1470,48 @@ namespace BahrHidro.UI
             }
         }
 
+
+        private void LimparTracadoDisciplina_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string discipline = (TracadoDisciplinaComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "ColdWater";
+                string discLabel = (TracadoDisciplinaComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? discipline;
+
+                var confirm = MessageBox.Show(
+                    $"Deseja remover todos os tubos e conexões gerados automaticamente pelo Bahr Hidro para:\n{discLabel}?",
+                    "Bahr Hidro - Limpar Traçado da Disciplina",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (confirm != MessageBoxResult.Yes) return;
+
+                var res = _revitBridge.ClearGeneratedRouting(discipline);
+                TracadoResumoGeracaoText.Text = res.Summary;
+                InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
+                MessageBox.Show(res.Summary, "Bahr Hidro - Limpeza Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao limpar traçado:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void GerarElevacoesParede_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.GenerateHydraulicWallElevations();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                MessageBox.Show(res.Summary, "Bahr Hidro - Elevações de Parede (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao gerar elevações de parede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
 }
 }

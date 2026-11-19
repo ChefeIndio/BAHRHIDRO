@@ -325,6 +325,16 @@ namespace BahrHidro.Revit
             return RevitClashAndSheetGenerator.RunHydraulicClashCheck(_doc);
         }
 
+        public (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateHydraulicWallElevations()
+        {
+            return RevitDocumentationGenerator.GenerateHydraulicWallElevations(_uidoc);
+        }
+
+        public (int DeletedCount, string Summary) ClearGeneratedRouting(string disciplineMode)
+        {
+            return RevitDocumentationGenerator.ClearGeneratedRouting(_doc, disciplineMode);
+        }
+
         public SheetGenerationResult GenerateHydraulicSheets()
         {
             var info = GetProjectInfo();

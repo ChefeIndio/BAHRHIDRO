@@ -324,10 +324,12 @@ namespace BahrHidro.Revit
 
                     if (branchPipes.Count > 0)
                     {
+                        for (int bpIdx = 1; bpIdx < branchPipes.Count; bpIdx++)
+                            SetPipeComment(branchPipes[bpIdx], $"BahrHidroAuto|Disc={request.DisciplineMode}");
                         pipesCreated += branchPipes.Count;
                         totalLengthFeet += branchPipes.Sum(GetPipeLengthFeet);
 
-                        SetPipeComment(branchPipes[0], $"BahrHidro|{pt.Name}|{pt.Weight.ToString("F2", CultureInfo.InvariantCulture)}|H={pt.PointHeightMeters.ToString("F2", CultureInfo.InvariantCulture)}m");
+                        SetPipeComment(branchPipes[0], $"BahrHidro|{pt.Name}|{pt.Weight.ToString("F2", CultureInfo.InvariantCulture)}|H={pt.PointHeightMeters.ToString("F2", CultureInfo.InvariantCulture)}m|Disc={request.DisciplineMode}");
 
                         // Inserção automática de Registo de Pressão na descida de Chuveiro (H = 1,10 m)
                         if (request.InsertValvesAutomatically &&
@@ -597,7 +599,7 @@ namespace BahrHidro.Revit
                     // Corpo vertical da Caixa Sifonada (DN 100 mm)
                     Pipe csBody = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pBoxTop, pBoxBottom);
                     SetPipeDiameter(csBody, dia100Feet);
-                    SetPipeComment(csBody, $"BahrHidro|Caixa Sifonada CS-{cIdx + 1:D2}|DN100x100x50");
+                    SetPipeComment(csBody, $"BahrHidro|Caixa Sifonada CS-{cIdx + 1:D2}|DN100x100x50|Disc={request.DisciplineMode}");
                     pipesCreated++;
                     totalLengthFeet += GetPipeLengthFeet(csBody);
 
@@ -771,6 +773,7 @@ namespace BahrHidro.Revit
 
                         Pipe cPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, a, b);
                         SetPipeDiameter(cPipe, diaSubcollectorFeet);
+                        SetPipeComment(cPipe, $"BahrHidroAuto|Disc={request.DisciplineMode}");
                         collectorPipes.Add(cPipe);
                         pipesCreated++;
                         totalLengthFeet += GetPipeLengthFeet(cPipe);
@@ -779,6 +782,7 @@ namespace BahrHidro.Revit
                     XYZ pDropDown = new XYZ(pOutletTop.X, pOutletTop.Y, pOutletTop.Z - UnitUtils.ConvertToInternalUnits(0.80, UnitTypeId.Meters));
                     Pipe dropPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pOutletTop, pDropDown);
                     SetPipeDiameter(dropPipe, diaSubcollectorFeet);
+                    SetPipeComment(dropPipe, $"BahrHidroAuto|Disc={request.DisciplineMode}");
                     pipesCreated++;
                     totalLengthFeet += GetPipeLengthFeet(dropPipe);
 
@@ -859,7 +863,7 @@ namespace BahrHidro.Revit
 
             var hwRequest = request with
             {
-                DisciplineMode = "ColdWater",
+                DisciplineMode = "HotWater",
                 Points = hotPoints
             };
 
@@ -961,6 +965,7 @@ namespace BahrHidro.Revit
 
                     Pipe ventPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pBottom, pTop);
                     SetPipeDiameter(ventPipe, dia50Feet);
+                    SetPipeComment(ventPipe, $"BahrHidroAuto|Disc={request.DisciplineMode}");
                     pipesCreated++;
                     totalLengthFeet += GetPipeLengthFeet(ventPipe);
 
@@ -1691,6 +1696,7 @@ namespace BahrHidro.Revit
 
                 Pipe trunkPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, a, b);
                 SetPipeDiameter(trunkPipe, diameterFeet);
+                SetPipeComment(trunkPipe, $"BahrHidroAuto|Disc={GetSystemTagFromPipe(trunkPipe)}");
                 trunkSegments.Add(trunkPipe);
                 pipesCreated++;
                 totalLengthFeet += GetPipeLengthFeet(trunkPipe);
@@ -1911,6 +1917,7 @@ namespace BahrHidro.Revit
 
                 Pipe pipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, points[i], points[i + 1]);
                 SetPipeDiameter(pipe, diameterFeet);
+                SetPipeComment(pipe, $"BahrHidroAuto|Disc={GetSystemTagFromPipe(pipe)}");
 
                 if (createdPipes.Count > 0)
                 {
@@ -2068,5 +2075,16 @@ namespace BahrHidro.Revit
         private sealed record WorldBox(double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ);
         private sealed record WallAxisSegment(double X1, double Y1, double X2, double Y2, double MinZ, double MaxZ, double Width);
         private sealed record RoutingSpatialContext(List<WorldBox> SteelObstacles, List<WorldBox> OpeningObstacles, List<WallAxisSegment> Walls);
-    }
+    
+        private static string GetSystemTagFromPipe(Pipe pipe)
+        {
+            string sys = RemoverAcentos(pipe.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM)?.AsValueString() ?? "").ToLowerInvariant();
+            if (sys.Contains("quente") || sys.Contains("hot")) return "HotWater";
+            if (sys.Contains("vent")) return "Ventilation";
+            if (sys.Contains("pluv") || sys.Contains("storm")) return "StormDrainage";
+            if (sys.Contains("esgoto") || sys.Contains("sanit")) return "SanitarySewer";
+            return "ColdWater";
+        }
+
+}
 }

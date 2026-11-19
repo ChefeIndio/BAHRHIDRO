@@ -319,10 +319,11 @@
                                             </DataGrid.Columns>
                                         </DataGrid>
 
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                            <Button Content="Gerar Traçado Automático no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0" Click="ExecutarTracado3D_Click"/>
-                                            <Button Content="Ir para Água Fria (Dimensionar)" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
-                                        </StackPanel>
+                                        <WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <Button Content="Gerar Traçado Automático no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,8,6" Click="ExecutarTracado3D_Click"/>
+                                            <Button Content="Limpar Traçado (Disciplina)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,6" Click="LimparTracadoDisciplina_Click"/>
+                                            <Button Content="Ir para Água Fria (Dimensionar)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,6" Click="BtnIrAguaFria_Click"/>
+                                        </WrapPanel>
 
                                         <TextBlock x:Name="TracadoResumoGeracaoText" Text="Resultado: Aguardando geração do traçado." FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                         <TextBox x:Name="TracadoLogTextBox" Height="95" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Background="#F8FAFC" FontSize="11"/>
@@ -337,7 +338,8 @@
                                         <WrapPanel Orientation="Horizontal">
                                             <Button Content="1. Verificar Colisões (Steel Frame)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="VerificarColisoesSteelFrame_Click"/>
                                             <Button Content="2. Gerar Isométricos 3D (c/ Tags)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="GerarIsometricos3D_Click"/>
-                                            <Button Content="3. Gerar Pranchas (Plotagem)" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,6,6" Click="GerarPranchasPlotagem_Click"/>
+                                            <Button Content="3. Elevações de Parede (1:20)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="GerarElevacoesParede_Click"/>
+                                            <Button Content="4. Gerar Pranchas (Plotagem)" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,6,6" Click="GerarPranchasPlotagem_Click"/>
                                             <Button Content="Taggear Vista Atual" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,0,6" Click="TaggearTubosVistaAtual_Click"/>
                                         </WrapPanel>
                                     </StackPanel>

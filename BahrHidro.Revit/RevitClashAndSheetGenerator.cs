@@ -123,27 +123,32 @@ namespace BahrHidro.Revit
         {
             Document doc = uidoc.Document;
 
-            // 1. Busca vistas isométricas geradas pelo Bahr Hidro; se não houver, gera automaticamente agora
-            var isoViews = new FilteredElementCollector(doc)
-                .OfClass(typeof(View3D))
-                .Cast<View3D>()
-                .Where(v => !v.IsTemplate && v.Name.StartsWith("BahrHidro - Isométrico", StringComparison.OrdinalIgnoreCase))
+            // 1. Busca vistas isométricas e elevações de parede geradas pelo Bahr Hidro
+            var targetViews = new FilteredElementCollector(doc)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .Where(v => !v.IsTemplate &&
+                            (v.Name.StartsWith("BahrHidro - Isométrico", StringComparison.OrdinalIgnoreCase) ||
+                             v.Name.StartsWith("BahrHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(v => v.Name)
                 .ToList();
 
-            if (isoViews.Count == 0)
+            if (targetViews.Count == 0)
             {
                 RevitDocumentationGenerator.GenerateWetZoneIsometricViews(uidoc);
-                isoViews = new FilteredElementCollector(doc)
-                    .OfClass(typeof(View3D))
-                    .Cast<View3D>()
-                    .Where(v => !v.IsTemplate && v.Name.StartsWith("BahrHidro - Isométrico", StringComparison.OrdinalIgnoreCase))
+                RevitDocumentationGenerator.GenerateHydraulicWallElevations(uidoc);
+                targetViews = new FilteredElementCollector(doc)
+                    .OfClass(typeof(View))
+                    .Cast<View>()
+                    .Where(v => !v.IsTemplate &&
+                                (v.Name.StartsWith("BahrHidro - Isométrico", StringComparison.OrdinalIgnoreCase) ||
+                                 v.Name.StartsWith("BahrHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase)))
                     .OrderBy(v => v.Name)
                     .ToList();
             }
 
-            if (isoViews.Count == 0)
-                throw new InvalidOperationException("Não foi possível localizar ou gerar vistas isométricas 3D para inserir na prancha.");
+            if (targetViews.Count == 0)
+                throw new InvalidOperationException("Não foi possível localizar ou gerar vistas isométricas/elevações para inserir na prancha.");
 
             // 2. Seleciona o carimbo (TitleBlock) do template (prioriza A1 / A0)
             var titleBlocks = new FilteredElementCollector(doc)
@@ -169,7 +174,7 @@ namespace BahrHidro.Revit
 
             // Distribui até 4 vistas isométricas por prancha (grade 2x2)
             const int viewsPerSheet = 4;
-            int totalSheetsNeeded = (int)Math.Ceiling(isoViews.Count / (double)viewsPerSheet);
+            int totalSheetsNeeded = (int)Math.Ceiling(targetViews.Count / (double)viewsPerSheet);
 
             using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Pranchas de Plotagem"))
             {
@@ -229,10 +234,10 @@ namespace BahrHidro.Revit
                         new((midU + usableMaxU) / 2.0, (usableMinV + midV) / 2.0, 0)  // Inferior Direito
                     };
 
-                    var batch = isoViews.Skip(sIdx * viewsPerSheet).Take(viewsPerSheet).ToList();
+                    var batch = targetViews.Skip(sIdx * viewsPerSheet).Take(viewsPerSheet).ToList();
                     for (int vIdx = 0; vIdx < batch.Count; vIdx++)
                     {
-                        View3D view = batch[vIdx];
+                        View view = batch[vIdx];
                         if (!Viewport.CanAddViewToSheet(doc, sheet.Id, view.Id))
                             continue;
 

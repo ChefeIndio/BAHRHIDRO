@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BahrHidro.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+840b9e14d8c95b5c01895c43321cbccb885f9b54")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+694f2a2e601795a3a7c18c68df9a17f47df6dd9a")]
 [assembly: System.Reflection.AssemblyProductAttribute("BahrHidro.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BahrHidro.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
