@@ -36,22 +36,13 @@ namespace BahrHidro.Revit
             if (allPipes.Count == 0)
                 throw new InvalidOperationException("Nenhuma rede horizontal/de pavimento encontrada. Gere os traçados nos pavimentos antes de interligar as prumadas multinível.");
 
-            var walls = new List<(XYZ P0, XYZ P1)>();
-            var obstacles = new List<(double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ)>();
-            CollectWallsAndObstacles(doc, Transform.Identity, walls, obstacles);
-            foreach (var link in new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>())
-            {
-                Document? linkDoc = link.GetLinkDocument();
-                if (linkDoc != null)
-                    CollectWallsAndObstacles(linkDoc, link.GetTotalTransform(), walls, obstacles);
-            }
+            var (spatialIndex, _, _) = RevitSpatialCache.GetOrBuild(doc);
 
-            // Agrupa tubos existentes por disciplina (ColdWater, HotWater, SanitarySewer, Ventilation)
             var byDiscipline = new Dictionary<string, List<Pipe>>(StringComparer.OrdinalIgnoreCase);
             foreach (var p in allPipes)
             {
                 string disc = ClassifyPipeDiscipline(p);
-                if (disc == "StormDrainage") continue; // Condutores pluviais já descem da cobertura
+                if (disc == "StormDrainage") continue;
                 if (!byDiscipline.ContainsKey(disc))
                     byDiscipline[disc] = new List<Pipe>();
                 byDiscipline[disc].Add(p);
@@ -61,6 +52,7 @@ namespace BahrHidro.Revit
                 throw new InvalidOperationException("Nenhuma rede de Água Fria, Água Quente, Esgoto ou Ventilação encontrada para interligação vertical.");
 
             double clusterRadiusFeet = UnitUtils.ConvertToInternalUnits(2.40, UnitTypeId.Meters);
+            double wallSnapDistFeet = UnitUtils.ConvertToInternalUnits(1.20, UnitTypeId.Meters);
             Level lowestLevel = levels[0];
             Level highestLevel = levels[^1];
 
@@ -92,19 +84,31 @@ namespace BahrHidro.Revit
                         if (pipeTypeId == ElementId.InvalidElementId || sysTypeId == ElementId.InvalidElementId)
                             continue;
 
-                        // Calcula centro XY do núcleo e alinha ao eixo da parede mais próxima
                         double avgX = cluster.Average(p => GetMidpoint(p).X);
                         double avgY = cluster.Average(p => GetMidpoint(p).Y);
-                        SnapToNearestWall(avgX, avgY, walls, out double wallX, out double wallY);
 
-                        // Soma pesos acumulados de todos os pavimentos atendidos por este núcleo
+                        double wallX = avgX;
+                        double wallY = avgY;
+                        var (nearWall, _, _) = spatialIndex.FindNearestWall(avgX, avgY, wallSnapDistFeet);
+                        if (nearWall != null)
+                        {
+                            double dx = nearWall.P1.X - nearWall.P0.X;
+                            double dy = nearWall.P1.Y - nearWall.P0.Y;
+                            double lenSq = dx * dx + dy * dy;
+                            if (lenSq >= 1e-6)
+                            {
+                                double t = Math.Clamp(((avgX - nearWall.P0.X) * dx + (avgY - nearWall.P0.Y) * dy) / lenSq, 0.0, 1.0);
+                                wallX = nearWall.P0.X + t * dx;
+                                wallY = nearWall.P0.Y + t * dy;
+                            }
+                        }
+
                         double totalWeight = cluster.Sum(ExtractWeightFromComment);
                         if (totalWeight <= 0) totalWeight = Math.Max(0.4, cluster.Count * 0.3);
 
                         double riserDiaMm = ResolveRiserDiameterMm(disc, totalWeight);
                         double riserDiaFeet = UnitUtils.ConvertToInternalUnits(riserDiaMm, UnitTypeId.Millimeters);
 
-                        // Define cota base e cota topo da coluna conforme a disciplina normativa
                         double minPipeZ = cluster.Min(p => GetMidpoint(p).Z);
                         double maxPipeZ = cluster.Max(p => GetMidpoint(p).Z);
 
@@ -134,16 +138,14 @@ namespace BahrHidro.Revit
                         if ((topZFeet - bottomZFeet) < MinSegmentFeet * 2)
                             continue;
 
-                        // Desvia de montantes Steel Frame e portas/janelas ao longo de toda a altura
                         double clearance = (riserDiaFeet / 2.0) + UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters);
-                        if (FindClashFreeColumnXY(wallX, wallY, bottomZFeet, topZFeet, clearance, obstacles, out double safeX, out double safeY))
+                        if (FindClashFreeColumnXY(wallX, wallY, bottomZFeet, topZFeet, clearance, spatialIndex, out double safeX, out double safeY))
                         {
                             wallX = safeX;
                             wallY = safeY;
                             clashesAvoided++;
                         }
 
-                        // Identifica cotas Z onde há redes horizontais nos pavimentos para criar nós de derivação
                         var floorJunctionZs = cluster
                             .Select(p => GetMidpoint(p).Z)
                             .Where(z => z > bottomZFeet + MinSegmentFeet && z < topZFeet - MinSegmentFeet)
@@ -177,7 +179,6 @@ namespace BahrHidro.Revit
                         {
                             risersCreated++;
 
-                            // Interliga cada pavimento ao nó correspondente da prumada
                             foreach (double jZ in floorJunctionZs)
                             {
                                 XYZ jPt = new XYZ(wallX, wallY, jZ);
@@ -196,7 +197,6 @@ namespace BahrHidro.Revit
                                 SetPipeComment(tiePipe, $"BahrHidroRiser|{riserCode}-Ramal|Disc={disc}");
                                 pipesCreated++;
 
-                                // Conecta Tê na coluna vertical
                                 var touchingVert = new List<Connector>();
                                 foreach (var vp in verticalSegments)
                                 {
@@ -250,7 +250,6 @@ namespace BahrHidro.Revit
             if (disc == "SanitarySewer") return 100.0;
             if (disc == "Ventilation") return 50.0;
 
-            // NBR 5626: Q = 0.30 * sqrt(ΣP), garantindo V <= 3.0 m/s
             double flowLs = 0.30 * Math.Sqrt(Math.Max(0.1, totalWeight));
             if (flowLs <= 0.45) return 25.0;
             if (flowLs <= 1.15) return 32.0;
@@ -288,99 +287,21 @@ namespace BahrHidro.Revit
             return "ColdWater";
         }
 
-        private static void CollectWallsAndObstacles(
-            Document targetDoc,
-            Transform tr,
-            List<(XYZ P0, XYZ P1)> wallsOut,
-            List<(double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ)> obstaclesOut)
-        {
-            foreach (var w in new FilteredElementCollector(targetDoc).OfClass(typeof(Wall)).WhereElementIsNotElementType().Cast<Wall>())
-            {
-                if (w.Location is not LocationCurve lc || lc.Curve is not Line line) continue;
-                wallsOut.Add((tr.OfPoint(line.GetEndPoint(0)), tr.OfPoint(line.GetEndPoint(1))));
-            }
-
-            var cats = new[]
-            {
-                BuiltInCategory.OST_StructuralColumns,
-                BuiltInCategory.OST_StructuralFraming,
-                BuiltInCategory.OST_Doors,
-                BuiltInCategory.OST_Windows
-            };
-
-            foreach (var elem in new FilteredElementCollector(targetDoc).WherePasses(new ElementMulticategoryFilter(cats)).WhereElementIsNotElementType())
-            {
-                BoundingBoxXYZ? bb = elem.get_BoundingBox(null);
-                if (bb == null) continue;
-                XYZ[] corners =
-                {
-                    tr.OfPoint(new XYZ(bb.Min.X, bb.Min.Y, bb.Min.Z)),
-                    tr.OfPoint(new XYZ(bb.Max.X, bb.Max.Y, bb.Max.Z)),
-                    tr.OfPoint(new XYZ(bb.Min.X, bb.Max.Y, bb.Min.Z)),
-                    tr.OfPoint(new XYZ(bb.Max.X, bb.Min.Y, bb.Max.Z))
-                };
-                obstaclesOut.Add((
-                    corners.Min(c => c.X),
-                    corners.Min(c => c.Y),
-                    corners.Min(c => c.Z),
-                    corners.Max(c => c.X),
-                    corners.Max(c => c.Y),
-                    corners.Max(c => c.Z)));
-            }
-        }
-
-        private static void SnapToNearestWall(double x, double y, List<(XYZ P0, XYZ P1)> walls, out double outX, out double outY)
-        {
-            outX = x;
-            outY = y;
-            double maxDist = UnitUtils.ConvertToInternalUnits(1.20, UnitTypeId.Meters);
-            double bestDist = double.MaxValue;
-
-            foreach (var w in walls)
-            {
-                double dx = w.P1.X - w.P0.X;
-                double dy = w.P1.Y - w.P0.Y;
-                double lenSq = dx * dx + dy * dy;
-                if (lenSq < 1e-6) continue;
-
-                double t = Math.Clamp(((x - w.P0.X) * dx + (y - w.P0.Y) * dy) / lenSq, 0.0, 1.0);
-                double px = w.P0.X + t * dx;
-                double py = w.P0.Y + t * dy;
-                double dist = Math.Sqrt(Math.Pow(x - px, 2) + Math.Pow(y - py, 2));
-
-                if (dist < bestDist && dist <= maxDist)
-                {
-                    bestDist = dist;
-                    outX = px;
-                    outY = py;
-                }
-            }
-        }
-
         private static bool FindClashFreeColumnXY(
             double x,
             double y,
             double minZ,
             double maxZ,
             double clearance,
-            List<(double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ)> obstacles,
+            SpatialSceneIndex spatialIndex,
             out double safeX,
             out double safeY)
         {
             safeX = x;
             safeY = y;
 
-            bool Collides(double cx, double cy)
-            {
-                foreach (var o in obstacles)
-                {
-                    if ((cx + clearance) >= o.MinX && (cx - clearance) <= o.MaxX &&
-                        (cy + clearance) >= o.MinY && (cy - clearance) <= o.MaxY &&
-                        maxZ >= o.MinZ && minZ <= o.MaxZ)
-                        return true;
-                }
-                return false;
-            }
+            bool Collides(double cx, double cy) =>
+                spatialIndex.HasObstacleCollision(cx - clearance, cx + clearance, cy - clearance, cy + clearance, minZ, maxZ);
 
             if (!Collides(x, y)) return false;
 

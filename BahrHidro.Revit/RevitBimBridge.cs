@@ -465,6 +465,16 @@ namespace BahrHidro.Revit
             });
         }
 
+        public Task<SpatialCacheStatsResult> RebuildSpatialCache()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                return RevitSpatialCache.RebuildAndGetStats(_doc);
+            });
+        }
+
         public Task<MultilevelRiserResult> GenerateMultilevelRisers()
         {
             return _runner.RunAsync(uiApp =>

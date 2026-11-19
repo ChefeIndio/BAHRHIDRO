@@ -344,6 +344,7 @@
                                             <Button Content="Taggear Vista Atual" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,0,6" Click="TaggearTubosVistaAtual_Click"/>
                                             <Button Content="Auditar Furação LSF" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="6,0,6,6" Click="AuditarFuracaoLsf_Click"/>
                                             <Button Content="Cotas Fabricação X/H (1:20)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,0,6" Click="CotasFabricacaoElevacoes_Click"/>
+                                            <Button Content="Atualizar Cache LSF" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="6,0,0,6" Click="AtualizarCacheLsf_Click"/>
                                         </WrapPanel>
                                     </StackPanel>
                                 </Border>

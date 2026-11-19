@@ -1616,5 +1616,21 @@ namespace BahrHidro.UI
             }
         }
 
+
+    private async void AtualizarCacheLsf_Click(object sender, RoutedEventArgs e)
+    {
+        if (_revitBridge == null) return;
+        try
+        {
+            var res = await _revitBridge.RebuildSpatialCache();
+            TracadoResumoGeracaoText.Text = res.Summary;
+            TracadoLogTextBox.Text = res.Summary;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
 }
 }
