@@ -16,6 +16,8 @@ namespace BahrHidro.Revit
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (!BahrHidro.UI.LicenseService.EnsureLicensed()) return Autodesk.Revit.UI.Result.Cancelled;
+
             try
             {
                 if (_activeWindow != null && _activeWindow.IsLoaded)
