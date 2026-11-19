@@ -9,6 +9,7 @@ namespace BahrHidro.Revit
     {
         public Result OnStartup(UIControlledApplication application)
         {
+            try { BahrHidro.UI.UiNavigationController.Initialize(); } catch { }
             try
             {
                 const string tabName = "Bahr Hidro";

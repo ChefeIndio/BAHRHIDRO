@@ -16,6 +16,7 @@ namespace BahrHidro.UI
         public RainwaterView()
         {
             InitializeComponent();
+            UiNavigationController.Initialize();
             var regioes = RainwaterRegionCatalog.GetRegions();
             CmbRegiao.ItemsSource = regioes;
 

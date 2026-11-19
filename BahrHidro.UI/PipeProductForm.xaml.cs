@@ -18,6 +18,7 @@ namespace BahrHidro.UI
         public PipeProductForm()
         {
             InitializeComponent();
+            UiNavigationController.Initialize();
 
             _catalogService = CreateCatalogService();
 

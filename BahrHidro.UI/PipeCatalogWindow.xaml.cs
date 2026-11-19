@@ -17,6 +17,7 @@ namespace BahrHidro.UI
         public PipeCatalogWindow()
         {
             InitializeComponent();
+            UiNavigationController.Initialize();
 
             string catalogPath = System.IO.Path.Combine(
                 Environment.GetFolderPath(

@@ -38,7 +38,8 @@ namespace BahrHidro.UI
 
         public MainWindow()
         {
-            try { try { InitializeComponent(); } catch (Exception ex) { System.Windows.MessageBox.Show(ex.InnerException?.ToString() ?? ex.ToString(), "Bahr Hidro BIM - Erro de Interface"); throw; } } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Bahr Hidro BIM - Debug"); throw; }
+            try { try { InitializeComponent();
+            UiNavigationController.Initialize(); } catch (Exception ex) { System.Windows.MessageBox.Show(ex.InnerException?.ToString() ?? ex.ToString(), "Bahr Hidro BIM - Erro de Interface"); throw; } } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Bahr Hidro BIM - Debug"); throw; }
             InitializeKeyboardShortcuts();
             LoadOfficeProfileToUi();
 

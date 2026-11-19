@@ -13,6 +13,7 @@ namespace BahrHidro.UI
         public FittingsWindow()
         {
             InitializeComponent();
+            UiNavigationController.Initialize();
             
             // Vai buscar as conexões ao Core automaticamente
             _fittings = FittingCatalog.GetStandardFittings()
