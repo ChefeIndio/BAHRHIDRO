@@ -358,6 +358,8 @@
                                 <Button Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="DetectarRedeAutoRevit_Click"/>
                                 <Button Content="Selecionar Início no 3D" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
                                 <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Click="AplicarRevit_Click"/>
+                                <Button x:Name="BtnPintarAuditoria3D" Content="Pintar Pressão/Velocidade (3D)" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="PintarAuditoria3D_Click"/>
+                                <Button x:Name="BtnLimparAuditoria3D" Content="Limpar Cores 3D" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="LimparAuditoria3D_Click"/>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Rede de Água Fria — Dimensionamento Hidráulico (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>

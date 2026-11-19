@@ -77,6 +77,8 @@ namespace BahrHidro.UI
             HeaderActionsPluvial.Visibility = Visibility.Visible;
             SalvarDadosRevitButton.Visibility = Visibility.Visible;
             BtnExtrairBom3D.Visibility = Visibility.Visible;
+            BtnPintarAuditoria3D.Visibility = Visibility.Visible;
+            BtnLimparAuditoria3D.Visibility = Visibility.Visible;
 
             var info = _revitBridge.GetProjectInfo();
             MemObraTextBox.Text = info.ProjectName;
@@ -1510,6 +1512,45 @@ namespace BahrHidro.UI
             catch (Exception ex)
             {
                 MessageBox.Show($"Aviso ao gerar elevações de parede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+
+        private void PintarAuditoria3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            if (_ultimoResultadoDaRede == null)
+            {
+                MessageBox.Show("Clique em 'Calcular Rede Hidráulica' antes de aplicar a pintura de auditoria no 3D.", "Bahr Hidro - Auditoria NBR 5626", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                var res = _revitBridge.ApplyHydraulicVisualAudit(_ultimoResultadoDaRede);
+                MessageBox.Show(
+                    $"{res.Summary}\n\nLegenda aplicada na vista:\n• Verde: Pressão >= 1,0 m.c.a. e Velocidade <= 3,0 m/s\n• Laranja: Velocidade > 3,0 m/s\n• Vermelho: Pressão < 1,0 m.c.a. (10 kPa)",
+                    "Bahr Hidro - Auditoria Visual 3D",
+                    MessageBoxButton.OK,
+                    res.LowPressureCount > 0 || res.HighVelocityCount > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao pintar rede 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void LimparAuditoria3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.ClearHydraulicVisualAudit();
+                MessageBox.Show(res.Summary, "Bahr Hidro - Cores Restauradas", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao limpar cores:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

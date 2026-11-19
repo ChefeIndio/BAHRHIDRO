@@ -330,6 +330,16 @@ namespace BahrHidro.Revit
             return RevitDocumentationGenerator.GenerateHydraulicWallElevations(_uidoc);
         }
 
+        public VisualAuditSummaryResult ApplyHydraulicVisualAudit(NetworkCalculationResult result)
+        {
+            return RevitVisualAuditManager.ApplyOverrides(_uidoc, result, new Dictionary<Guid, ElementId>());
+        }
+
+        public (int ClearedCount, string Summary) ClearHydraulicVisualAudit()
+        {
+            return RevitVisualAuditManager.ClearOverrides(_uidoc);
+        }
+
         public (int DeletedCount, string Summary) ClearGeneratedRouting(string disciplineMode)
         {
             return RevitDocumentationGenerator.ClearGeneratedRouting(_doc, disciplineMode);

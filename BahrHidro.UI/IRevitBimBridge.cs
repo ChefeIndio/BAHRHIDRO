@@ -82,6 +82,12 @@ namespace BahrHidro.UI
         int ViewportsPlaced,
         string Summary);
 
+    public sealed record VisualAuditSummaryResult(
+        int ApprovedCount,
+        int HighVelocityCount,
+        int LowPressureCount,
+        string Summary);
+
     public interface IRevitBimBridge
     {
         RevitNetworkImportData ImportNetworkAutomaticallyFromRevit();
@@ -106,5 +112,7 @@ namespace BahrHidro.UI
         SheetGenerationResult GenerateHydraulicSheets();
         (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateHydraulicWallElevations();
         (int DeletedCount, string Summary) ClearGeneratedRouting(string disciplineMode);
+        VisualAuditSummaryResult ApplyHydraulicVisualAudit(NetworkCalculationResult result);
+        (int ClearedCount, string Summary) ClearHydraulicVisualAudit();
     }
 }
