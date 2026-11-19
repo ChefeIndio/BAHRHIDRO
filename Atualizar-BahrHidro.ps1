@@ -1,3 +1,4 @@
+param([switch]$FromGitHub)
 $ErrorActionPreference = "Stop"
 Write-Host "=====================================================" -ForegroundColor Cyan
 Write-Host "  BAHR HIDRO - INSTALADOR E ATUALIZADOR (REVIT 2026) " -ForegroundColor Cyan
@@ -16,7 +17,7 @@ if (Test-Path (Join-Path $RepoDir ".git")) {
     Write-Host "[1/4] Atualizando repositorio via Git..." -ForegroundColor Green
     git fetch origin main
     git reset --hard origin/main
-} else {
+} elseif ($FromGitHub) {
     Write-Host "[1/4] Baixando ultima versao do GitHub (ZIP)..." -ForegroundColor Green
     $ZipTmp = Join-Path $env:TEMP "bahrhidro_main.zip"
     $ExtTmp = Join-Path $env:TEMP "bahrhidro_extract"
@@ -25,6 +26,8 @@ if (Test-Path (Join-Path $RepoDir ".git")) {
     Expand-Archive -Path $ZipTmp -DestinationPath $ExtTmp -Force
     $InnerDir = Get-ChildItem -Path $ExtTmp -Directory | Select-Object -First 1 -ExpandProperty FullName
     Copy-Item -Path "$InnerDir\*" -Destination $RepoDir -Recurse -Force
+} else {
+    Write-Host "[1/4] Compilando arquivos locais do pacote baixado..." -ForegroundColor Green
 }
 
 Write-Host "[2/4] Limpando e compilando Bahr Hidro (.NET 8 Windows)..." -ForegroundColor Green
@@ -44,10 +47,19 @@ New-Item -ItemType Directory -Force -Path $BinTarget | Out-Null
 Write-Host "[3/4] Instalando DLLs em $BinTarget..." -ForegroundColor Green
 Copy-Item -Path "$BuildOut\*" -Destination $BinTarget -Recurse -Force
 
+$ProgDataAddin = "C:\ProgramData\Autodesk\Revit\Addins\2026\BahrHidro.addin"
+if (Test-Path $ProgDataAddin) { Remove-Item $ProgDataAddin -Force -ErrorAction SilentlyContinue }
+
 $RevitAddinsDir = Join-Path $env:APPDATA "Autodesk\Revit\Addins\2026"
 New-Item -ItemType Directory -Force -Path $RevitAddinsDir | Out-Null
 $AddinManifestPath = Join-Path $RevitAddinsDir "BahrHidro.addin"
 $AssemblyDllPath = Join-Path $BinTarget "BahrHidro.Revit.dll"
+
+$DllBytes = [System.IO.File]::ReadAllBytes($AssemblyDllPath)
+$DllAscii = [System.Text.Encoding]::ASCII.GetString($DllBytes)
+if (-not $DllAscii.Contains("BahrHidroApp")) {
+    throw "ERRO: A classe BahrHidroApp nao foi encontrada dentro de $AssemblyDllPath!"
+}
 
 $AddinXml = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -77,4 +89,4 @@ $StateObj = @{
 [System.IO.File]::WriteAllText((Join-Path $AppDataBahr "version_state.json"), $StateObj, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host ""
-Write-Host "CONCLUIDO COM SUCESSO! BahrHidro.Revit.BahrHidroApp registrado no Revit 2026." -ForegroundColor Green
+Write-Host "CONCLUIDO COM SUCESSO! BahrHidroApp validada dentro de $AssemblyDllPath." -ForegroundColor Green

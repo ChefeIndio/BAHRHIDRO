@@ -117,6 +117,7 @@ namespace BahrHidro.UI
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = batPath,
+                    Arguments = "-FromGitHub",
                     WorkingDirectory = Path.GetDirectoryName(batPath)!,
                     UseShellExecute = true
                 });
