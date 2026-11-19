@@ -28,7 +28,8 @@ namespace BahrHidro.Revit
                 {
                     panel.AddItem(new PushButtonData("BahrHidro_Main", "Abrir\nBahr Hidro", asmPath, mainCmd.FullName!)
                     {
-                        ToolTip = "Abre o painel flutuante do Bahr Hidro."
+                        ToolTip = "Abre o painel flutuante do Bahr Hidro.",
+                        LargeImage = RibbonIconFactory.CreateMainIcon()
                     });
                 }
 

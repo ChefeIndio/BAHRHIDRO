@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Autodesk.Revit.UI;
 
+using System.Runtime.InteropServices;
+
 namespace BahrHidro.Revit
 {
     public sealed class RevitExternalEventRunner : IExternalEventHandler
@@ -33,6 +35,7 @@ namespace BahrHidro.Revit
             });
 
             _externalEvent.Raise();
+            try { SetForegroundWindow(System.Diagnostics.Process.GetCurrentProcess().MainWindowHandle); } catch { }
             return tcs.Task;
         }
 
@@ -54,5 +57,8 @@ namespace BahrHidro.Revit
         }
 
         public string GetName() => "Bahr Hidro - Executor Assíncrono BIM";
-    }
+    
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+}
 }

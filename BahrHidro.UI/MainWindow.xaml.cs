@@ -1796,5 +1796,28 @@ namespace BahrHidro.UI
         }
     }
 
+
+    private async void LimparRedeGerada_Click(object sender, RoutedEventArgs e)
+    {
+        if (_revitBridge == null) return;
+        var confirm = MessageBox.Show(
+            "Deseja remover todos os tubos, conexões e vistas gerados pelo Bahr Hidro neste modelo?",
+            "Bahr Hidro - Limpar Rede Gerada",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        if (confirm != MessageBoxResult.Yes) return;
+
+        try
+        {
+            var res = await _revitBridge.CleanGeneratedNetwork();
+            TracadoResumoGeracaoText.Text = res.Summary;
+            TracadoLogTextBox.Text = res.Summary;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro ao limpar rede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
 }
 }
