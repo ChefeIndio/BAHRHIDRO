@@ -1590,5 +1590,23 @@ namespace BahrHidro.UI
             }
         }
 
+
+        private void GerarPrumadasMultinivel_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.GenerateMultilevelRisers();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Details);
+                InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
+                MessageBox.Show(res.Summary, "Bahr Hidro - Prumadas Multinível (AF / AQ / TQ / CV)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao gerar prumadas multinível:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
 }
 }

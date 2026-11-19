@@ -340,6 +340,11 @@ namespace BahrHidro.Revit
             return RevitLsfFabricationManager.RunLsfPunchingAudit(_doc);
         }
 
+        public MultilevelRiserResult GenerateMultilevelRisers()
+        {
+            return RevitMultilevelRiserManager.GenerateMultilevelRisers(_doc);
+        }
+
         public (int ViewsAnnotated, int CalloutsPlaced, string Summary) ApplyFabricationCoordinatesToElevations()
         {
             return RevitLsfFabricationManager.ApplyFabricationCoordinatesToElevations(_uidoc);

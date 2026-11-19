@@ -322,6 +322,7 @@
                                         <WrapPanel Orientation="Horizontal" Margin="0,0,0,10">
                                             <Button Content="Gerar Traçado Automático no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,8,6" Click="ExecutarTracado3D_Click"/>
                                             <Button Content="Limpar Traçado (Disciplina)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,6" Click="LimparTracadoDisciplina_Click"/>
+                                            <Button Content="Interligar Prumadas Multinível" Style="{StaticResource SecondaryButton}" Margin="0,0,8,6" Click="GerarPrumadasMultinivel_Click"/>
                                             <Button Content="Ir para Água Fria (Dimensionar)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,6" Click="BtnIrAguaFria_Click"/>
                                         </WrapPanel>
 

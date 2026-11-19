@@ -95,6 +95,15 @@ namespace BahrHidro.UI
         string Summary,
         List<string> HoleDetails);
 
+    public sealed record MultilevelRiserResult(
+        int RisersCreated,
+        int LevelsConnected,
+        int PipesCreated,
+        int FittingsCreated,
+        int ClashesAvoided,
+        string Summary,
+        List<string> Details);
+
     public interface IRevitBimBridge
     {
         RevitNetworkImportData ImportNetworkAutomaticallyFromRevit();
@@ -123,5 +132,6 @@ namespace BahrHidro.UI
         (int ClearedCount, string Summary) ClearHydraulicVisualAudit();
         LsfPunchingAuditResult AuditLsfStudPunching();
         (int ViewsAnnotated, int CalloutsPlaced, string Summary) ApplyFabricationCoordinatesToElevations();
+        MultilevelRiserResult GenerateMultilevelRisers();
     }
 }
