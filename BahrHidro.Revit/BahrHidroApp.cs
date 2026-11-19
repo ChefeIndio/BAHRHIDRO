@@ -15,6 +15,21 @@ namespace BahrHidro.Revit
                 try { application.CreateRibbonTab(tabName); } catch { }
 
                 RibbonPanel panel = application.CreateRibbonPanel(tabName, "Hidráulica & LSF • Licenciado");
+            try
+            {
+                var pbdWater = new PushButtonData("BH_WaterOnly", "Água Fria/Quente", System.Reflection.Assembly.GetExecutingAssembly().Location, "BahrHidro.Revit.GenerateWaterSystemCommand")
+                {
+                    ToolTip = "Traça e dimensiona apenas Água Fria (NBR 5626) e Água Quente isolada (NBR 7198) nas paredes LSF."
+                };
+                var pbdSanitary = new PushButtonData("BH_SanitaryOnly", "Esgoto (NBR 8160)", System.Reflection.Assembly.GetExecutingAssembly().Location, "BahrHidro.Revit.GenerateSanitarySystemCommand")
+                {
+                    ToolTip = "Traça e dimensiona separadamente Esgoto Sanitário (i=2% e 1%), Caixa Sifonada, Caixa de Gordura e Ventilação."
+                };
+                panel.AddItem(pbdWater);
+                panel.AddItem(pbdSanitary);
+            }
+            catch { }
+
                 Assembly asm = Assembly.GetExecutingAssembly();
                 string asmPath = asm.Location;
 

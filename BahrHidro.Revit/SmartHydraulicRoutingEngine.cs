@@ -71,7 +71,17 @@ namespace BahrHidro.Revit
         private const double FeetPerMeter = 3.280839895013123;
         private const double MmToFeet = 1.0 / 304.8;
 
+        public static List<Pipe> GeneratePressurizedWaterOnly(Document doc, ElementId? preferredPipeTypeId = null)
+        {
+            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeSanitaryAndStorm: false);
+        }
+
         public static List<Pipe> GenerateOrthogonalLsfNetwork(Document doc, ElementId? preferredPipeTypeId = null)
+        {
+            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeSanitaryAndStorm: true);
+        }
+
+        private static List<Pipe> GenerateOrthogonalLsfNetworkInternal(Document doc, ElementId? preferredPipeTypeId, bool includeSanitaryAndStorm)
         {
             var allCreated = new List<Pipe>();
             if (doc == null) return allCreated;
@@ -83,9 +93,9 @@ namespace BahrHidro.Revit
             var tank = fixtures.FirstOrDefault(f => f.Role == HydraulicFixtureRole.WaterTank);
             var heater = fixtures.FirstOrDefault(f => f.Role == HydraulicFixtureRole.HotWaterHeater);
             double globalFloorZ = activeFixtures.Min(f => f.BaseZ);
-            double roofZ = DiscoverRoofElevation(doc, globalFloorZ, out BoundingBoxXYZ? roofBox);
+            double roofZ = DiscoverRoofElevationPublic(doc, globalFloorZ, out BoundingBoxXYZ? roofBox);
 
-            var zones = BuildHydraulicWallZones(doc, activeFixtures);
+            var zones = BuildHydraulicWallZonesPublic(doc, activeFixtures);
             if (zones.Count == 0) return allCreated;
 
             ElementId cwSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticColdWater, "Água Fria - Bahr Hidro");
@@ -126,7 +136,7 @@ namespace BahrHidro.Revit
                     PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, hwPipeTypeId);
 
                 // Empilhamento Vertical: Unifica prumadas de pavimentos sobrepostos
-                ConsolidateVerticalDrops(zones);
+                ConsolidateVerticalDropsPublic(zones);
 
                 double sourceZ = tank != null
                     ? Math.Max(tank.BaseZ, roofZ + 0.30 * FeetPerMeter)
@@ -199,7 +209,7 @@ namespace BahrHidro.Revit
                     double hwSourceZ = heater != null ? Math.Max(heater.BaseZ + 1.50 * FeetPerMeter, roofZ + 0.15 * FeetPerMeter) : sourceZ - (0.08 * FeetPerMeter);
 
                     var firstHwZone = hwZones[0];
-                    double hwDropU = ChooseFreeStudBayU(firstHwZone.StudUs, firstHwZone.DropU + 0.30 * FeetPerMeter, firstHwZone.DropU + 1.20 * FeetPerMeter, firstHwZone.DropU + 0.40 * FeetPerMeter);
+                    double hwDropU = ChooseFreeStudBayPublic(firstHwZone.StudUs, firstHwZone.DropU + 0.30 * FeetPerMeter, firstHwZone.DropU + 1.20 * FeetPerMeter, firstHwZone.DropU + 0.40 * FeetPerMeter);
                     XYZ firstHwDropTop = firstHwZone.WallAlongX ? new XYZ(hwDropU, firstHwZone.WallPlane, hwSourceZ) : new XYZ(firstHwZone.WallPlane, hwDropU, hwSourceZ);
 
                     if (heater != null)
@@ -214,7 +224,7 @@ namespace BahrHidro.Revit
                     for (int zi = 0; zi < hwZones.Count; zi++)
                     {
                         var zone = hwZones[zi];
-                        double zDropU = zi == 0 ? hwDropU : ChooseFreeStudBayU(zone.StudUs, zone.DropU + 0.30 * FeetPerMeter, zone.DropU + 1.20 * FeetPerMeter, zone.DropU + 0.40 * FeetPerMeter);
+                        double zDropU = zi == 0 ? hwDropU : ChooseFreeStudBayPublic(zone.StudUs, zone.DropU + 0.30 * FeetPerMeter, zone.DropU + 1.20 * FeetPerMeter, zone.DropU + 0.40 * FeetPerMeter);
                         XYZ zoneHwTop = zone.WallAlongX ? new XYZ(zDropU, zone.WallPlane, hwSourceZ) : new XYZ(zone.WallPlane, zDropU, hwSourceZ);
 
                         if (zi > 0)
@@ -246,7 +256,7 @@ namespace BahrHidro.Revit
                 // =========================================================
                 // 3. REDE DE ESGOTO INTELIGENTE (Pia Cozinha Separada + Junções 45°)
                 // =========================================================
-                foreach (var zone in zones.Where(z => z.SewerFixtures.Count > 0))
+                if (includeSanitaryAndStorm) foreach (var zone in zones.Where(z => z.SewerFixtures.Count > 0))
                 {
                     var sewerAndVent = GenerateSanitaryAndVentForZone(
                         doc, sanSysTypeId, ventSysTypeId, cwPipeTypeId, levelId, zone, roofZ, allCreated); // Passa allCreated para desvio 3D
@@ -256,7 +266,7 @@ namespace BahrHidro.Revit
                 // =========================================================
                 // 4. ÁGUAS PLUVIAIS (NBR 10844)
                 // =========================================================
-                if (roofBox != null && sanSysTypeId != ElementId.InvalidElementId)
+                if (includeSanitaryAndStorm && roofBox != null && sanSysTypeId != ElementId.InvalidElementId)
                 {
                     var rainPipes = GenerateStormwaterRainLeaders(doc, sanSysTypeId, cwPipeTypeId, levelId, roofBox, globalFloorZ, out rainSummary);
                     allCreated.AddRange(rainPipes);
@@ -293,7 +303,7 @@ namespace BahrHidro.Revit
             return allCreated;
         }
 
-        private static void ConsolidateVerticalDrops(List<HydraulicWallZone> zones)
+        public static void ConsolidateVerticalDropsPublic(List<HydraulicWallZone> zones)
         {
             // Em sobrados, unifica a posição da prumada (DropU) se as paredes estiverem alinhadas
             var grouped = zones.GroupBy(z => new { z.WallAlongX, Plane = Math.Round(z.WallPlane, 1) }).ToList();
@@ -404,7 +414,7 @@ namespace BahrHidro.Revit
 
                 if (ventSysTypeId != ElementId.InvalidElementId)
                 {
-                    double ventU = ChooseFreeStudBayU(zone.StudUs, csU - 0.40 * FeetPerMeter, csU + 0.40 * FeetPerMeter, csU);
+                    double ventU = ChooseFreeStudBayPublic(zone.StudUs, csU - 0.40 * FeetPerMeter, csU + 0.40 * FeetPerMeter, csU);
                     XYZ pVentBase = MakePt(ventU, zone.WallPlane, subFloorZ);
                     XYZ pVentRoof = MakePt(ventU, zone.WallPlane, roofZ + (0.40 * FeetPerMeter));
                     TryAddPipe(doc, pipes, ventSysTypeId, pipeTypeId, levelId, pCaixaSifonada, pVentBase, 50.0, "VENT | Ramal Ventilação NBR 8160");
@@ -476,7 +486,7 @@ namespace BahrHidro.Revit
                 double rawU = zone.WallAlongX ? f.Center.X : f.Center.Y;
                 if (f.Role == HydraulicFixtureRole.Toilet) rawU -= 0.12 * FeetPerMeter;
                 else if (f.NeedsHotWater) rawU += 0.075 * FeetPerMeter;
-                double bayU = ChooseFreeStudBayU(zone.StudUs, rawU - 0.35 * FeetPerMeter, rawU + 0.35 * FeetPerMeter, rawU);
+                double bayU = ChooseFreeStudBayPublic(zone.StudUs, rawU - 0.35 * FeetPerMeter, rawU + 0.35 * FeetPerMeter, rawU);
                 double fixN = zone.WallAlongX ? f.Center.Y : f.Center.X;
                 double stubN = zone.WallPlane + ((fixN >= zone.WallPlane ? 1.0 : -1.0) * 0.08 * FeetPerMeter);
                 double targetZ = zone.FloorZ + (f.FeedElevationOffsetMeters * FeetPerMeter);
@@ -589,7 +599,7 @@ namespace BahrHidro.Revit
             return rainPipes;
         }
 
-        private static List<HydraulicWallZone> BuildHydraulicWallZones(Document doc, List<SemanticFixtureNode> fixtures) {
+        public static List<HydraulicWallZone> BuildHydraulicWallZonesPublic(Document doc, List<SemanticFixtureNode> fixtures) {
             var candidatePlanes = DiscoverAllWallPlanes(doc, out var diagonalBraces);
             var allOpenings = DiscoverAllWallOpenings(doc);
             var zones = new List<HydraulicWallZone>();
@@ -616,7 +626,7 @@ namespace BahrHidro.Revit
                 var zFixtures = z.ColdWaterFixtures.Concat(z.HotWaterFixtures).Concat(z.SewerFixtures).ToList();
                 double minU = zFixtures.Min(f => z.WallAlongX ? f.Center.X : f.Center.Y);
                 double maxU = zFixtures.Max(f => z.WallAlongX ? f.Center.X : f.Center.Y);
-                z.DropU = ChooseFreeStudBayU(z.StudUs, minU, maxU, minU);
+                z.DropU = ChooseFreeStudBayPublic(z.StudUs, minU, maxU, minU);
                 foreach (var op in allOpenings) {
                     double opPlane = z.WallAlongX ? (op.Min.Y + op.Max.Y) * 0.5 : (op.Min.X + op.Max.X) * 0.5;
                     if (Math.Abs(opPlane - z.WallPlane) <= 0.35 * FeetPerMeter) z.Openings.Add(new WallOpeningObstacle { MinU = z.WallAlongX ? op.Min.X : op.Min.Y, MaxU = z.WallAlongX ? op.Max.X : op.Max.Y, BottomZ = op.Min.Z, TopZ = op.Max.Z });
@@ -698,7 +708,7 @@ namespace BahrHidro.Revit
             return boxes;
         }
 
-        private static double DiscoverRoofElevation(Document doc, double floorZ, out BoundingBoxXYZ? combinedRoofBox) {
+        public static double DiscoverRoofElevationPublic(Document doc, double floorZ, out BoundingBoxXYZ? combinedRoofBox) {
             combinedRoofBox = null;
             double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
             double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
@@ -848,7 +858,7 @@ namespace BahrHidro.Revit
             }
         }
 
-        private static double ChooseFreeStudBayU(List<double> studUs, double minU, double maxU, double? preferredU) {
+        public static double ChooseFreeStudBayPublic(List<double> studUs, double minU, double maxU, double? preferredU) {
             if (studUs.Count < 2) return preferredU ?? minU;
             var bays = new List<double>();
             for (int i = 0; i < studUs.Count - 1; i++) {
