@@ -236,7 +236,9 @@ namespace BahrHidro.Revit
                     for (int zi = 0; zi < hwZones.Count; zi++)
                     {
                         var zone = hwZones[zi];
-                        double zDropU = zi == 0 ? hwDropU : ChooseFreeStudBayPublic(zone.StudUs, zone.DropU + 0.30 * FeetPerMeter, zone.DropU + 1.20 * FeetPerMeter, zone.DropU + 0.40 * FeetPerMeter);
+                        double zDropU = zi == 0 ? hwDropU : ChooseFreeStudBayPublic(zone.StudUs, zone.DropU + 0.35 * FeetPerMeter, zone.DropU + 1.40 * FeetPerMeter, zone.DropU + 0.45 * FeetPerMeter);
+                        if (Math.Abs(zDropU - zone.DropU) < 0.20 * FeetPerMeter)
+                            zDropU = zone.DropU + (0.40 * FeetPerMeter);
                         XYZ zoneHwTop = zone.WallAlongX ? new XYZ(zDropU, zone.WallPlane, hwSourceZ) : new XYZ(zone.WallPlane, zDropU, hwSourceZ);
 
                         if (zi > 0)
@@ -426,7 +428,9 @@ namespace BahrHidro.Revit
 
                 if (ventSysTypeId != ElementId.InvalidElementId)
                 {
-                    double ventU = ChooseFreeStudBayPublic(zone.StudUs, csU - 0.40 * FeetPerMeter, csU + 0.40 * FeetPerMeter, csU);
+                    double ventU = ChooseFreeStudBayPublic(zone.StudUs, csU - 0.50 * FeetPerMeter, csU + 0.50 * FeetPerMeter, csU);
+                    if (Math.Abs(ventU - zone.DropU) < 0.20 * FeetPerMeter)
+                        ventU = zone.DropU - (0.40 * FeetPerMeter);
                     XYZ pVentBase = MakePt(ventU, zone.WallPlane, subFloorZ);
                     XYZ pVentRoof = MakePt(ventU, zone.WallPlane, roofZ + (0.40 * FeetPerMeter));
                     TryAddPipe(doc, pipes, ventSysTypeId, pipeTypeId, levelId, pCaixaSifonada, pVentBase, 50.0, "VENT | Ramal Ventilação NBR 8160");

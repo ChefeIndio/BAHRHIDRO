@@ -67,6 +67,17 @@ namespace BahrHidro.Revit
 
                 // Alinha tubos de queda entre pavimentos sobrepostos
                 SmartHydraulicRoutingEngine.ConsolidateVerticalDropsPublic(zones);
+                var existingWaterStacks = PipeNetworkHelper.GetExistingVerticalStackLocations(doc);
+                foreach (var z in zones)
+                {
+                    bool hitsWater = existingWaterStacks.Any(st =>
+                        Math.Abs((z.WallAlongX ? st.Y : st.X) - z.WallPlane) <= 0.25 * FeetPerMeter &&
+                        Math.Abs((z.WallAlongX ? st.X : st.Y) - z.DropU) <= 0.25 * FeetPerMeter);
+                    if (hitsWater)
+                    {
+                        z.DropU = SmartHydraulicRoutingEngine.ChooseFreeStudBayPublic(z.StudUs, z.DropU + 0.35 * FeetPerMeter, z.DropU + 1.50 * FeetPerMeter, z.DropU + 0.50 * FeetPerMeter);
+                    }
+                }
 
                 // Ordena zonas do pavimento mais alto para o térreo para conectar tubos de queda ao subcoletor
                 var orderedZones = zones.OrderByDescending(z => z.FloorZ).ToList();
@@ -130,6 +141,7 @@ namespace BahrHidro.Revit
                 report.PipesCreated = allSanitaryPipes.Count;
 
                 CreateDedicatedSanitaryViews(doc, allSanitaryPipes, globalFloorZ);
+                LsfPanelElevationGenerator.CreateLiveHydraulicViews(doc, allSanitaryPipes, null, globalFloorZ);
                 ExecutiveDetailingGenerator.CreateHydraulicSchedules(doc);
                 WriteSanitaryMemorial(doc, report);
 
