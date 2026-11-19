@@ -6,7 +6,7 @@ namespace BahrHidro.UI
     {
         public LicenseActivationWindow()
         {
-            InitializeComponent();
+            try { InitializeComponent(); } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Bahr Hidro BIM - Debug"); throw; }
             MachineIdTextBox.Text = LicenseService.GetMachineId();
 
             var current = LicenseService.ValidateStoredLicense();
