@@ -29,6 +29,11 @@ namespace BahrHidro.Revit
             if (spatialIndex.Studs.Count == 0)
                 return result;
 
+            var cfg = OfficeProfileService.LoadCurrent();
+            double folgaMm = cfg.FolgaFuroMm > 0 ? cfg.FolgaFuroMm : 6.0;
+            double maxAlmaPct = cfg.MaxFuroAlmaPercent > 0 ? cfg.MaxFuroAlmaPercent : 50.0;
+            double minGuiaM = (cfg.DistanciaMinimaGuiaCm > 0 ? cfg.DistanciaMinimaGuiaCm : 25.0) / 100.0;
+
             Level? baseLevel = new FilteredElementCollector(doc)
                 .OfClass(typeof(Level))
                 .Cast<Level>()
@@ -56,7 +61,7 @@ namespace BahrHidro.Revit
                     diaMm = Math.Round(UnitUtils.ConvertFromInternalUnits(dParam.AsDouble(), UnitTypeId.Millimeters), 0);
 
                 string sysName = pipe.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM)?.AsValueString() ?? "Hidráulica";
-                double pipeRadiusFeet = UnitUtils.ConvertToInternalUnits((diaMm / 2.0) + 3.0, UnitTypeId.Millimeters);
+                double pipeRadiusFeet = UnitUtils.ConvertToInternalUnits((diaMm / 2.0) + (folgaMm / 2.0), UnitTypeId.Millimeters);
 
                 var candidateStuds = spatialIndex.QueryStudsAlongSegment(p0, p1, pipeRadiusFeet);
 
@@ -73,7 +78,7 @@ namespace BahrHidro.Revit
                         continue;
                     recordedKeys.Add(dedupKey);
 
-                    double requiredHoleMm = Math.Ceiling(diaMm + 6.0);
+                    double requiredHoleMm = Math.Ceiling(diaMm + folgaMm);
                     double webWidthMm = stud.WebWidthMm;
                     double occupancyPct = Math.Round((requiredHoleMm / webWidthMm) * 100.0, 1);
 
@@ -83,14 +88,14 @@ namespace BahrHidro.Revit
 
                     var (wallName, xFromCornerM) = ResolveWallAndXCoordinate(doc, hitPt, spatialIndex);
 
-                    bool webOk = occupancyPct <= 50.0;
-                    bool trackClearanceOk = distBottomM >= 0.25 && distTopM >= 0.25;
+                    bool webOk = occupancyPct <= maxAlmaPct;
+                    bool trackClearanceOk = distBottomM >= minGuiaM && distTopM >= minGuiaM;
 
                     string status = (webOk && trackClearanceOk)
-                        ? "APROVADO (<= 50% Alma)"
+                        ? $"APROVADO (<= {maxAlmaPct:F0}% Alma)"
                         : !webOk
-                            ? $"ATENÇÃO: Furo {occupancyPct:F0}% > 50% (Reforço)"
-                            : "ATENÇÃO: Próximo à guia (< 25 cm)";
+                            ? $"ATENÇÃO: Furo {occupancyPct:F0}% > {maxAlmaPct:F0}% (Reforço)"
+                            : $"ATENÇÃO: Próximo à guia (< {cfg.DistanciaMinimaGuiaCm:F0} cm)";
 
                     result.Add(new LsfPunchingHoleItem(
                         $"FUR-{holeSeq:D2}",

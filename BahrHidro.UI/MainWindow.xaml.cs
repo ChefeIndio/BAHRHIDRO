@@ -1767,5 +1767,34 @@ namespace BahrHidro.UI
         MessageBox.Show("Valores padrão ABNT NBR 5626 / 8160 e Steel Frame restaurados.", "Bahr Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
+
+    private async void VerificarAtualizacoes_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            UpdateStatusText.Text = "Consultando repositório ChefeIndio/BAHRHIDRO no GitHub...";
+            var res = await GitHubUpdateService.CheckForUpdatesAsync();
+            UpdateStatusText.Text = res.StatusSummary;
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusText.Text = $"Não foi possível consultar o GitHub agora: {ex.Message}";
+        }
+    }
+
+    private void ExecutarAtualizadorWindows_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string msg = GitHubUpdateService.TriggerWindowsUpdater();
+            UpdateStatusText.Text = msg;
+            MessageBox.Show(msg, "Bahr Hidro - Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Aviso ao iniciar atualizador:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
 }
 }

@@ -1198,6 +1198,17 @@
                         <Button Content="Restaurar Padrão NBR" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,6" Click="RestaurarPadraoNbr_Click"/>
                     </WrapPanel>
 
+                    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,4,0,12">
+                        <StackPanel>
+                            <TextBlock Text="4. Atualizações do Plugin (GitHub - ChefeIndio/BAHRHIDRO)" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="UpdateStatusText" Text="Clique em 'Verificar Atualizações' para consultar a versão mais recente." FontSize="12" Opacity="0.85" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            <WrapPanel>
+                                <Button Content="Verificar Atualizações (GitHub)" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Margin="0,0,8,4" Click="VerificarAtualizacoes_Click"/>
+                                <Button Content="Atualizar Plugin no Windows" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,4" Click="ExecutarAtualizadorWindows_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
                     <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap"/>
                 </StackPanel>
             </ScrollViewer>
