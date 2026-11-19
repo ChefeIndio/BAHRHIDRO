@@ -690,5 +690,73 @@ namespace BahrHidro.Revit
             return RevitClashAndSheetGenerator.GenerateHydraulicSheets(_uidoc, info.ProjectName);
         }
 
+
+        public Task<string> RunOrderedFullAutomationAsync()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                var doc = uiApp.ActiveUIDocument?.Document ?? throw new InvalidOperationException("Abra um projeto no Revit.");
+                var pipes = SmartHydraulicRoutingEngine.GenerateOrthogonalLsfNetwork(doc);
+                ActivateViewSafe(uiApp.ActiveUIDocument, LsfPanelElevationGenerator.View3DCombinedName);
+                return $"Sequência completa (1º Água Fria → 2º Água Quente → 3º Esgoto) concluída! {pipes.Count} trechos gerados + 4 Vistas 3D ao Vivo + Seção Geral.";
+            });
+        }
+
+        public Task<string> RunColdWaterOnlyAsync()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                var doc = uiApp.ActiveUIDocument?.Document ?? throw new InvalidOperationException("Abra um projeto no Revit.");
+                var pipes = SmartHydraulicRoutingEngine.GenerateColdWaterOnly(doc);
+                ActivateViewSafe(uiApp.ActiveUIDocument, LsfPanelElevationGenerator.View3DColdWaterName);
+                return $"1º Água Fria (NBR 5626) concluída: {pipes.Count} trechos gerados. Vista '{LsfPanelElevationGenerator.View3DColdWaterName}' ativada.";
+            });
+        }
+
+        public Task<string> RunHotWaterOnlyAsync()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                var doc = uiApp.ActiveUIDocument?.Document ?? throw new InvalidOperationException("Abra um projeto no Revit.");
+                var pipes = SmartHydraulicRoutingEngine.GenerateHotWaterOnly(doc);
+                ActivateViewSafe(uiApp.ActiveUIDocument, LsfPanelElevationGenerator.View3DHotWaterName);
+                return $"2º Água Quente Isolada (NBR 7198) concluída: {pipes.Count} trechos gerados. Vista '{LsfPanelElevationGenerator.View3DHotWaterName}' ativada.";
+            });
+        }
+
+        public Task<string> RunSanitaryOnlyAsync()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                var doc = uiApp.ActiveUIDocument?.Document ?? throw new InvalidOperationException("Abra um projeto no Revit.");
+                var pipes = SanitarySewerRoutingEngine.GenerateSanitaryNetworkOnly(doc, out var rep);
+                ActivateViewSafe(uiApp.ActiveUIDocument, LsfPanelElevationGenerator.View3DSanitaryName);
+                return $"3º Esgoto & Ventilação (NBR 8160) concluído: {pipes.Count} trechos ({rep.TotalUhc} UHC, Subcoletor DN{(int)rep.MaxCollectorDnMm}). Vista '{LsfPanelElevationGenerator.View3DSanitaryName}' ativada.";
+            });
+        }
+
+        public Task<string> OpenLiveViewByNameAsync(string viewName)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                var uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Abra um projeto no Revit.");
+                bool ok = ActivateViewSafe(uidoc, viewName);
+                return ok
+                    ? $"Vista '{viewName}' aberta ao vivo no Revit."
+                    : $"Vista '{viewName}' ainda não foi gerada. Execute o traçado 3D primeiro.";
+            });
+        }
+
+        private static bool ActivateViewSafe(UIDocument? uidoc, string viewName)
+        {
+            if (uidoc?.Document == null) return false;
+            var target = new FilteredElementCollector(uidoc.Document)
+                .OfClass(typeof(View))
+                .Cast<View>()
+                .FirstOrDefault(v => !v.IsTemplate && v.Name.Equals(viewName, StringComparison.OrdinalIgnoreCase));
+            if (target == null) return false;
+            uidoc.ActiveView = target;
+            return true;
+        }
 }
 }

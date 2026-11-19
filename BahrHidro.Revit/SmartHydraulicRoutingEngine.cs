@@ -71,17 +71,27 @@ namespace BahrHidro.Revit
         private const double FeetPerMeter = 3.280839895013123;
         private const double MmToFeet = 1.0 / 304.8;
 
+        public static List<Pipe> GenerateColdWaterOnly(Document doc, ElementId? preferredPipeTypeId = null)
+        {
+            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeCold: true, includeHot: false, includeSanitaryAndStorm: false);
+        }
+
+        public static List<Pipe> GenerateHotWaterOnly(Document doc, ElementId? preferredPipeTypeId = null)
+        {
+            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeCold: false, includeHot: true, includeSanitaryAndStorm: false);
+        }
+
         public static List<Pipe> GeneratePressurizedWaterOnly(Document doc, ElementId? preferredPipeTypeId = null)
         {
-            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeSanitaryAndStorm: false);
+            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeCold: true, includeHot: true, includeSanitaryAndStorm: false);
         }
 
         public static List<Pipe> GenerateOrthogonalLsfNetwork(Document doc, ElementId? preferredPipeTypeId = null)
         {
-            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeSanitaryAndStorm: true);
+            return GenerateOrthogonalLsfNetworkInternal(doc, preferredPipeTypeId, includeCold: true, includeHot: true, includeSanitaryAndStorm: true);
         }
 
-        private static List<Pipe> GenerateOrthogonalLsfNetworkInternal(Document doc, ElementId? preferredPipeTypeId, bool includeSanitaryAndStorm)
+        private static List<Pipe> GenerateOrthogonalLsfNetworkInternal(Document doc, ElementId? preferredPipeTypeId, bool includeCold, bool includeHot, bool includeSanitaryAndStorm)
         {
             var allCreated = new List<Pipe>();
             if (doc == null) return allCreated;
@@ -130,7 +140,7 @@ namespace BahrHidro.Revit
                     tx.Start();
                 }
 
-                PipeNetworkHelper.PurgePreviousBahrHidroElements(doc, purgeWater: true, purgeSanitaryAndStorm: includeSanitaryAndStorm);
+                PipeNetworkHelper.PurgePreviousBahrHidroElements(doc, purgeWater: (includeCold && includeHot), purgeSanitaryAndStorm: includeSanitaryAndStorm);
                 FamilyLoader.EnsureEssentialFittings(doc);
                 PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, cwPipeTypeId);
                 if (hwPipeTypeId != cwPipeTypeId)
@@ -160,7 +170,7 @@ namespace BahrHidro.Revit
                 var cwPipes = new List<Pipe>();
                 var cwZones = zones.Where(z => z.ColdWaterFixtures.Count > 0).ToList();
 
-                if (cwZones.Count > 0 && cwSysTypeId != ElementId.InvalidElementId)
+                if (includeCold && cwZones.Count > 0 && cwSysTypeId != ElementId.InvalidElementId)
                 {
                     double totalBuildingWeight = cwZones.SelectMany(z => z.ColdWaterFixtures).Sum(f => f.RelativeWeight);
                     double mainHeaderDn = totalBuildingWeight > 3.5 ? 32.0 : 25.0;
@@ -214,7 +224,7 @@ namespace BahrHidro.Revit
                 var hwPipes = new List<Pipe>();
                 var hwZones = zones.Where(z => z.HotWaterFixtures.Count > 0).ToList();
 
-                if (hwZones.Count > 0 && hwSysTypeId != ElementId.InvalidElementId)
+                if (includeHot && hwZones.Count > 0 && hwSysTypeId != ElementId.InvalidElementId)
                 {
                     double totalHwWeight = hwZones.SelectMany(z => z.HotWaterFixtures).Sum(f => f.RelativeWeight);
                     double hwHeaderDn = totalHwWeight > 3.0 ? 28.0 : 22.0;

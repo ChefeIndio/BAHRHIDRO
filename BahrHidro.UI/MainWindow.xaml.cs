@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows.Input;
 using System;
 using System.Collections.Generic;
@@ -124,11 +125,23 @@ namespace BahrHidro.UI
             }
         }
 
+        private readonly Stack<string> _tabHistory = new();
+        private string _activePanelTag = "Inicio";
+        private bool _isGoingBackTab = false;
+
         private void SelecionarPainel(string tag)
         {
             if (PanelInicio == null) return;
 
+            if (!_isGoingBackTab && !string.IsNullOrWhiteSpace(_activePanelTag) && _activePanelTag != tag)
+            {
+                _tabHistory.Push(_activePanelTag);
+            }
+            _activePanelTag = tag;
+
             PanelInicio.Visibility = tag == "Inicio" ? Visibility.Visible : Visibility.Collapsed;
+            if (PanelVistas3DVivas != null)
+                PanelVistas3DVivas.Visibility = tag == "Vistas3DVivas" ? Visibility.Visible : Visibility.Collapsed;
             PanelTracado3D.Visibility = tag == "Tracado3D" ? Visibility.Visible : Visibility.Collapsed;
             PanelAguaFria.Visibility = tag == "AguaFria" ? Visibility.Visible : Visibility.Collapsed;
             PanelBomba.Visibility = tag == "Bomba" ? Visibility.Visible : Visibility.Collapsed;
@@ -137,6 +150,53 @@ namespace BahrHidro.UI
             PanelEsgoto.Visibility = tag == "Esgoto" ? Visibility.Visible : Visibility.Collapsed;
             PanelPluvial.Visibility = tag == "Pluvial" ? Visibility.Visible : Visibility.Collapsed;
             PanelMemorial.Visibility = tag == "Memorial" ? Visibility.Visible : Visibility.Collapsed;
+            if (ConfiguracoesPanel != null)
+                ConfiguracoesPanel.Visibility = tag == "Configuracoes" ? Visibility.Visible : Visibility.Collapsed;
+
+            if (BtnVoltarAba != null)
+                BtnVoltarAba.IsEnabled = _tabHistory.Count > 0;
+        }
+
+        private void BtnVoltarAba_Click(object sender, RoutedEventArgs e)
+        {
+            if (_tabHistory.Count == 0)
+            {
+                SelecionarPainel("Inicio");
+                if (NavInicio != null) NavInicio.IsSelected = true;
+                return;
+            }
+
+            string prevTag = _tabHistory.Pop();
+            _isGoingBackTab = true;
+            try
+            {
+                SelecionarPainel(prevTag);
+                SyncTreeSelectionByTag(prevTag);
+            }
+            finally
+            {
+                _isGoingBackTab = false;
+            }
+        }
+
+        private void SyncTreeSelectionByTag(string tag)
+        {
+            TreeViewItem? target = tag switch
+            {
+                "Inicio" => NavInicio,
+                "Tracado3D" => NavTracado3D,
+                "Vistas3DVivas" => NavVistas3DVivas,
+                "AguaFria" => NavAguaFria,
+                "Bomba" => NavBomba,
+                "AguaQuente" => NavAguaQuente,
+                "Reservatorios" => NavReservatorios,
+                "Esgoto" => NavEsgoto,
+                "Pluvial" => NavPluvial,
+                "Memorial" => NavMemorial,
+                _ => null
+            };
+            if (target != null)
+                target.IsSelected = true;
         }
 
         private void BtnIrInicio_Click(object sender, RoutedEventArgs e)
@@ -1639,16 +1699,7 @@ namespace BahrHidro.UI
 
     private void NavConfiguracoes_Click(object sender, RoutedEventArgs e)
     {
-        PanelInicio.Visibility = Visibility.Collapsed;
-        PanelTracado3D.Visibility = Visibility.Collapsed;
-        PanelAguaFria.Visibility = Visibility.Collapsed;
-        PanelBomba.Visibility = Visibility.Collapsed;
-        PanelAguaQuente.Visibility = Visibility.Collapsed;
-        PanelReservatorios.Visibility = Visibility.Collapsed;
-        PanelEsgoto.Visibility = Visibility.Collapsed;
-        PanelPluvial.Visibility = Visibility.Collapsed;
-        PanelMemorial.Visibility = Visibility.Collapsed;
-        ConfiguracoesPanel.Visibility = Visibility.Visible;
+        SelecionarPainel("Configuracoes");
         LoadOfficeProfileToUi();
     }
 
@@ -2015,5 +2066,100 @@ namespace BahrHidro.UI
         }
     }
 
+
+        private async void ExecutarSequenciaCompletaAfAqEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                Vistas3DVivasStatusText.Text = "Executando sequência: 1º Água Fria → 2º Água Quente → 3º Esgoto e gerando as 4 vistas 3D...";
+                string msg = await _revitBridge.RunOrderedFullAutomationAsync();
+                Vistas3DVivasStatusText.Text = msg;
+                MessageBox.Show(msg, "Bahr Hidro — Sequência Completa & 4 Vistas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao executar sequência completa:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ExecutarSomenteAguaFria_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string msg = await _revitBridge.RunColdWaterOnlyAsync();
+                Vistas3DVivasStatusText.Text = msg;
+                MessageBox.Show(msg, "Bahr Hidro — 1º Água Fria", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro na Água Fria:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ExecutarSomenteAguaQuente_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string msg = await _revitBridge.RunHotWaterOnlyAsync();
+                Vistas3DVivasStatusText.Text = msg;
+                MessageBox.Show(msg, "Bahr Hidro — 2º Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro na Água Quente:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ExecutarSomenteEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string msg = await _revitBridge.RunSanitaryOnlyAsync();
+                Vistas3DVivasStatusText.Text = msg;
+                MessageBox.Show(msg, "Bahr Hidro — 3º Esgoto & Ventilação", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro no Esgoto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void AbrirVista3DAguaFria_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Água Fria");
+        private async void AbrirVista3DAguaQuente_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Água Quente");
+        private async void AbrirVista3DEsgoto_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Esgoto");
+        private async void AbrirVista3DCompleta_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Completo (AF + AQ + Esgoto)");
+        private async void AbrirSecaoGeral_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - Seção Geral da Rede");
+
+        private async Task AbrirVistaLiveAsync(string viewName)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string msg = await _revitBridge.OpenLiveViewByNameAsync(viewName);
+                Vistas3DVivasStatusText.Text = msg;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao abrir vista:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void AbrirMemoriaisCsv_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BahrHidro", "Logs");
+                Directory.CreateDirectory(logDir);
+                Process.Start(new ProcessStartInfo { FileName = logDir, UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao abrir pasta de memoriais:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
 }
 }

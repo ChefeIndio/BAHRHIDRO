@@ -172,6 +172,9 @@
                 </StackPanel>
 
                 <WrapPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                    <Button x:Name="BtnVoltarAba" Style="{StaticResource QuickChipButton}" ToolTip="Voltar para a aba ou tela anterior (Alt + Seta Esquerda)" Click="BtnVoltarAba_Click">
+                        <TextBlock Text="← Voltar" Foreground="#0F172A" FontWeight="Bold"/>
+                    </Button>
                     <Button Style="{StaticResource QuickChipButton}" ToolTip="Atualizar Cache Espacial 2D de Montantes LSF (Tecla F5)" Click="QuickRibbonCache_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="⚡ Cache LSF " Foreground="#0F172A"/>
@@ -229,7 +232,8 @@
                     <TreeViewItem x:Name="NavInicio" Header="Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
 
                     <TreeViewItem Header="HIDRÁULICA (NBR 5626)" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A">
-                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático 3D" Tag="Tracado3D" FontWeight="Normal" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado 3D (1º AF → 2º AQ → 3º Esgoto)" Tag="Tracado3D" FontWeight="SemiBold" Foreground="#0284C7"/>
+                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D ao Vivo &amp; Seção" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#0F766E"/>
                         <TreeViewItem x:Name="NavAguaFria" Header="Água Fria (Rede BIM 3D)" Tag="AguaFria" FontWeight="Normal" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavBomba" Header="Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#334155"/>
                         <TreeViewItem x:Name="NavAguaQuente" Header="Água Quente (Boiler)" Tag="AguaQuente" FontWeight="Normal" Foreground="#334155"/>
@@ -305,6 +309,52 @@
                                 </StackPanel>
                             </Border>
                         </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+
+                
+                <!-- 0C. VISTAS 3D AO VIVO, SEÇÃO GERAL & ORDEM AF -> AQ -> ESGOTO -->
+                <ScrollViewer x:Name="PanelVistas3DVivas" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="28">
+                    <StackPanel MaxWidth="980" HorizontalAlignment="Left">
+                        <Border Background="#0F172A" CornerRadius="8" Padding="22" Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="AUTOMAÇÃO SEQUENCIAL &amp; VISTAS 3D AO VIVO" Foreground="#38BDF8" FontSize="11.5" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Text="Ordem Estrita: 1º Água Fria → 2º Água Quente → 3º Esgoto + 4 Vistas 3D" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock Text="Execute o ciclo completo em sequência normativa ou gere/abra cada rede e vista 3D isolada ao vivo no Revit." Foreground="#CBD5E1" FontSize="12.5" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="1. EXECUÇÃO EM ORDEM NORMATIVA (AF → AQ → ESGOTO)" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,10"/>
+                                <Button Content="▶ EXECUTAR TUDO NA ORDEM (1º Água Fria → 2º Água Quente → 3º Esgoto + 4 Vistas 3D + Seção)"
+                                        Style="{StaticResource PrimaryButton}" Height="40" Padding="16,0" Margin="0,0,0,12"
+                                        Click="ExecutarSequenciaCompletaAfAqEsgoto_Click"/>
+                                <WrapPanel>
+                                    <Button Content="1º Gerar Água Fria (NBR 5626)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,8" Click="ExecutarSomenteAguaFria_Click"/>
+                                    <Button Content="2º Gerar Água Quente Isolada (NBR 7198)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,8" Click="ExecutarSomenteAguaQuente_Click"/>
+                                    <Button Content="3º Gerar Esgoto &amp; Ventilação (NBR 8160)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,8" Click="ExecutarSomenteEsgoto_Click"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16">
+                            <StackPanel>
+                                <TextBlock Text="2. ABRIR PLANTAS 3D AO VIVO &amp; SEÇÃO NO REVIT" FontSize="12" FontWeight="Bold" Foreground="#0F766E" Margin="0,0,0,10"/>
+                                <WrapPanel>
+                                    <Button Content="🔵 3D Água Fria" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DAguaFria_Click"/>
+                                    <Button Content="🔴 3D Água Quente" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DAguaQuente_Click"/>
+                                    <Button Content="🟤 3D Esgoto &amp; Ventilação" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DEsgoto_Click"/>
+                                    <Button Content="🟢 3D Completo (AF + AQ + Esgoto Juntas)" Style="{StaticResource PrimaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DCompleta_Click"/>
+                                    <Button Content="📐 Abrir Seção Geral da Rede" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirSecaoGeral_Click"/>
+                                    <Button Content="📂 Memoriais &amp; Planilha Furação LSF (.csv)" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirMemoriaisCsv_Click"/>
+                                </WrapPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
+                            <TextBlock x:Name="Vistas3DVivasStatusText" Text="Pronto. Clique em 'EXECUTAR TUDO NA ORDEM' para traçar AF → AQ → Esgoto e abrir as 4 vistas 3D ao vivo." Foreground="#334155" FontSize="12.5" TextWrapping="Wrap"/>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 
