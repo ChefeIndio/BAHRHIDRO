@@ -1191,6 +1191,17 @@ namespace BahrHidro.UI
                     if (vent != null) TracadoSystemTypeComboBox.SelectedItem = vent;
                 }
             }
+            else if (disc == "StormDrainage")
+            {
+                TracadoPlanoComboBox.SelectedIndex = 0; // Por Cima
+                TracadoOffsetTextBox.Text = "2,80";
+                TracadoDiametroComboBox.SelectedIndex = 6; // 100 mm
+                if (TracadoSystemTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> sysList)
+                {
+                    var pluv = sysList.FirstOrDefault(s => s.Name.Contains("Pluv", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Storm", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Esgoto", StringComparison.OrdinalIgnoreCase));
+                    if (pluv != null) TracadoSystemTypeComboBox.SelectedItem = pluv;
+                }
+            }
             else if (disc == "SanitarySewer")
             {
                 TracadoPlanoComboBox.SelectedIndex = 1; // Por Baixo

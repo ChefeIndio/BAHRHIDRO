@@ -177,6 +177,9 @@ namespace BahrHidro.Revit
             if (string.Equals(request.DisciplineMode, "Ventilation", StringComparison.OrdinalIgnoreCase))
                 return ExecuteVentilationRouting(doc, request);
 
+            if (string.Equals(request.DisciplineMode, "StormDrainage", StringComparison.OrdinalIgnoreCase))
+                return ExecuteStormDrainageRouting(doc, request);
+
             return ExecuteColdWaterRouting(doc, request);
         }
 
@@ -753,6 +756,170 @@ namespace BahrHidro.Revit
             string summary = $"Ventilação 3D (NBR 8160): {ventClusters.Count} coluna(s) DN 50 mm criada(s) ({totalLengthMeters:F2} m) e {steelClashesAvoided} desvio(s) Steel Frame.";
 
             return new RevitAutoRoutingResult(ventClusters.Count, pipesCreated, fittingsCreated, steelClashesAvoided, totalLengthMeters, summary, logs);
+        }
+
+
+        // =====================================================================
+        // 5. ROTEAMENTO DE ÁGUAS PLUVIAIS 3D (ABNT NBR 10844 — CONDUTORES)
+        // =====================================================================
+        private static RevitAutoRoutingResult ExecuteStormDrainageRouting(Document doc, RevitAutoRoutingRequest request)
+        {
+            var logs = new List<string>();
+            var pipeTypeId = new ElementId(request.PipeTypeId);
+            var systemTypeId = new ElementId(request.PipingSystemTypeId);
+
+            if (doc.GetElement(pipeTypeId) is not PipeType)
+                throw new InvalidOperationException("Selecione um Tipo de Tubo válido do template.");
+            if (doc.GetElement(systemTypeId) is not PipingSystemType)
+                throw new InvalidOperationException("Selecione um Sistema de Tubulação válido do template.");
+
+            Level? baseLevel = request.LevelId.HasValue
+                ? doc.GetElement(new ElementId(request.LevelId.Value)) as Level
+                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
+
+            if (baseLevel == null)
+                throw new InvalidOperationException("Nenhum Nível (Level) encontrado no projeto Revit.");
+
+            var steelObstacles = request.AvoidSteelFrameClashes
+                ? CollectSteelFrameBoundingBoxes(doc)
+                : new List<WorldBox>();
+
+            // Procura coberturas (OST_Roofs) no modelo atual e nos vínculos IFC/RVT
+            var roofBoxes = new List<WorldBox>();
+            CollectRoofsFromDoc(doc, Transform.Identity, roofBoxes);
+
+            var links = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>()
+                .ToList();
+
+            foreach (var link in links)
+            {
+                Document? linkDoc = link.GetLinkDocument();
+                if (linkDoc == null) continue;
+                CollectRoofsFromDoc(linkDoc, link.GetTotalTransform(), roofBoxes);
+            }
+
+            double minX, maxX, minY, maxY, eaveZFeet;
+            double roofAreaM2 = 0;
+
+            if (roofBoxes.Count > 0)
+            {
+                minX = roofBoxes.Min(b => b.MinX);
+                maxX = roofBoxes.Max(b => b.MaxX);
+                minY = roofBoxes.Min(b => b.MinY);
+                maxY = roofBoxes.Max(b => b.MaxY);
+                eaveZFeet = roofBoxes.Min(b => b.MinZ);
+
+                double dxM = UnitUtils.ConvertFromInternalUnits(maxX - minX, UnitTypeId.Meters);
+                double dyM = UnitUtils.ConvertFromInternalUnits(maxY - minY, UnitTypeId.Meters);
+                roofAreaM2 = Math.Round(dxM * dyM, 2);
+                logs.Add($"Cobertura detectada ({roofBoxes.Count} elemento(s)): projeção de {dxM:F2} m × {dyM:F2} m ({roofAreaM2:F2} m²).");
+            }
+            else if (request.Points.Count > 0)
+            {
+                // Fallback: usa envoltória dos pontos detectados com beiral de 0,60 m
+                double eaveMargin = UnitUtils.ConvertToInternalUnits(0.60, UnitTypeId.Meters);
+                minX = request.Points.Min(p => UnitUtils.ConvertToInternalUnits(p.X, UnitTypeId.Meters)) - eaveMargin;
+                maxX = request.Points.Max(p => UnitUtils.ConvertToInternalUnits(p.X, UnitTypeId.Meters)) + eaveMargin;
+                minY = request.Points.Min(p => UnitUtils.ConvertToInternalUnits(p.Y, UnitTypeId.Meters)) - eaveMargin;
+                maxY = request.Points.Max(p => UnitUtils.ConvertToInternalUnits(p.Y, UnitTypeId.Meters)) + eaveMargin;
+                eaveZFeet = baseLevel.Elevation + UnitUtils.ConvertToInternalUnits(Math.Max(2.80, request.TrunkOffsetMeters), UnitTypeId.Meters);
+
+                double dxM = UnitUtils.ConvertFromInternalUnits(maxX - minX, UnitTypeId.Meters);
+                double dyM = UnitUtils.ConvertFromInternalUnits(maxY - minY, UnitTypeId.Meters);
+                roofAreaM2 = Math.Round(dxM * dyM, 2);
+                logs.Add($"Nenhuma cobertura explícita encontrada: projeção estimada pela planta ({dxM:F2} m × {dyM:F2} m).");
+            }
+            else
+            {
+                throw new InvalidOperationException("Nenhuma cobertura (Telhado) ou ponto de referência encontrado para posicionar os condutores pluviais.");
+            }
+
+            // Define 4 cantos de descida (recuados 15 cm para alinhar com a face externa da parede sob o beiral)
+            double insetFeet = UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters);
+            if ((maxX - minX) <= insetFeet * 3 || (maxY - minY) <= insetFeet * 3)
+                insetFeet = 0;
+
+            var corners = new[]
+            {
+                (Name: "Condutor Pluvial AP-01 (SO)", X: minX + insetFeet, Y: minY + insetFeet, OutDir: new XYZ(-1, -1, 0).Normalize()),
+                (Name: "Condutor Pluvial AP-02 (SE)", X: maxX - insetFeet, Y: minY + insetFeet, OutDir: new XYZ(1, -1, 0).Normalize()),
+                (Name: "Condutor Pluvial AP-03 (NO)", X: minX + insetFeet, Y: maxY - insetFeet, OutDir: new XYZ(-1, 1, 0).Normalize()),
+                (Name: "Condutor Pluvial AP-04 (NE)", X: maxX - insetFeet, Y: maxY - insetFeet, OutDir: new XYZ(1, 1, 0).Normalize())
+            };
+
+            double diaMm = request.InitialDiameterMm >= 75 ? request.InitialDiameterMm : (roofAreaM2 > 120 ? 100.0 : 75.0);
+            double diaFeet = UnitUtils.ConvertToInternalUnits(diaMm, UnitTypeId.Millimeters);
+            double groundZFeet = baseLevel.Elevation - UnitUtils.ConvertToInternalUnits(0.10, UnitTypeId.Meters);
+            double topZFeet = Math.Max(eaveZFeet, baseLevel.Elevation + UnitUtils.ConvertToInternalUnits(2.50, UnitTypeId.Meters));
+
+            int pipesCreated = 0;
+            int fittingsCreated = 0;
+            int steelClashesAvoided = 0;
+            double totalLengthFeet = 0;
+
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Condutores Pluviais 3D (NBR 10844)"))
+            {
+                tx.Start();
+
+                foreach (var c in corners)
+                {
+                    double safeX = c.X;
+                    double safeY = c.Y;
+
+                    if (request.AvoidSteelFrameClashes && steelObstacles.Count > 0)
+                    {
+                        double clearance = (diaFeet / 2.0) + UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters);
+                        bool shifted = FindClashFreeVerticalDrop(
+                            safeX, safeY, groundZFeet, topZFeet, clearance, preferShiftAlongX: true, steelObstacles,
+                            out double outX, out double outY);
+                        if (shifted)
+                        {
+                            safeX = outX;
+                            safeY = outY;
+                            steelClashesAvoided++;
+                            logs.Add($"[Steel Frame] {c.Name} deslocado para evitar pilar/montante de canto.");
+                        }
+                    }
+
+                    XYZ pTop = new XYZ(safeX, safeY, topZFeet);
+                    XYZ pBottom = new XYZ(safeX, safeY, groundZFeet);
+                    XYZ pDischarge = pBottom + c.OutDir * UnitUtils.ConvertToInternalUnits(0.30, UnitTypeId.Meters);
+
+                    var chainPts = BuildCleanPolyline(new[] { pTop, pBottom, pDischarge });
+                    var created = CreatePipeChain(doc, systemTypeId, pipeTypeId, baseLevel.Id, diaFeet, chainPts, ref fittingsCreated);
+
+                    if (created.Count > 0)
+                    {
+                        pipesCreated += created.Count;
+                        totalLengthFeet += created.Sum(GetPipeLengthFeet);
+                        logs.Add($"{c.Name}: DN {diaMm:F0} mm criado (H = {UnitUtils.ConvertFromInternalUnits(topZFeet - groundZFeet, UnitTypeId.Meters):F2} m).");
+                    }
+                }
+
+                tx.Commit();
+            }
+
+            double totalLengthMeters = Math.Round(UnitUtils.ConvertFromInternalUnits(totalLengthFeet, UnitTypeId.Meters), 2);
+            string summary = $"Águas Pluviais 3D (NBR 10844): 4 condutores DN {diaMm:F0} mm criados ({totalLengthMeters:F2} m), {fittingsCreated} curva(s) e {steelClashesAvoided} desvio(s) Steel Frame.";
+
+            return new RevitAutoRoutingResult(4, pipesCreated, fittingsCreated, steelClashesAvoided, totalLengthMeters, summary, logs);
+        }
+
+        private static void CollectRoofsFromDoc(Document targetDoc, Transform tr, List<WorldBox> output)
+        {
+            var roofs = new FilteredElementCollector(targetDoc)
+                .OfCategory(BuiltInCategory.OST_Roofs)
+                .WhereElementIsNotElementType()
+                .ToElements();
+
+            foreach (var r in roofs)
+            {
+                BoundingBoxXYZ? bb = r.get_BoundingBox(null);
+                if (bb == null) continue;
+                output.Add(TransformBoundingBox(bb, tr));
+            }
         }
 
         // =====================================================================

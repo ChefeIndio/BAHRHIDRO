@@ -198,6 +198,7 @@
                                             <ComboBoxItem Content="Água Quente (ABNT NBR 7198 — Afastado 15 cm da Água Fria)" Tag="HotWater"/>
                                             <ComboBoxItem Content="Esgoto Sanitário (ABNT NBR 8160 — Com Declividade 1% e 2%)" Tag="SanitarySewer"/>
                                             <ComboBoxItem Content="Ventilação Sanitária (ABNT NBR 8160 — Colunas DN 50 mm)" Tag="Ventilation"/>
+                                            <ComboBoxItem Content="Águas Pluviais (ABNT NBR 10844 — Condutores Verticais do Telhado)" Tag="StormDrainage"/>
                                         </ComboBox>
 
                                         <TextBlock Text="Direção do Traçado Principal" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -253,6 +254,8 @@
                                                     <ComboBoxItem Content="32 mm (1&quot;)" Tag="32"/>
                                                     <ComboBoxItem Content="40 mm (1 1/4&quot;)" Tag="40"/>
                                                     <ComboBoxItem Content="50 mm (1 1/2&quot;)" Tag="50"/>
+                                                    <ComboBoxItem Content="75 mm (3&quot;)" Tag="75"/>
+                                                    <ComboBoxItem Content="100 mm (4&quot;)" Tag="100"/>
                                                 </ComboBox>
                                             </StackPanel>
                                         </Grid>

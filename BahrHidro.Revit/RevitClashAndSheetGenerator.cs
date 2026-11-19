@@ -245,6 +245,26 @@ namespace BahrHidro.Revit
                     }
                 }
 
+                // 3. Cria/Atualiza Tabelas Nativas de Quantitativo (Tubos e Conexões) e insere na primeira prancha
+                if (firstSheet != null)
+                {
+                    try
+                    {
+                        ViewSchedule pipeSchedule = GetOrCreatePipeTakeoffSchedule(doc);
+                        ViewSchedule fittingSchedule = GetOrCreateFittingTakeoffSchedule(doc);
+
+                        BoundingBoxUV outl = firstSheet.Outline;
+                        double maxU = outl != null && outl.Max.U > outl.Min.U ? outl.Max.U : 2.76;
+                        double maxV = outl != null && outl.Max.V > outl.Min.V ? outl.Max.V : 1.95;
+
+                        // Posiciona as tabelas na faixa direita da prancha (acima do carimbo)
+                        double schedX = Math.Max(0.2, maxU - 0.52);
+                        ScheduleSheetInstance.Create(doc, firstSheet.Id, pipeSchedule.Id, new XYZ(schedX, maxV - 0.12, 0));
+                        ScheduleSheetInstance.Create(doc, firstSheet.Id, fittingSchedule.Id, new XYZ(schedX, maxV - 0.72, 0));
+                    }
+                    catch { }
+                }
+
                 tx.Commit();
             }
 
@@ -256,6 +276,94 @@ namespace BahrHidro.Revit
             string tbName = chosenTitleBlock != null ? $"{chosenTitleBlock.FamilyName} ({chosenTitleBlock.Name})" : "Folha Padrão";
             string summary = $"Pranchas Geradas: {sheetsCreated} prancha(s) criada(s) [{tbName}] com {viewportsPlaced} vista(s) isométrica(s) posicionada(s).";
             return new SheetGenerationResult(sheetsCreated, viewportsPlaced, summary);
+        }
+
+
+        private static ViewSchedule GetOrCreatePipeTakeoffSchedule(Document doc)
+        {
+            const string schedName = "BahrHidro - Quantitativo de Tubulações";
+            var existing = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewSchedule))
+                .Cast<ViewSchedule>()
+                .FirstOrDefault(s => s.Name.Equals(schedName, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null)
+                return existing;
+
+            ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PipeCurves));
+            sched.Name = schedName;
+            sched.Definition.IsItemized = false;
+
+            long[] desiredParams =
+            {
+                (long)BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM,
+                (long)BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM,
+                (long)BuiltInParameter.RBS_PIPE_DIAMETER_PARAM,
+                (long)BuiltInParameter.CURVE_ELEM_LENGTH
+            };
+
+            var schedulable = sched.Definition.GetSchedulableFields();
+            foreach (long pId in desiredParams)
+            {
+                var sf = schedulable.FirstOrDefault(f => f.ParameterId.Value == pId);
+                if (sf == null) continue;
+
+                ScheduleField field = sched.Definition.AddField(sf);
+                if (pId == (long)BuiltInParameter.CURVE_ELEM_LENGTH)
+                {
+                    field.ColumnHeading = "Comprimento Total (m)";
+                    try { field.DisplayType = ScheduleFieldDisplayType.Totals; } catch { }
+                }
+                else
+                {
+                    sched.Definition.AddSortGroupField(new ScheduleSortGroupField(field.FieldId));
+                }
+            }
+
+            return sched;
+        }
+
+        private static ViewSchedule GetOrCreateFittingTakeoffSchedule(Document doc)
+        {
+            const string schedName = "BahrHidro - Quantitativo de Conexões";
+            var existing = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewSchedule))
+                .Cast<ViewSchedule>()
+                .FirstOrDefault(s => s.Name.Equals(schedName, StringComparison.OrdinalIgnoreCase));
+
+            if (existing != null)
+                return existing;
+
+            ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PipeFitting));
+            sched.Name = schedName;
+            sched.Definition.IsItemized = false;
+
+            long[] desiredParams =
+            {
+                (long)BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM,
+                (long)BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM,
+                (long)BuiltInParameter.RBS_CALCULATED_SIZE
+            };
+
+            var schedulable = sched.Definition.GetSchedulableFields();
+            foreach (long pId in desiredParams)
+            {
+                var sf = schedulable.FirstOrDefault(f => f.ParameterId.Value == pId);
+                if (sf == null) continue;
+
+                ScheduleField field = sched.Definition.AddField(sf);
+                sched.Definition.AddSortGroupField(new ScheduleSortGroupField(field.FieldId));
+            }
+
+            var countSf = schedulable.FirstOrDefault(f => f.FieldType == ScheduleFieldType.Count);
+            if (countSf != null)
+            {
+                ScheduleField countField = sched.Definition.AddField(countSf);
+                countField.ColumnHeading = "Qtd (un)";
+                try { countField.DisplayType = ScheduleFieldDisplayType.Totals; } catch { }
+            }
+
+            return sched;
         }
 
         private static void CollectStructuralTargets(
