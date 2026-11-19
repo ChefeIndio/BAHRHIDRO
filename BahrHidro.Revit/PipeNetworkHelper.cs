@@ -116,5 +116,77 @@ namespace BahrHidro.Revit
 
             return results;
         }
-    }
+    
+        public static int PurgePreviousBahrHidroElements(Document doc, bool purgeWater, bool purgeSanitaryAndStorm)
+        {
+            if (doc == null) return 0;
+
+            bool MatchesTarget(string cmt)
+            {
+                if (string.IsNullOrEmpty(cmt) || !cmt.StartsWith("BahrHidro", StringComparison.OrdinalIgnoreCase))
+                    return false;
+                bool isSan = cmt.Contains("ESG") || cmt.Contains("VENT") || cmt.Contains("AP |");
+                bool isWat = cmt.Contains("AF") || cmt.Contains("AQ");
+                if (purgeWater && purgeSanitaryAndStorm) return true;
+                if (purgeWater && isWat) return true;
+                if (purgeSanitaryAndStorm && isSan) return true;
+                return false;
+            }
+
+            var toDelete = new HashSet<ElementId>();
+
+            var pipes = new FilteredElementCollector(doc)
+                .OfCategory(BuiltInCategory.OST_PipeCurves)
+                .OfClass(typeof(Pipe))
+                .Cast<Pipe>()
+                .ToList();
+
+            foreach (var p in pipes)
+            {
+                string cmt = p.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? string.Empty;
+                if (!MatchesTarget(cmt)) continue;
+
+                toDelete.Add(p.Id);
+                var cm = p.ConnectorManager;
+                if (cm == null) continue;
+                foreach (Connector c in cm.Connectors)
+                {
+                    if (c == null || !c.IsConnected) continue;
+                    foreach (Connector refC in c.AllRefs)
+                    {
+                        if (refC?.Owner != null && refC.Owner.Id != p.Id &&
+                            (refC.Owner is FamilyInstance || refC.Owner.Category?.Id.Value == (long)BuiltInCategory.OST_PipeFitting))
+                        {
+                            toDelete.Add(refC.Owner.Id);
+                        }
+                    }
+                }
+            }
+
+            if (toDelete.Count == 0) return 0;
+            try
+            {
+                doc.Delete(toDelete.ToList());
+                doc.Regenerate();
+            }
+            catch { }
+            return toDelete.Count;
+        }
+
+        public static List<XYZ> GetExistingVerticalStackLocations(Document doc)
+        {
+            var points = new List<XYZ>();
+            if (doc == null) return points;
+
+            foreach (var p in new FilteredElementCollector(doc).OfCategory(BuiltInCategory.OST_PipeCurves).OfClass(typeof(Pipe)).Cast<Pipe>())
+            {
+                if (p.Location is not LocationCurve lc || lc.Curve is not Line line) continue;
+                XYZ a = line.GetEndPoint(0);
+                XYZ b = line.GetEndPoint(1);
+                if (Math.Abs(a.X - b.X) < 0.03 && Math.Abs(a.Y - b.Y) < 0.03 && Math.Abs(a.Z - b.Z) > 1.0)
+                    points.Add(new XYZ(a.X, a.Y, (a.Z + b.Z) * 0.5));
+            }
+            return points;
+        }
+}
 }

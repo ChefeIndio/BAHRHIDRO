@@ -27,6 +27,8 @@ namespace BahrHidro.Revit
                 };
                 panel.AddItem(pbdWater);
                 panel.AddItem(pbdSanitary);
+                var pbdLogs = new PushButtonData("BH_OpenLogs", "Memoriais & CSV", System.Reflection.Assembly.GetExecutingAssembly().Location, "BahrHidro.Revit.OpenBahrHidroLogsCommand") { ToolTip = "Abre a pasta com os memoriais de cálculo (NBR 5626/8160) e a tabela CSV de furação LSF." };
+                panel.AddItem(pbdLogs);
             }
             catch { }
 

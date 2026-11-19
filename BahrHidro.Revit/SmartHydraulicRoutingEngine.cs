@@ -130,6 +130,7 @@ namespace BahrHidro.Revit
                     tx.Start();
                 }
 
+                PipeNetworkHelper.PurgePreviousBahrHidroElements(doc, purgeWater: true, purgeSanitaryAndStorm: includeSanitaryAndStorm);
                 FamilyLoader.EnsureEssentialFittings(doc);
                 PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, cwPipeTypeId);
                 if (hwPipeTypeId != cwPipeTypeId)
@@ -137,6 +138,17 @@ namespace BahrHidro.Revit
 
                 // Empilhamento Vertical: Unifica prumadas de pavimentos sobrepostos
                 ConsolidateVerticalDropsPublic(zones);
+                var existingStacks = PipeNetworkHelper.GetExistingVerticalStackLocations(doc);
+                foreach (var z in zones)
+                {
+                    bool conflict = existingStacks.Any(st =>
+                        Math.Abs((z.WallAlongX ? st.Y : st.X) - z.WallPlane) <= 0.25 * FeetPerMeter &&
+                        Math.Abs((z.WallAlongX ? st.X : st.Y) - z.DropU) <= 0.20 * FeetPerMeter);
+                    if (conflict)
+                    {
+                        z.DropU = ChooseFreeStudBayPublic(z.StudUs, z.DropU + 0.35 * FeetPerMeter, z.DropU + 1.50 * FeetPerMeter, z.DropU + 0.50 * FeetPerMeter);
+                    }
+                }
 
                 double sourceZ = tank != null
                     ? Math.Max(tank.BaseZ, roofZ + 0.30 * FeetPerMeter)

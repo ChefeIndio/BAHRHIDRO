@@ -61,6 +61,7 @@ namespace BahrHidro.Revit
                     tx.Start();
                 }
 
+                PipeNetworkHelper.PurgePreviousBahrHidroElements(doc, purgeWater: false, purgeSanitaryAndStorm: true);
                 FamilyLoader.EnsureEssentialFittings(doc);
                 PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, sewerPipeTypeId);
 
