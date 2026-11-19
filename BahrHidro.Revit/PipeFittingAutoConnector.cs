@@ -16,6 +16,7 @@ namespace BahrHidro.Revit
 
         public static bool EnsureRoutingPreferences(Document doc, PipeType? pipeType)
         {
+            FamilyLoader.EnsureEssentialFittings(doc);
             if (doc == null || pipeType == null) return false;
             var rpm = pipeType.RoutingPreferenceManager;
             if (rpm == null) return false;

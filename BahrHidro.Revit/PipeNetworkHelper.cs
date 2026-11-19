@@ -66,5 +66,39 @@ namespace BahrHidro.Revit
                 catch { }
             }
         }
-    }
+    
+        public static List<Element> GetAllPlumbingFixtures(Document doc)
+        {
+            var results = new List<Element>();
+            
+            // 1. Pega do modelo atual (IFC aberto ou RVT)
+            results.AddRange(new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .OfCategory(BuiltInCategory.OST_PlumbingFixtures)
+                .ToList());
+
+            // 2. Vareja arquivos vinculados (IFC linkado ou RVT linkado)
+            var links = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>()
+                .ToList();
+
+            foreach (var link in links)
+            {
+                var linkDoc = link.GetLinkDocument();
+                if (linkDoc != null)
+                {
+                    var linkedFixtures = new FilteredElementCollector(linkDoc)
+                        .WhereElementIsNotElementType()
+                        .OfCategory(BuiltInCategory.OST_PlumbingFixtures)
+                        .ToList();
+                        
+                    // Nota: No momento de ler a coordenada de linkedFixtures,
+                    // o coletor deve aplicar o link.GetTotalTransform()
+                    results.AddRange(linkedFixtures);
+                }
+            }
+            return results;
+        }
+}
 }
