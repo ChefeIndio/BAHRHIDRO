@@ -439,14 +439,15 @@ namespace BahrHidro.Revit
                 }
                 else
                 {
+                    var pointInfo = ReadPointMetadataFromElement(element);
                     var openEndNode = new HydraulicNode
                     {
                         Id = Guid.NewGuid(),
-                        Name = $"FIM-{element.Id.Value}",
+                        Name = pointInfo.Label ?? $"PC-{element.Id.Value}",
                         Type = HydraulicNodeType.ConsumptionPoint,
                         ElevationMeters = Math.Round(GetElevationMeters(element, connectors), 3),
                         DemandLitersPerSecond = 0,
-                        RelativeWeight = 0.4
+                        RelativeWeight = pointInfo.Weight
                     };
 
                     result.Network.AddNode(openEndNode);
@@ -639,5 +640,27 @@ namespace BahrHidro.Revit
             }
             return sb.ToString().Normalize(NormalizationForm.FormC);
         }
-    }
+    
+        private static (string? Label, double Weight) ReadPointMetadataFromElement(Element element)
+        {
+            try
+            {
+                Parameter? commentParam = element.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
+                string comment = commentParam?.AsString() ?? "";
+                if (comment.StartsWith("BahrHidro|", StringComparison.OrdinalIgnoreCase))
+                {
+                    var parts = comment.Split('|');
+                    if (parts.Length >= 3 &&
+                        double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double w) &&
+                        w > 0)
+                    {
+                        return (parts[1], w);
+                    }
+                }
+            }
+            catch { }
+            return (null, 0.4);
+        }
+
+}
 }

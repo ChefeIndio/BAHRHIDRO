@@ -32,6 +32,23 @@ namespace BahrHidro.UI
         List<RevitLookupItem> PipingSystemTypes,
         List<RevitLevelLookupItem> Levels);
 
+    public sealed class DetectedRoutingPoint
+    {
+        public bool IsSelected { get; set; } = true;
+        public string Name { get; set; } = "";
+        public string FixtureCategory { get; set; } = "";
+        public string SourceType { get; set; } = ""; // IFC, DWG, Revit, Manual
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double BaseZ { get; set; }
+        public double PointHeightMeters { get; set; } = 0.60;
+        public double OutwardDirX { get; set; } = 0.0;
+        public double OutwardDirY { get; set; } = 1.0;
+        public double Weight { get; set; } = 0.4;
+        public long? HostElementId { get; set; }
+        public string CoordinatesDisplay => $"X:{X:F2} Y:{Y:F2}";
+    }
+
     public sealed record RevitAutoRoutingRequest(
         long PipeTypeId,
         long PipingSystemTypeId,
@@ -39,7 +56,7 @@ namespace BahrHidro.UI
         bool RouteFromAbove,
         double TrunkOffsetMeters,
         double InitialDiameterMm,
-        bool SelectedFixturesOnly);
+        List<DetectedRoutingPoint> Points);
 
     public sealed record RevitAutoRoutingResult(
         int FixturesConnected,
@@ -63,6 +80,8 @@ namespace BahrHidro.UI
         RevitRoofData? CaptureRoofFromRevit(Window ownerWindow);
         RevitPopulationEstimate EstimateBuildingPopulation();
         RevitTemplateRoutingOptions GetRoutingTemplateOptions();
-        RevitAutoRoutingResult ExecuteAutomaticPipeRouting(Window ownerWindow, RevitAutoRoutingRequest request);
+        List<DetectedRoutingPoint> DetectRoutingPointsFromModel(long? levelId);
+        DetectedRoutingPoint? PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId);
+        RevitAutoRoutingResult ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request);
     }
 }

@@ -304,9 +304,19 @@ namespace BahrHidro.Revit
             return RevitAutoRouter.GetTemplateOptions(_doc);
         }
 
-        public RevitAutoRoutingResult ExecuteAutomaticPipeRouting(Window ownerWindow, RevitAutoRoutingRequest request)
+        public List<DetectedRoutingPoint> DetectRoutingPointsFromModel(long? levelId)
         {
-            return RevitAutoRouter.ExecuteRouting(_uidoc, ownerWindow, request);
+            return RevitAutoRouter.DetectAllPoints(_doc, levelId);
+        }
+
+        public DetectedRoutingPoint? PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId)
+        {
+            return RevitAutoRouter.PickManualPoint(_uidoc, ownerWindow, fixtureCategory, levelId);
+        }
+
+        public RevitAutoRoutingResult ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request)
+        {
+            return RevitAutoRouter.ExecuteRouting(_doc, request);
         }
 
         public RevitPopulationEstimate EstimateBuildingPopulation()

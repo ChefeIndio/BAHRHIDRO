@@ -32,6 +32,7 @@ namespace BahrHidro.UI
         private Guid? _trechoSelecionadoParaEdicaoId;
 
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
+        private readonly List<DetectedRoutingPoint> _pontosTracadoDetectados = new();
 
         public MainWindow()
         {
@@ -1114,7 +1115,7 @@ namespace BahrHidro.UI
                 if (opts.Levels.Count > 0)
                     TracadoNivelComboBox.SelectedIndex = 0;
 
-                TracadoTemplateStatusText.Text = $"Template carregado: {opts.PipeTypes.Count} tipo(s) de tubo, {opts.PipingSystemTypes.Count} sistema(s) e {opts.Levels.Count} nível(is).";
+                TracadoTemplateStatusText.Text = $"Template: {opts.PipeTypes.Count} tubo(s), {opts.PipingSystemTypes.Count} sistema(s). Clique em 'Detectar (IFC / DWG)'.";
             }
             catch (Exception ex)
             {
@@ -1122,16 +1123,85 @@ namespace BahrHidro.UI
             }
         }
 
-        private void AtualizarTemplateTracado_Click(object sender, RoutedEventArgs e)
-        {
-            CarregarOpcoesTemplateTracado();
-        }
-
         private void TracadoPlanoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (TracadoOffsetTextBox == null) return;
             string tag = (TracadoPlanoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Top";
             TracadoOffsetTextBox.Text = tag == "Bottom" ? "-0,15" : "2,60";
+        }
+
+        private void DetectarPontosTracado_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null)
+            {
+                MessageBox.Show("Esta função requer o Bahr Hidro aberto dentro do Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
+                var encontrados = _revitBridge.DetectRoutingPointsFromModel(levelId);
+
+                _pontosTracadoDetectados.Clear();
+                _pontosTracadoDetectados.AddRange(encontrados);
+                AtualizarTabelaPontosTracado();
+
+                if (encontrados.Count == 0)
+                {
+                    MessageBox.Show(
+                        "Nenhum bloco sanitário identificado automaticamente no IFC/DWG.\n\nUse o painel '3. Marcação Rápida no DWG / 3D' à esquerda para clicar nos locais das peças sobre a planta.",
+                        "Bahr Hidro BIM - Leitura IFC/DWG",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    var fontes = string.Join(", ", encontrados.Select(x => x.SourceType).Distinct());
+                    TracadoTemplateStatusText.Text = $"{encontrados.Count} ponto(s) detectado(s) via {fontes}. Ajuste as alturas se desejar e gere o traçado.";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao detectar pontos:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void AdicionarPontoManualDwg_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string categoria = (TracadoPontoManualTipoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Lavatório";
+                long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
+
+                var novoPonto = _revitBridge.PickManualRoutingPoint(this, categoria, levelId);
+                if (novoPonto != null)
+                {
+                    int num = _pontosTracadoDetectados.Count(p => p.FixtureCategory == novoPonto.FixtureCategory) + 1;
+                    novoPonto.Name = $"{novoPonto.FixtureCategory} {num:D2}";
+                    _pontosTracadoDetectados.Add(novoPonto);
+                    AtualizarTabelaPontosTracado();
+                    TracadoTemplateStatusText.Text = $"Ponto '{novoPonto.Name}' adicionado! Total: {_pontosTracadoDetectados.Count} ponto(s).";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao marcar ponto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void LimparPontosTracado_Click(object sender, RoutedEventArgs e)
+        {
+            _pontosTracadoDetectados.Clear();
+            AtualizarTabelaPontosTracado();
+            TracadoTemplateStatusText.Text = "Lista limpa. Detecte pontos do IFC/DWG ou adicione manualmente.";
+        }
+
+        private void AtualizarTabelaPontosTracado()
+        {
+            TracadoPontosDataGrid.ItemsSource = null;
+            TracadoPontosDataGrid.ItemsSource = _pontosTracadoDetectados;
         }
 
         private void ExecutarTracado3D_Click(object sender, RoutedEventArgs e)
@@ -1144,6 +1214,12 @@ namespace BahrHidro.UI
 
             try
             {
+                if (_pontosTracadoDetectados.Count == 0)
+                {
+                    DetectarPontosTracado_Click(sender, e);
+                    if (_pontosTracadoDetectados.Count == 0) return;
+                }
+
                 if (TracadoPipeTypeComboBox.SelectedValue is not long pipeTypeId)
                 {
                     MessageBox.Show("Selecione um Tipo de Tubo do template.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -1163,7 +1239,6 @@ namespace BahrHidro.UI
                 long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
                 bool routeFromAbove = ((TracadoPlanoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Top") == "Top";
                 double initDia = double.TryParse((TracadoDiametroComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(), out double d) ? d : 25.0;
-                bool selectedOnly = ((TracadoEscopoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "All") == "Selection";
 
                 var req = new RevitAutoRoutingRequest(
                     pipeTypeId,
@@ -1172,14 +1247,11 @@ namespace BahrHidro.UI
                     routeFromAbove,
                     offsetM,
                     initDia,
-                    selectedOnly);
+                    _pontosTracadoDetectados.ToList());
 
-                var res = _revitBridge.ExecuteAutomaticPipeRouting(this, req);
+                var res = _revitBridge.ExecuteAutomaticPipeRouting(req);
 
-                TracadoAparelhosText.Text = $"{res.FixturesConnected} aparelho(s)";
-                TracadoTubosText.Text = $"{res.PipesCreated} tubo(s)";
-                TracadoConexoesText.Text = $"{res.FittingsCreated} conexão(ões)";
-                TracadoMetragemText.Text = $"{res.TotalLengthMeters.ToString("F2", PtBr)} m";
+                TracadoResumoGeracaoText.Text = res.Summary;
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Logs);
 
                 InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
@@ -1190,6 +1262,5 @@ namespace BahrHidro.UI
                 MessageBox.Show($"Erro ao gerar traçado 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
-}
+    }
 }
