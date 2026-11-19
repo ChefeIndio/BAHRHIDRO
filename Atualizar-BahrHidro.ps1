@@ -13,11 +13,22 @@ if (Get-Process -Name "Revit" -ErrorAction SilentlyContinue) {
 }
 
 if (Test-Path (Join-Path $RepoDir ".git")) {
-    Write-Host "[1/4] Baixando ultimas atualizacoes do GitHub..." -ForegroundColor Green
-    git pull origin main
+    Write-Host "[1/4] Atualizando repositorio via Git..." -ForegroundColor Green
+    git fetch origin main
+    git reset --hard origin/main
+} else {
+    Write-Host "[1/4] Baixando ultima versao do GitHub (ZIP)..." -ForegroundColor Green
+    $ZipTmp = Join-Path $env:TEMP "bahrhidro_main.zip"
+    $ExtTmp = Join-Path $env:TEMP "bahrhidro_extract"
+    if (Test-Path $ExtTmp) { Remove-Item $ExtTmp -Recurse -Force }
+    Invoke-WebRequest -Uri "https://github.com/ChefeIndio/BAHRHIDRO/archive/refs/heads/main.zip" -OutFile $ZipTmp
+    Expand-Archive -Path $ZipTmp -DestinationPath $ExtTmp -Force
+    $InnerDir = Get-ChildItem -Path $ExtTmp -Directory | Select-Object -First 1 -ExpandProperty FullName
+    Copy-Item -Path "$InnerDir\*" -Destination $RepoDir -Recurse -Force
 }
 
-Write-Host "[2/4] Compilando Bahr Hidro (.NET 8 Windows)..." -ForegroundColor Green
+Write-Host "[2/4] Limpando e compilando Bahr Hidro (.NET 8 Windows)..." -ForegroundColor Green
+dotnet clean "BahrHidro.Revit\BahrHidro.Revit.csproj" -c Release | Out-Null
 dotnet build "BahrHidro.Revit\BahrHidro.Revit.csproj" -c Release
 
 $BuildOut = Join-Path $RepoDir "BahrHidro.Revit\bin\Release\net8.0-windows"
@@ -27,6 +38,7 @@ if (-not (Test-Path $BuildOut)) {
 
 $AppDataBahr = Join-Path $env:APPDATA "BahrHidro"
 $BinTarget = Join-Path $AppDataBahr "Bin"
+if (Test-Path $BinTarget) { Remove-Item "$BinTarget\*" -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $BinTarget | Out-Null
 
 Write-Host "[3/4] Instalando DLLs em $BinTarget..." -ForegroundColor Green
@@ -53,7 +65,7 @@ $AddinXml = @"
 [System.IO.File]::WriteAllText($AddinManifestPath, $AddinXml, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host "[4/4] Registrando versao instalada..." -ForegroundColor Green
-$Sha = ""
+$Sha = "main"
 if (Test-Path (Join-Path $RepoDir ".git")) {
     $Sha = (git rev-parse --short HEAD).Trim()
 }
@@ -65,4 +77,4 @@ $StateObj = @{
 [System.IO.File]::WriteAllText((Join-Path $AppDataBahr "version_state.json"), $StateObj, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host ""
-Write-Host "CONCLUIDO COM SUCESSO! Classe [BahrHidro.Revit.BahrHidroApp] registrada no Revit 2026." -ForegroundColor Green
+Write-Host "CONCLUIDO COM SUCESSO! BahrHidro.Revit.BahrHidroApp registrado no Revit 2026." -ForegroundColor Green
