@@ -55,6 +55,31 @@ namespace BahrHidro.Revit
             }
         }
 
+        public string GetModelOverviewSummary()
+        {
+            try
+            {
+                int tubos = new FilteredElementCollector(_doc).OfClass(typeof(Pipe)).WhereElementIsNotElementType().GetElementCount();
+                int aparelhos = new FilteredElementCollector(_doc).OfCategory(BuiltInCategory.OST_PlumbingFixtures).WhereElementIsNotElementType().GetElementCount();
+                int telhados = new FilteredElementCollector(_doc).OfCategory(BuiltInCategory.OST_Roofs).WhereElementIsNotElementType().GetElementCount();
+                int ambientes = new FilteredElementCollector(_doc).OfCategory(BuiltInCategory.OST_Rooms).WhereElementIsNotElementType().GetElementCount();
+                return $"Raio-X do Modelo 3D: {tubos} tubo(s) | {aparelhos} aparelho(s) sanitário(s) | {telhados} telhado(s) | {ambientes} ambiente(s).";
+            }
+            catch
+            {
+                return "Modelo Revit pronto para detecção automática.";
+            }
+        }
+
+        public RevitNetworkImportData ImportNetworkAutomaticallyFromRevit()
+        {
+            _ultimaExtracao = RevitNetworkExtractor.ExtractAutomaticFromDocument(_doc);
+            return new RevitNetworkImportData(
+                _ultimaExtracao.Network,
+                _ultimaExtracao.OriginalDiametersMmBySegmentId,
+                _ultimaExtracao.DetectionSummary);
+        }
+
         public void ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported)
         {
             try
@@ -68,7 +93,10 @@ namespace BahrHidro.Revit
                 Element startElement = _doc.GetElement(pickedRef);
                 _ultimaExtracao = RevitNetworkExtractor.ExtractFromStartElement(_doc, startElement);
 
-                onNetworkImported(new RevitNetworkImportData(_ultimaExtracao.Network, _ultimaExtracao.OriginalDiametersMmBySegmentId));
+                onNetworkImported(new RevitNetworkImportData(
+                    _ultimaExtracao.Network,
+                    _ultimaExtracao.OriginalDiametersMmBySegmentId,
+                    _ultimaExtracao.DetectionSummary));
             }
             catch (Autodesk.Revit.Exceptions.OperationCanceledException)
             {

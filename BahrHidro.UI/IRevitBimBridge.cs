@@ -7,7 +7,8 @@ namespace BahrHidro.UI
 {
     public sealed record RevitNetworkImportData(
         HydraulicNetwork Network,
-        Dictionary<Guid, double> OriginalDiametersMm);
+        Dictionary<Guid, double> OriginalDiametersMm,
+        string Summary = "");
 
     public sealed record RevitRoofData(
         string RoofName,
@@ -24,10 +25,12 @@ namespace BahrHidro.UI
 
     public interface IRevitBimBridge
     {
+        RevitNetworkImportData ImportNetworkAutomaticallyFromRevit();
         void ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported);
         int ApplyDiametersToRevit(NetworkCalculationResult result);
         (string ProjectName, string ClientName, string Address, string Author) GetProjectInfo();
         void SaveProjectInfo(string projectName, string clientName, string address, string author);
+        string GetModelOverviewSummary();
         Dictionary<string, int> ImportAllSewerFixturesFromRevit();
         Dictionary<string, int> ImportSewerFixturesFromRevit(Window ownerWindow);
         RevitRoofData? CaptureAllRoofsFromRevit();

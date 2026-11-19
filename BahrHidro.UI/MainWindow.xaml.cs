@@ -79,8 +79,10 @@ namespace BahrHidro.UI
             MemEnderecoTextBox.Text = info.Address;
             MemEngenheiroTextBox.Text = info.Author;
 
-            if (!string.IsNullOrWhiteSpace(info.ProjectName))
-                InicioProjetoStatusText.Text = $"Projeto Revit Conectado: {info.ProjectName} | Cliente: {info.ClientName}";
+            string raioX = _revitBridge.GetModelOverviewSummary();
+            InicioProjetoStatusText.Text = !string.IsNullOrWhiteSpace(info.ProjectName)
+                ? $"Projeto: {info.ProjectName} — {raioX}"
+                : raioX;
         }
 
         private async Task AtualizarStatusCatalogoInicioAsync()
@@ -609,6 +611,22 @@ namespace BahrHidro.UI
         // =====================================================================
         // INTEGRAÇÃO REVIT 3D (PADRONIZADA)
         // =====================================================================
+        private void DetectarRedeAutoRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var importData = _revitBridge.ImportNetworkAutomaticallyFromRevit();
+                CarregarRedeImportadaNaTela(importData);
+                if (!string.IsNullOrWhiteSpace(importData.Summary))
+                    MessageBox.Show(importData.Summary, "Bahr Hidro - Detecção Automática 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso na detecção automática:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
         private void ImportarRevit_Click(object sender, RoutedEventArgs e)
         {
             if (_revitBridge == null) return;
@@ -616,6 +634,17 @@ namespace BahrHidro.UI
             {
                 _revitBridge.ImportNetworkFromRevit(this, importData =>
                 {
+                    CarregarRedeImportadaNaTela(importData);
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void CarregarRedeImportadaNaTela(RevitNetworkImportData importData)
+        {
                     _network = importData.Network;
                     _diametrosOriginaisRevit = importData.OriginalDiametersMm ?? new Dictionary<Guid, double>();
                     _trechosManuais.Clear();
@@ -639,17 +668,14 @@ namespace BahrHidro.UI
                     NavAguaFria.IsSelected = true;
                     SelecionarPainel("AguaFria");
 
+                    if (!string.IsNullOrWhiteSpace(importData.Summary))
+                        ResumoTrocasTubosText.Text = importData.Summary;
+
                     if (MemStatusRedeText != null)
                     {
-                        MemStatusRedeText.Text = $"Rede importada ({_network.Segments.Count} trechos). Clique em 'Calcular Rede Hidráulica' antes de exportar.";
+                        MemStatusRedeText.Text = $"Rede detectada ({_network.Segments.Count} trechos). Clique em 'Calcular Rede Hidráulica' antes de exportar.";
                         MemStatusRedeText.Foreground = Brushes.DarkOrange;
                     }
-                });
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
         }
 
         private void AplicarRevit_Click(object sender, RoutedEventArgs e)

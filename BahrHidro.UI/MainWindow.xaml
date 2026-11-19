@@ -143,7 +143,7 @@
                                 <StackPanel>
                                     <TextBlock Text="2. REDE HIDRÁULICA BIM 3D" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                     <TextBlock x:Name="InicioRedeStatusText" Text="Nenhuma rede carregada. Importe do modelo 3D do Revit para dimensionar." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button x:Name="BtnImportarInicioRevit" Content="Importar Rede 3D (Revit)" Style="{StaticResource RevitActionButton}" Height="36" Visibility="Collapsed" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="ImportarRevit_Click"/>
+                                    <Button x:Name="BtnImportarInicioRevit" Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Height="36" Visibility="Collapsed" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="DetectarRedeAutoRevit_Click"/>
                                     <Button Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
                                 </StackPanel>
                             </Border>
@@ -167,7 +167,8 @@
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsAguaFria" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button Content="Importar Rede 3D (Revit)" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
+                                <Button Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="DetectarRedeAutoRevit_Click"/>
+                                <Button Content="Selecionar Início no 3D" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
                                 <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Click="AplicarRevit_Click"/>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
