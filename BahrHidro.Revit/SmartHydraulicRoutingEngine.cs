@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Autodesk.Revit.DB;
@@ -54,6 +55,7 @@ namespace BahrHidro.Revit
         public double WallPlane { get; set; }
         public double FloorZ { get; set; }
         public double DropU { get; set; }
+        public bool HasDiagonalBracing { get; set; }
         public List<double> StudUs { get; set; } = new();
         public List<WallOpeningObstacle> Openings { get; set; } = new();
         public List<SemanticFixtureNode> ColdWaterFixtures { get; set; } = new();
@@ -90,8 +92,13 @@ namespace BahrHidro.Revit
             if (pipeTypeId == ElementId.InvalidElementId || levelId == ElementId.InvalidElementId)
                 return allCreated;
 
+            string pipeTypeName = NormalizeText(doc.GetElement(pipeTypeId)?.Name ?? string.Empty);
+            bool explicitPex = pipeTypeName.Contains("pex") || pipeTypeName.Contains("multicamada") || pipeTypeName.Contains("ponto a ponto");
+
             bool ownTransaction = !doc.IsModifiable;
             Transaction? tx = null;
+            HydraulicVerificationSummary? physicsSummary = null;
+            var strategyLog = new List<string>();
 
             try
             {
@@ -105,7 +112,7 @@ namespace BahrHidro.Revit
                 PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
 
                 // =========================================================
-                // 1. REDE DE ÁGUA FRIA MULTI-PAREDE + DESVIO DE PORTAS/JANELAS
+                // 1. REDE DE ÁGUA FRIA (PVC RÍGIDO OU PEX MANIFOLD PONTO-A-PONTO)
                 // =========================================================
                 var cwPipes = new List<Pipe>();
                 var cwZones = zones.Where(z => z.ColdWaterFixtures.Count > 0).ToList();
@@ -118,7 +125,6 @@ namespace BahrHidro.Revit
                     double totalBuildingWeight = cwZones.SelectMany(z => z.ColdWaterFixtures).Sum(f => f.RelativeWeight);
                     double mainHeaderDn = totalBuildingWeight > 3.5 ? 32.0 : 25.0;
 
-                    // Ponto inicial da alimentação geral (Reservatório ou Prumada Principal)
                     var firstZone = cwZones[0];
                     XYZ firstDropTop = firstZone.WallAlongX
                         ? new XYZ(firstZone.DropU, firstZone.WallPlane, sourceZ)
@@ -132,7 +138,6 @@ namespace BahrHidro.Revit
                         TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pTankElbow, firstDropTop, 32.0, $"AF | Barrilete Mestre 2 | Peso={totalBuildingWeight:F1}");
                     }
 
-                    // Interliga múltiplas paredes hidráulicas pelo forro (Z = sourceZ)
                     XYZ prevHeaderPt = firstDropTop;
                     for (int zi = 0; zi < cwZones.Count; zi++)
                     {
@@ -149,21 +154,32 @@ namespace BahrHidro.Revit
                             prevHeaderPt = zoneTopDrop;
                         }
 
-                        RouteColdWaterInWallZone(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, zone, sourceZ);
+                        bool usePexManifold = explicitPex || zone.HasDiagonalBracing;
+                        if (usePexManifold)
+                        {
+                            string reason = zone.HasDiagonalBracing ? "Contraventamento X LSF detectado" : "Perfil PEX/Manifold";
+                            strategyLog.Add($"Parede {zone.Index}: PEX Ponto-a-Ponto c/ Manifold ({reason})");
+                            RoutePexManifoldInWallZone(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, zone, sourceZ);
+                        }
+                        else
+                        {
+                            strategyLog.Add($"Parede {zone.Index}: Barrilete Ortogonal LSF ({zone.Openings.Count} vãos desviados)");
+                            RouteColdWaterInWallZone(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, zone, sourceZ);
+                        }
                     }
 
-                    doc.Regenerate();
-                    PipeFittingAutoConnector.ConnectPipesWithElbows(doc, cwPipes);
-                    allCreated.AddRange(cwPipes);
-
-                    // Loop fechado de física hidráulica NBR 5626 (Pressão Dinâmica & Velocidade)
+                    // Executa física hidráulica NBR 5626 ANTES de soldar conexões para garantir Luvas de Redução exatas
                     var criticalFixture = cwZones
                         .SelectMany(z => z.ColdWaterFixtures)
                         .OrderByDescending(f => f.BaseZ + f.FeedElevationOffsetMeters * FeetPerMeter)
                         .First();
 
                     double critZ = criticalFixture.BaseZ + criticalFixture.FeedElevationOffsetMeters * FeetPerMeter;
-                    HydraulicPhysicsVerifier.VerifyAndOptimizeColdWater(doc, cwPipes, sourceZ, critZ, criticalFixture.Name);
+                    physicsSummary = HydraulicPhysicsVerifier.VerifyAndOptimizeColdWater(doc, cwPipes, sourceZ, critZ, criticalFixture.Name);
+
+                    doc.Regenerate();
+                    PipeFittingAutoConnector.ConnectPipesWithElbows(doc, cwPipes);
+                    allCreated.AddRange(cwPipes);
                 }
 
                 // =========================================================
@@ -179,7 +195,7 @@ namespace BahrHidro.Revit
                 // =========================================================
                 // 3. AUDITORIA LSF, QUANTITATIVOS E ELEVAÇÕES EXECUTIVAS
                 // =========================================================
-                ExecutiveDetailingGenerator.AuditAndMarkLsfPenetrations(doc, allCreated, globalFloorZ);
+                int lsfCrossings = ExecutiveDetailingGenerator.AuditAndMarkLsfPenetrations(doc, allCreated, globalFloorZ);
                 ExecutiveDetailingGenerator.CreateHydraulicSchedules(doc);
 
                 var panelDescriptors = zones.Select(z =>
@@ -194,7 +210,7 @@ namespace BahrHidro.Revit
 
                     return new WallPanelDescriptor
                     {
-                        Name = $"Parede Hidráulica {z.Index}",
+                        Name = $"Painel LSF {z.Index}",
                         WallAlongX = z.WallAlongX,
                         WallPlane = z.WallPlane,
                         MinU = Math.Min(minU, z.DropU),
@@ -206,6 +222,7 @@ namespace BahrHidro.Revit
                 }).ToList();
 
                 LsfPanelElevationGenerator.GeneratePanelElevationsAndSheet(doc, panelDescriptors, allCreated);
+                WriteExecutionAuditLog(doc, zones.Count, allCreated.Count, lsfCrossings, physicsSummary, strategyLog);
 
                 if (ownTransaction && tx != null)
                     tx.Commit();
@@ -218,6 +235,59 @@ namespace BahrHidro.Revit
             }
 
             return allCreated;
+        }
+
+        private static void RoutePexManifoldInWallZone(
+            Document doc,
+            List<Pipe> cwPipes,
+            ElementId cwSysTypeId,
+            ElementId pipeTypeId,
+            ElementId levelId,
+            HydraulicWallZone zone,
+            double sourceZ)
+        {
+            XYZ MakePt(double u, double n, double z) => zone.WallAlongX ? new XYZ(u, n, z) : new XYZ(n, u, z);
+
+            double zoneWeight = zone.ColdWaterFixtures.Sum(f => f.RelativeWeight);
+            double feedDn = zoneWeight > 3.5 ? 32.0 : 25.0;
+            double manifoldZ = zone.FloorZ + (1.20 * FeetPerMeter);
+
+            // Alimentação superior até a Caixa Distribuidora (Manifold) no vão livre principal
+            XYZ pTopDrop = MakePt(zone.DropU, zone.WallPlane, sourceZ);
+            XYZ pManifold = MakePt(zone.DropU, zone.WallPlane, manifoldZ);
+            TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pTopDrop, pManifold, feedDn, $"AF | Alimentação Manifold P{zone.Index} | Peso={zoneWeight:F1}");
+            TryPlaceValveOnWall(doc, levelId, pManifold, "gaveta");
+
+            int lineIdx = 0;
+            foreach (var f in zone.ColdWaterFixtures)
+            {
+                double rawU = zone.WallAlongX ? f.Center.X : f.Center.Y;
+                if (f.Role == HydraulicFixtureRole.Toilet)
+                    rawU -= 0.12 * FeetPerMeter;
+
+                // Posiciona descida individual no centro do vão livre mais próximo do aparelho (zero furos em montantes!)
+                double bayU = ChooseFreeStudBayU(zone.StudUs, rawU - 0.35 * FeetPerMeter, rawU + 0.35 * FeetPerMeter, rawU);
+                double fixN = zone.WallAlongX ? f.Center.Y : f.Center.X;
+                double dirSign = fixN >= zone.WallPlane ? 1.0 : -1.0;
+                double stubN = zone.WallPlane + (dirSign * 0.08 * FeetPerMeter);
+
+                double targetZ = zone.FloorZ + (f.FeedElevationOffsetMeters * FeetPerMeter);
+                double plenumZ = sourceZ - ((0.08 + lineIdx * 0.03) * FeetPerMeter);
+                double pexDn = 16.0;
+
+                XYZ pManifoldStart = MakePt(zone.DropU, zone.WallPlane, manifoldZ + ((lineIdx + 1) * 0.04 * FeetPerMeter));
+                XYZ pRiseCeiling = MakePt(zone.DropU, zone.WallPlane, plenumZ);
+                XYZ pAcrossCeiling = MakePt(bayU, zone.WallPlane, plenumZ);
+                XYZ pDropPoint = MakePt(bayU, zone.WallPlane, targetZ);
+                XYZ pOut = MakePt(bayU, stubN, targetZ);
+
+                TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pManifoldStart, pRiseCeiling, pexDn, $"AF-PEX | Subida Forro {f.Name} | Peso={f.RelativeWeight:F1}");
+                TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pRiseCeiling, pAcrossCeiling, pexDn, $"AF-PEX | Forro Livre {f.Name} | Peso={f.RelativeWeight:F1}");
+                TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pAcrossCeiling, pDropPoint, pexDn, $"AF-PEX | Descida Vão Livre {f.Name} | Peso={f.RelativeWeight:F1}");
+                TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pDropPoint, pOut, pexDn, $"AF-PEX | Ponto {f.Name} | Peso={f.RelativeWeight:F1}");
+
+                lineIdx++;
+            }
         }
 
         private static void RouteColdWaterInWallZone(
@@ -235,7 +305,6 @@ namespace BahrHidro.Revit
             double trunkDn = zoneWeight > 3.5 ? 32.0 : 25.0;
             double trunkZ = zone.FloorZ + (0.45 * FeetPerMeter);
 
-            // Descida vertical da prumada no vão livre entre montantes LSF
             XYZ pTopDrop = MakePt(zone.DropU, zone.WallPlane, sourceZ);
             XYZ pBottomDrop = MakePt(zone.DropU, zone.WallPlane, trunkZ);
             TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pTopDrop, pBottomDrop, trunkDn, $"AF | Prumada Parede {zone.Index} | Peso={zoneWeight:F1}");
@@ -254,7 +323,6 @@ namespace BahrHidro.Revit
             allTrunkUs.AddRange(fixtureNodes.Select(x => x.U));
             allTrunkUs = DeduplicateSorted(allTrunkUs, 0.03);
 
-            // Trechos horizontais do barrilete com desvio preventivo por cima de portas e janelas
             for (int i = 0; i < allTrunkUs.Count - 1; i++)
             {
                 RouteHorizontalSegmentAvoidingOpenings(
@@ -263,7 +331,6 @@ namespace BahrHidro.Revit
                     $"AF | Ramal Tronco P{zone.Index} #{i + 1} | Peso={zoneWeight:F1}");
             }
 
-            // Sub-ramais verticais e pontos de consumo
             foreach (var item in fixtureNodes)
             {
                 var f = item.Fixture;
@@ -336,7 +403,7 @@ namespace BahrHidro.Revit
             foreach (var obs in blocking)
             {
                 double margin = 0.12 * FeetPerMeter;
-                double detourZ = obs.TopZ + (0.15 * FeetPerMeter); // Passa 15cm acima da verga da porta/janela
+                double detourZ = obs.TopZ + (0.15 * FeetPerMeter);
 
                 double uEnter = forward ? Math.Max(curU, obs.MinU - margin) : Math.Min(curU, obs.MaxU + margin);
                 double uExit = forward ? Math.Min(uEnd, obs.MaxU + margin) : Math.Max(uEnd, obs.MinU - margin);
@@ -434,7 +501,6 @@ namespace BahrHidro.Revit
                 XYZ pJoinMain = MakePt(midU, collectorN, subFloorZ - 0.02 * FeetPerMeter - (0.005 * mainDist));
                 TryAddPipe(doc, pipes, sanSysTypeId, pipeTypeId, levelId, pCaixaSifonada, pJoinMain, 50.0, "ESG | Saída Caixa Sifonada i=2%");
 
-                // Coluna de Ventilação Sanitária DN50 (NBR 8160) subindo pela parede LSF até acima da cobertura
                 if (ventSysTypeId != ElementId.InvalidElementId)
                 {
                     double ventU = ChooseFreeStudBayU(zone.StudUs, csU - 0.40 * FeetPerMeter, csU + 0.40 * FeetPerMeter, csU);
@@ -453,13 +519,12 @@ namespace BahrHidro.Revit
 
         private static List<HydraulicWallZone> BuildHydraulicWallZones(Document doc, List<SemanticFixtureNode> fixtures)
         {
-            var candidatePlanes = DiscoverAllWallPlanes(doc);
+            var candidatePlanes = DiscoverAllWallPlanes(doc, out var diagonalBraces);
             var allOpenings = DiscoverAllWallOpenings(doc);
             var zones = new List<HydraulicWallZone>();
 
             foreach (var fix in fixtures)
             {
-                // Procura parede/painel LSF mais próximo atrás/ao lado do aparelho (<= 1.20m)
                 var bestPlane = candidatePlanes
                     .Select(p => new
                     {
@@ -510,7 +575,6 @@ namespace BahrHidro.Revit
                 double maxU = zFixtures.Max(f => z.WallAlongX ? f.Center.X : f.Center.Y);
                 z.DropU = ChooseFreeStudBayU(z.StudUs, minU, maxU, minU);
 
-                // Associa portas e janelas que interceptam o plano desta parede
                 foreach (var op in allOpenings)
                 {
                     double opPlane = z.WallAlongX ? (op.Min.Y + op.Max.Y) * 0.5 : (op.Min.X + op.Max.X) * 0.5;
@@ -525,15 +589,24 @@ namespace BahrHidro.Revit
                         });
                     }
                 }
+
+                // Verifica se existe contraventamento diagonal em X no plano desta parede LSF
+                z.HasDiagonalBracing = diagonalBraces.Any(b =>
+                    b.AlongX == z.WallAlongX &&
+                    Math.Abs(b.Plane - z.WallPlane) <= 0.20 * FeetPerMeter &&
+                    b.MaxU >= minU && b.MinU <= maxU);
             }
 
             return zones;
         }
 
-        private static List<WallPanelDescriptor> DiscoverAllWallPlanes(Document doc)
+        private static List<WallPanelDescriptor> DiscoverAllWallPlanes(
+            Document doc,
+            out List<(bool AlongX, double Plane, double MinU, double MaxU)> diagonalBraces)
         {
             var result = new List<WallPanelDescriptor>();
             var studs = new List<(double U, double N, bool AlongX)>();
+            var braces = new List<(bool AlongX, double Plane, double MinU, double MaxU)>();
 
             var cats = new[]
             {
@@ -549,6 +622,26 @@ namespace BahrHidro.Revit
                 {
                     foreach (var el in new FilteredElementCollector(targetDoc).WhereElementIsNotElementType().OfCategory(cat))
                     {
+                        // Detecta contraventamentos diagonais em X via LocationCurve
+                        if (el.Location is LocationCurve elLc && elLc.Curve is Line elLine)
+                        {
+                            XYZ a = tr.OfPoint(elLine.GetEndPoint(0));
+                            XYZ b = tr.OfPoint(elLine.GetEndPoint(1));
+                            double horiz = Math.Sqrt(Math.Pow(b.X - a.X, 2) + Math.Pow(b.Y - a.Y, 2));
+                            double vert = Math.Abs(b.Z - a.Z);
+                            if (horiz > 0.35 * FeetPerMeter && vert > 0.35 * FeetPerMeter)
+                            {
+                                bool bAlongX = Math.Abs(b.X - a.X) >= Math.Abs(b.Y - a.Y);
+                                braces.Add((
+                                    bAlongX,
+                                    bAlongX ? (a.Y + b.Y) * 0.5 : (a.X + b.X) * 0.5,
+                                    bAlongX ? Math.Min(a.X, b.X) : Math.Min(a.Y, b.Y),
+                                    bAlongX ? Math.Max(a.X, b.X) : Math.Max(a.Y, b.Y)
+                                ));
+                                continue;
+                            }
+                        }
+
                         var bb = el.get_BoundingBox(null);
                         if (bb == null) continue;
                         XYZ p1 = tr.OfPoint(bb.Min);
@@ -590,7 +683,6 @@ namespace BahrHidro.Revit
                     ScanDoc(ldoc, link.GetTotalTransform());
             }
 
-            // Agrupa montantes LSF alinhados em planos de parede
             foreach (bool alongX in new[] { true, false })
             {
                 var dirStuds = studs.Where(s => s.AlongX == alongX).OrderBy(s => s.N).ToList();
@@ -622,6 +714,7 @@ namespace BahrHidro.Revit
                 }
             }
 
+            diagonalBraces = braces;
             return result;
         }
 
@@ -675,6 +768,54 @@ namespace BahrHidro.Revit
             }
 
             return floorZ + (3.00 * FeetPerMeter);
+        }
+
+        private static void WriteExecutionAuditLog(
+            Document doc,
+            int zonesCount,
+            int pipesCount,
+            int lsfCrossings,
+            HydraulicVerificationSummary? physics,
+            List<string> strategies)
+        {
+            try
+            {
+                string logDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    "BahrHidro",
+                    "Logs");
+                Directory.CreateDirectory(logDir);
+
+                var sb = new StringBuilder();
+                sb.AppendLine("======================================================================");
+                sb.AppendLine($"BAHR HIDRO BIM — MEMORIAL AUTOMÁTICO DE TRAÇADO 3D ({DateTime.Now:dd/MM/yyyy HH:mm:ss})");
+                sb.AppendLine($"Projeto: {doc.Title}");
+                sb.AppendLine("======================================================================");
+                sb.AppendLine($"Paredes Hidráulicas Detectadas: {zonesCount}");
+                sb.AppendLine($"Segmentos de Tubulação Gerados: {pipesCount}");
+                sb.AppendLine($"Passagens em Montantes LSF Auditadas: {lsfCrossings}");
+                sb.AppendLine();
+                sb.AppendLine("--- ESTRATÉGIA POR PAINEL ---");
+                foreach (string s in strategies)
+                    sb.AppendLine($" * {s}");
+
+                if (physics != null)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("--- VERIFICAÇÃO HIDRÁULICA (NBR 5626 / FAIR-WHIPPLE-HSIAO) ---");
+                    sb.AppendLine($" * Soma de Pesos Relativos: {physics.TotalWeight:F2}");
+                    sb.AppendLine($" * Vazão de Projeto: {physics.DesignFlowLs:F2} L/s");
+                    sb.AppendLine($" * Velocidade Máxima na Rede: {physics.MaxVelocityMs:F2} m/s (Limite <= 3,00 m/s)");
+                    sb.AppendLine($" * Pressão Dinâmica no Ponto Crítico ({physics.CriticalFixtureName}): {physics.CriticalDynamicPressureMca:F2} m.c.a. ({physics.CriticalDynamicPressureMca * 10.0:F1} kPa)");
+                    sb.AppendLine($" * Trechos Re-dimensionados Automaticamente: {physics.UpsizedPipesCount}");
+                    sb.AppendLine($" * Status Normativo NBR 5626: {(physics.IsNormativeCompliant ? "CONFORME" : "VERIFICAR ALTURA DO RESERVATÓRIO")}");
+                }
+
+                File.WriteAllText(Path.Combine(logDir, "Ultimo_Memorial_3D.txt"), sb.ToString(), Encoding.UTF8);
+            }
+            catch
+            {
+            }
         }
 
         private static void TryPlaceValveOnWall(Document doc, ElementId levelId, XYZ location, string kindHint)

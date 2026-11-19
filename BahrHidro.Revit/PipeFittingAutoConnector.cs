@@ -16,8 +16,9 @@ namespace BahrHidro.Revit
 
         public static bool EnsureRoutingPreferences(Document doc, PipeType? pipeType)
         {
-            FamilyLoader.EnsureEssentialFittings(doc);
             if (doc == null || pipeType == null) return false;
+            FamilyLoader.EnsureEssentialFittings(doc);
+
             var rpm = pipeType.RoutingPreferenceManager;
             if (rpm == null) return false;
 
@@ -31,6 +32,7 @@ namespace BahrHidro.Revit
 
             bool okElbow = EnsureRuleGroup(doc, rpm, fittingSymbols, RoutingPreferenceRuleGroupType.Elbows, PartType.Elbow, new[] { "joelho", "elbow", "curva" });
             EnsureRuleGroup(doc, rpm, fittingSymbols, RoutingPreferenceRuleGroupType.Junctions, PartType.Tee, new[] { "te ", "tê", "tee", "junção", "juncao" });
+            EnsureRuleGroup(doc, rpm, fittingSymbols, RoutingPreferenceRuleGroupType.Transitions, PartType.Transition, new[] { "redu", "transi", "bucha", "luva" });
             return okElbow;
         }
 
@@ -85,7 +87,7 @@ namespace BahrHidro.Revit
             int connectedCount = 0;
             const double tolFeet = 0.04; // ~12 mm
 
-            // 1. Conecta pontas coincidentes com Joelho
+            // 1. Conecta pontas coincidentes (Joelho para ângulos ou Luva de Redução para trechos colineares)
             for (int i = 0; i < pipes.Count; i++)
             {
                 foreach (var cA in GetOpenEndConnectors(pipes[i]))
@@ -102,6 +104,10 @@ namespace BahrHidro.Revit
                                 if (angle > 0.03 && angle < Math.PI - 0.03)
                                 {
                                     try { doc.Create.NewElbowFitting(cA, cB); connectedCount++; } catch { }
+                                }
+                                else if (Math.Abs(cA.Radius - cB.Radius) > 0.001)
+                                {
+                                    try { doc.Create.NewTransitionFitting(cA, cB); connectedCount++; } catch { }
                                 }
                             }
                         }
