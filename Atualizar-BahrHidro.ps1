@@ -44,13 +44,13 @@ $AddinXml = @"
     <Name>Bahr Hidro</Name>
     <Assembly>$AssemblyDllPath</Assembly>
     <AddInId>12345678-ABCD-1234-ABCD-1234567890AB</AddInId>
-    <FullClassName>BahrHidro.Revit.MainCommand</FullClassName>
+    <FullClassName>BahrHidro.Revit.BahrHidroApp</FullClassName>
     <VendorId>BAHR</VendorId>
     <VendorDescription>Bahr Engenharia - Hidraulica e LSF (ABNT NBR 5626 / 8160)</VendorDescription>
   </AddIn>
 </RevitAddIns>
 "@
-Set-Content -Path $AddinManifestPath -Value $AddinXml -Encoding UTF8
+[System.IO.File]::WriteAllText($AddinManifestPath, $AddinXml, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host "[4/4] Registrando versao instalada..." -ForegroundColor Green
 $Sha = ""
@@ -62,7 +62,7 @@ $StateObj = @{
     InstalledDate = (Get-Date).ToString("dd/MM/yyyy HH:mm")
     RepoLocalPath = $RepoDir
 } | ConvertTo-Json
-Set-Content -Path (Join-Path $AppDataBahr "version_state.json") -Value $StateObj -Encoding UTF8
+[System.IO.File]::WriteAllText((Join-Path $AppDataBahr "version_state.json"), $StateObj, [System.Text.UTF8Encoding]::new($false))
 
 Write-Host ""
-Write-Host "CONCLUIDO COM SUCESSO! Classe [BahrHidro.Revit.MainCommand] registrada no Revit 2026." -ForegroundColor Green
+Write-Host "CONCLUIDO COM SUCESSO! Classe [BahrHidro.Revit.BahrHidroApp] registrada no Revit 2026." -ForegroundColor Green
