@@ -30,7 +30,7 @@ namespace BahrHidro.Revit
             var systemTypes = new FilteredElementCollector(doc)
                 .OfClass(typeof(PipingSystemType))
                 .Cast<PipingSystemType>()
-                .OrderByDescending(s => s.SystemClassification == MEPSystemClassification.DomesticColdWater)
+                .OrderByDescending(s => (s.SystemClassification == MEPSystemClassification.DomesticColdWater || s.SystemClassification == MEPSystemClassification.OtherPipe || s.SystemClassification == MEPSystemClassification.UndefinedSystemClassification))
                 .ThenBy(s => s.Name)
                 .Select(s => new RevitLookupItem(s.Id.Value, s.Name))
                 .ToList();

@@ -11,22 +11,14 @@ namespace BahrHidro.Revit
         public static bool EnsureElbowRoutingPreference(Document doc, ElementId pipeTypeId)
         {
             if (doc == null || pipeTypeId == ElementId.InvalidElementId) return false;
-            return EnsureElbowRoutingPreference(doc, doc.GetElement(pipeTypeId) as PipeType);
+            return EnsureRoutingPreferences(doc, doc.GetElement(pipeTypeId) as PipeType);
         }
 
-        public static bool EnsureElbowRoutingPreference(Document doc, PipeType? pipeType)
+        public static bool EnsureRoutingPreferences(Document doc, PipeType? pipeType)
         {
             if (doc == null || pipeType == null) return false;
-
             var rpm = pipeType.RoutingPreferenceManager;
             if (rpm == null) return false;
-
-            if (rpm.GetNumberOfRules(RoutingPreferenceRuleGroupType.Elbows) > 0)
-            {
-                var firstRule = rpm.GetRule(RoutingPreferenceRuleGroupType.Elbows, 0);
-                if (firstRule != null && firstRule.MEPPartId != ElementId.InvalidElementId)
-                    return true;
-            }
 
             var fittingSymbols = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_PipeFitting)
@@ -34,72 +26,128 @@ namespace BahrHidro.Revit
                 .Cast<FamilySymbol>()
                 .ToList();
 
-            FamilySymbol? elbowSymbol = fittingSymbols.FirstOrDefault(s =>
+            if (fittingSymbols.Count == 0) return false;
+
+            bool okElbow = EnsureRuleGroup(doc, rpm, fittingSymbols, RoutingPreferenceRuleGroupType.Elbows, PartType.Elbow, new[] { "joelho", "elbow", "curva" });
+            EnsureRuleGroup(doc, rpm, fittingSymbols, RoutingPreferenceRuleGroupType.Junctions, PartType.Tee, new[] { "te ", "tê", "tee", "junção", "juncao" });
+            return okElbow;
+        }
+
+        private static bool EnsureRuleGroup(
+            Document doc,
+            RoutingPreferenceManager rpm,
+            List<FamilySymbol> symbols,
+            RoutingPreferenceRuleGroupType groupType,
+            PartType targetPartType,
+            string[] nameHints)
+        {
+            if (rpm.GetNumberOfRules(groupType) > 0)
+            {
+                var existing = rpm.GetRule(groupType, 0);
+                if (existing != null && existing.MEPPartId != ElementId.InvalidElementId)
+                    return true;
+            }
+
+            FamilySymbol? symbol = symbols.FirstOrDefault(s =>
             {
                 var p = s.Family?.get_Parameter(BuiltInParameter.FAMILY_CONTENT_PART_TYPE);
-                return p != null && p.AsInteger() == (int)PartType.Elbow;
+                return p != null && p.AsInteger() == (int)targetPartType;
             });
 
-            elbowSymbol ??= fittingSymbols.FirstOrDefault(s =>
+            symbol ??= symbols.FirstOrDefault(s =>
             {
-                string full = $"{s.FamilyName} {s.Name}".ToLowerInvariant();
-                return full.Contains("joelho") || full.Contains("elbow") || full.Contains("curva");
+                string full = $" {s.FamilyName} {s.Name} ".ToLowerInvariant();
+                return nameHints.Any(h => full.Contains(h));
             });
 
-            if (elbowSymbol == null)
-                return false;
+            if (symbol == null) return false;
 
-            if (!elbowSymbol.IsActive)
+            if (!symbol.IsActive)
             {
-                elbowSymbol.Activate();
+                symbol.Activate();
                 doc.Regenerate();
             }
 
-            var rule = new RoutingPreferenceRule(elbowSymbol.Id, "Joelho Automático Bahr Hidro");
-            rpm.AddRule(RoutingPreferenceRuleGroupType.Elbows, rule, 0);
+            rpm.AddRule(groupType, new RoutingPreferenceRule(symbol.Id, $"Regra Automática Bahr Hidro ({groupType})"), 0);
             return true;
         }
 
         public static int ConnectPipesWithElbows(Document doc, IEnumerable<Pipe> createdPipes)
         {
             var pipes = createdPipes?.Where(p => p != null && p.IsValidObject).Distinct().ToList();
-            if (doc == null || pipes == null || pipes.Count < 2) return 0;
+            if (doc == null || pipes == null || pipes.Count == 0) return 0;
 
+            PipeNetworkHelper.NormalizePipesForSizing(doc, pipes);
             EnsureElbowRoutingPreference(doc, pipes[0].GetTypeId());
             doc.Regenerate();
 
             int connectedCount = 0;
-            const double tolFeet = 0.025; // ~7.6 mm
+            const double tolFeet = 0.04; // ~12 mm
 
+            // 1. Conecta pontas coincidentes com Joelho
             for (int i = 0; i < pipes.Count; i++)
             {
-                var cListA = GetOpenEndConnectors(pipes[i]);
-                foreach (var cA in cListA)
+                foreach (var cA in GetOpenEndConnectors(pipes[i]))
                 {
                     if (cA.IsConnected) continue;
-
                     for (int j = i + 1; j < pipes.Count; j++)
                     {
-                        var cListB = GetOpenEndConnectors(pipes[j]);
-                        foreach (var cB in cListB)
+                        foreach (var cB in GetOpenEndConnectors(pipes[j]))
                         {
                             if (cB.IsConnected) continue;
-
                             if (cA.Origin.DistanceTo(cB.Origin) <= tolFeet)
                             {
                                 double angle = cA.CoordinateSystem.BasisZ.AngleTo(cB.CoordinateSystem.BasisZ);
                                 if (angle > 0.03 && angle < Math.PI - 0.03)
                                 {
-                                    try
+                                    try { doc.Create.NewElbowFitting(cA, cB); connectedCount++; } catch { }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Conecta ramais que encostam no meio de outro tubo com Tê (quebrando o tronco)
+            var workingPipes = new List<Pipe>(pipes);
+            foreach (var branch in pipes)
+            {
+                if (!branch.IsValidObject) continue;
+                foreach (var cBranch in GetOpenEndConnectors(branch))
+                {
+                    if (cBranch.IsConnected) continue;
+                    XYZ pt = cBranch.Origin;
+
+                    for (int k = 0; k < workingPipes.Count; k++)
+                    {
+                        var host = workingPipes[k];
+                        if (!host.IsValidObject || host.Id == branch.Id) continue;
+                        if (host.Location is not LocationCurve lc || lc.Curve is not Line line) continue;
+
+                        XYZ p0 = line.GetEndPoint(0);
+                        XYZ p1 = line.GetEndPoint(1);
+                        if (pt.DistanceTo(p0) <= tolFeet || pt.DistanceTo(p1) <= tolFeet) continue;
+
+                        IntersectionResult proj = line.Project(pt);
+                        if (proj != null && proj.Distance <= tolFeet)
+                        {
+                            try
+                            {
+                                ElementId splitId = PlumbingUtils.BreakCurve(doc, host.Id, proj.XYZPoint);
+                                if (splitId != ElementId.InvalidElementId && doc.GetElement(splitId) is Pipe splitPipe)
+                                {
+                                    workingPipes.Add(splitPipe);
+                                    var cHost1 = GetClosestOpenEnd(host, proj.XYZPoint, tolFeet);
+                                    var cHost2 = GetClosestOpenEnd(splitPipe, proj.XYZPoint, tolFeet);
+                                    if (cHost1 != null && cHost2 != null)
                                     {
-                                        doc.Create.NewElbowFitting(cA, cB);
+                                        doc.Create.NewTeeFitting(cHost1, cHost2, cBranch);
                                         connectedCount++;
-                                    }
-                                    catch
-                                    {
+                                        break;
                                     }
                                 }
                             }
+                            catch { }
                         }
                     }
                 }
@@ -108,12 +156,18 @@ namespace BahrHidro.Revit
             return connectedCount;
         }
 
+        private static Connector? GetClosestOpenEnd(Pipe pipe, XYZ target, double tol)
+        {
+            return GetOpenEndConnectors(pipe)
+                .OrderBy(c => c.Origin.DistanceTo(target))
+                .FirstOrDefault(c => c.Origin.DistanceTo(target) <= tol);
+        }
+
         private static List<Connector> GetOpenEndConnectors(Pipe pipe)
         {
             var result = new List<Connector>();
             var cm = pipe.ConnectorManager;
             if (cm == null) return result;
-
             foreach (Connector c in cm.Connectors)
             {
                 if (c != null && c.ConnectorType == ConnectorType.End && !c.IsConnected)
