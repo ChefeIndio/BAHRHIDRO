@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Plumbing;
+using Autodesk.Revit.DB.Structure;
 
 namespace BahrHidro.Revit
 {
@@ -13,11 +14,12 @@ namespace BahrHidro.Revit
         Unknown,
         WaterTank,
         Shower,
+        FloorDrain,
         Toilet,
         Sink,
         LaundryTub,
         WashingMachine,
-        DrainOrAccessory
+        Accessory
     }
 
     public sealed class SemanticFixtureNode
@@ -29,8 +31,12 @@ namespace BahrHidro.Revit
         public double BaseZ { get; set; }
         public double FeedElevationOffsetMeters { get; set; } = 0.60;
         public double? IntermediateValveOffsetMeters { get; set; }
-        public double DiameterMm { get; set; } = 20.0;
+        public double ColdWaterDiameterMm { get; set; } = 20.0;
         public double RelativeWeight { get; set; } = 0.3;
+        public double SewerDiameterMm { get; set; } = 40.0;
+        public int UhC { get; set; } = 1;
+        public bool NeedsColdWater { get; set; } = true;
+        public bool NeedsSewer { get; set; } = true;
     }
 
     public static class SmartHydraulicRoutingEngine
@@ -40,28 +46,27 @@ namespace BahrHidro.Revit
 
         public static List<Pipe> GenerateOrthogonalLsfNetwork(Document doc, ElementId? preferredPipeTypeId = null)
         {
-            var createdPipes = new List<Pipe>();
-            if (doc == null) return createdPipes;
+            var allCreated = new List<Pipe>();
+            if (doc == null) return allCreated;
 
             var fixtures = DiscoverSemanticFixtures(doc);
-            var consumers = fixtures.Where(f =>
-                f.Role != HydraulicFixtureRole.WaterTank &&
-                f.Role != HydraulicFixtureRole.DrainOrAccessory &&
-                f.Role != HydraulicFixtureRole.Unknown).ToList();
+            var cwConsumers = fixtures.Where(f => f.NeedsColdWater).ToList();
+            var sewerConsumers = fixtures.Where(f => f.NeedsSewer).ToList();
 
-            if (consumers.Count == 0) return createdPipes;
+            if (cwConsumers.Count == 0 && sewerConsumers.Count == 0)
+                return allCreated;
 
+            var referenceGroup = cwConsumers.Count > 0 ? cwConsumers : sewerConsumers;
             var tank = fixtures.FirstOrDefault(f => f.Role == HydraulicFixtureRole.WaterTank);
 
-            // Detecta orientação predominante da parede hidráulica (along X vs along Y)
-            double minX = consumers.Min(c => c.Center.X);
-            double maxX = consumers.Max(c => c.Center.X);
-            double minY = consumers.Min(c => c.Center.Y);
-            double maxY = consumers.Max(c => c.Center.Y);
+            double minX = referenceGroup.Min(c => c.Center.X);
+            double maxX = referenceGroup.Max(c => c.Center.X);
+            double minY = referenceGroup.Min(c => c.Center.Y);
+            double maxY = referenceGroup.Max(c => c.Center.Y);
             bool wallAlongX = (maxX - minX) >= (maxY - minY);
 
-            double floorZ = consumers.Min(c => c.BaseZ);
-            var studPositions = DiscoverLsfStudPositions(doc, consumers, wallAlongX, out double? detectedWallPlane);
+            double floorZ = referenceGroup.Min(c => c.BaseZ);
+            var studPositions = DiscoverLsfStudPositions(doc, referenceGroup, wallAlongX, out double? detectedWallPlane);
 
             double wallPlane;
             if (detectedWallPlane.HasValue)
@@ -71,25 +76,28 @@ namespace BahrHidro.Revit
             else
             {
                 double avgNormal = wallAlongX
-                    ? consumers.Average(c => c.Center.Y)
-                    : consumers.Average(c => c.Center.X);
+                    ? referenceGroup.Average(c => c.Center.Y)
+                    : referenceGroup.Average(c => c.Center.X);
                 wallPlane = avgNormal - (0.12 * FeetPerMeter);
             }
 
-            // Cota do barrilete horizontal dentro da parede LSF (Z_piso + 0.45m, acima da zona crítica de 150mm da guia)
+            // Regra estrutural LSF: barrilete horizontal a 0.45m do piso (>= 150mm acima da guia inferior)
             double trunkZ = floorZ + (0.45 * FeetPerMeter);
+            double minU = referenceGroup.Min(c => wallAlongX ? c.Center.X : c.Center.Y);
+            double maxU = referenceGroup.Max(c => wallAlongX ? c.Center.X : c.Center.Y);
+            double dropU = ChooseFreeStudBayU(
+                studPositions,
+                minU,
+                maxU,
+                tank != null ? (wallAlongX ? tank.Center.X : tank.Center.Y) : (double?)null);
 
-            // Escolhe posição longitudinal (U) da descida da prumada no centro de um vão livre entre montantes LSF
-            double minU = consumers.Min(c => wallAlongX ? c.Center.X : c.Center.Y);
-            double maxU = consumers.Max(c => wallAlongX ? c.Center.X : c.Center.Y);
-            double dropU = ChooseFreeStudBayU(studPositions, minU, maxU, tank != null ? (wallAlongX ? tank.Center.X : tank.Center.Y) : (double?)null);
-
-            ElementId sysTypeId = PipeNetworkHelper.GetOrCreateColdWaterSystemTypeId(doc);
+            ElementId cwSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticColdWater, "Água Fria - Bahr Hidro");
+            ElementId sanSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Bahr Hidro");
             ElementId pipeTypeId = ResolvePipeTypeId(doc, preferredPipeTypeId);
             ElementId levelId = ResolveNearestLevelId(doc, floorZ);
 
-            if (sysTypeId == ElementId.InvalidElementId || pipeTypeId == ElementId.InvalidElementId || levelId == ElementId.InvalidElementId)
-                return createdPipes;
+            if (pipeTypeId == ElementId.InvalidElementId || levelId == ElementId.InvalidElementId)
+                return allCreated;
 
             bool ownTransaction = !doc.IsModifiable;
             Transaction? tx = null;
@@ -98,7 +106,7 @@ namespace BahrHidro.Revit
             {
                 if (ownTransaction)
                 {
-                    tx = new Transaction(doc, "Bahr Hidro - Traçado Inteligente LSF 3D");
+                    tx = new Transaction(doc, "Bahr Hidro - Traçado Inteligente LSF 3D (AF + Esgoto)");
                     tx.Start();
                 }
 
@@ -107,84 +115,108 @@ namespace BahrHidro.Revit
 
                 XYZ MakePt(double u, double n, double z) => wallAlongX ? new XYZ(u, n, z) : new XYZ(n, u, z);
 
-                // 1. Descida da Prumada (Reservatório -> Parede LSF -> Cota do Barrilete)
-                if (tank != null)
+                // =========================================================
+                // 1. REDE DE ÁGUA FRIA PRESSURIZADA (NBR 5626)
+                // =========================================================
+                var cwPipes = new List<Pipe>();
+                if (cwConsumers.Count > 0 && cwSysTypeId != ElementId.InvalidElementId)
                 {
-                    double tankU = wallAlongX ? tank.Center.X : tank.Center.Y;
-                    double tankN = wallAlongX ? tank.Center.Y : tank.Center.X;
-                    double tankZ = Math.Max(tank.BaseZ, floorZ + 2.60 * FeetPerMeter);
+                    double totalWeight = cwConsumers.Sum(c => c.RelativeWeight);
+                    double mainTrunkDn = totalWeight > 3.5 ? 32.0 : 25.0;
 
-                    XYZ pTankOut = MakePt(tankU, tankN, tankZ);
-                    XYZ pAlignU = MakePt(dropU, tankN, tankZ);
-                    XYZ pTopWall = MakePt(dropU, wallPlane, tankZ);
-                    XYZ pTrunkDrop = MakePt(dropU, wallPlane, trunkZ);
-
-                    TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pTankOut, pAlignU, 32.0, "Barrilete Superior - Trecho 1");
-                    TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pAlignU, pTopWall, 32.0, "Barrilete Superior - Trecho 2");
-                    TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pTopWall, pTrunkDrop, 32.0, "Prumada Principal AF");
-                }
-                else
-                {
-                    XYZ pCeiling = MakePt(dropU, wallPlane, floorZ + 2.80 * FeetPerMeter);
-                    XYZ pTrunkDrop = MakePt(dropU, wallPlane, trunkZ);
-                    TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pCeiling, pTrunkDrop, 32.0, "Prumada Principal AF");
-                }
-
-                // 2. Mapeia nós de derivação no barrilete horizontal para garantir Tês exatos
-                var fixtureNodes = consumers.Select(c =>
-                {
-                    double u = wallAlongX ? c.Center.X : c.Center.Y;
-                    if (c.Role == HydraulicFixtureRole.Toilet)
-                        u -= 0.12 * FeetPerMeter; // Ponto AF do vaso deslocado 12cm do eixo da bacia
-                    return new { Fixture = c, U = u };
-                }).OrderBy(x => x.U).ToList();
-
-                var allTrunkUs = new List<double> { dropU };
-                allTrunkUs.AddRange(fixtureNodes.Select(x => x.U));
-                allTrunkUs = DeduplicateSorted(allTrunkUs, 0.03); // ~9mm tolerância de nó
-
-                for (int i = 0; i < allTrunkUs.Count - 1; i++)
-                {
-                    XYZ pA = MakePt(allTrunkUs[i], wallPlane, trunkZ);
-                    XYZ pB = MakePt(allTrunkUs[i + 1], wallPlane, trunkZ);
-                    TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pA, pB, 25.0, $"Ramal Principal Parede #{i + 1}");
-                }
-
-                // 3. Sub-ramais verticais e pontos de saída para cada aparelho
-                foreach (var item in fixtureNodes)
-                {
-                    var f = item.Fixture;
-                    double u = item.U;
-                    double fixN = wallAlongX ? f.Center.Y : f.Center.X;
-                    double dirSign = fixN >= wallPlane ? 1.0 : -1.0;
-                    double stubN = wallPlane + (dirSign * 0.08 * FeetPerMeter);
-
-                    double targetZ = floorZ + (f.FeedElevationOffsetMeters * FeetPerMeter);
-                    XYZ pBaseNode = MakePt(u, wallPlane, trunkZ);
-
-                    if (f.IntermediateValveOffsetMeters.HasValue)
+                    if (tank != null)
                     {
-                        double valveZ = floorZ + (f.IntermediateValveOffsetMeters.Value * FeetPerMeter);
-                        XYZ pValve = MakePt(u, wallPlane, valveZ);
-                        XYZ pTop = MakePt(u, wallPlane, targetZ);
-                        XYZ pOut = MakePt(u, stubN, targetZ);
+                        double tankU = wallAlongX ? tank.Center.X : tank.Center.Y;
+                        double tankN = wallAlongX ? tank.Center.Y : tank.Center.X;
+                        double tankZ = Math.Max(tank.BaseZ, floorZ + 2.60 * FeetPerMeter);
 
-                        TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pBaseNode, pValve, f.DiameterMm, $"Sub-ramal {f.Name} (Ate Registro)");
-                        TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pValve, pTop, f.DiameterMm, $"Sub-ramal {f.Name} (Registro -> Ponto)");
-                        TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pTop, pOut, f.DiameterMm, $"Ponto Consumo - {f.Name}");
+                        XYZ pTankOut = MakePt(tankU, tankN, tankZ);
+                        XYZ pAlignU = MakePt(dropU, tankN, tankZ);
+                        XYZ pTopWall = MakePt(dropU, wallPlane, tankZ);
+                        XYZ pTrunkDrop = MakePt(dropU, wallPlane, trunkZ);
+
+                        TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pTankOut, pAlignU, 32.0, $"AF | Barrilete 1 | Peso={totalWeight:F1}");
+                        TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pAlignU, pTopWall, 32.0, $"AF | Barrilete 2 | Peso={totalWeight:F1}");
+                        TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pTopWall, pTrunkDrop, 32.0, $"AF | Prumada Principal | Peso={totalWeight:F1}");
                     }
                     else
                     {
-                        XYZ pEndWall = MakePt(u, wallPlane, targetZ);
-                        XYZ pOut = MakePt(u, stubN, targetZ);
-
-                        TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pBaseNode, pEndWall, f.DiameterMm, $"Sub-ramal {f.Name}");
-                        TryAddPipe(doc, createdPipes, sysTypeId, pipeTypeId, levelId, pEndWall, pOut, f.DiameterMm, $"Ponto Consumo - {f.Name}");
+                        XYZ pCeiling = MakePt(dropU, wallPlane, floorZ + 2.80 * FeetPerMeter);
+                        XYZ pTrunkDrop = MakePt(dropU, wallPlane, trunkZ);
+                        TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pCeiling, pTrunkDrop, 32.0, $"AF | Prumada Principal | Peso={totalWeight:F1}");
                     }
+
+                    // Registro de Gaveta geral na descida (Z = 1.80m) se família existir
+                    TryPlaceValveOnWall(doc, levelId, MakePt(dropU, wallPlane, floorZ + 1.80 * FeetPerMeter), "gaveta");
+
+                    var fixtureNodes = cwConsumers.Select(c =>
+                    {
+                        double u = wallAlongX ? c.Center.X : c.Center.Y;
+                        if (c.Role == HydraulicFixtureRole.Toilet)
+                            u -= 0.12 * FeetPerMeter;
+                        return new { Fixture = c, U = u };
+                    }).OrderBy(x => x.U).ToList();
+
+                    var allTrunkUs = new List<double> { dropU };
+                    allTrunkUs.AddRange(fixtureNodes.Select(x => x.U));
+                    allTrunkUs = DeduplicateSorted(allTrunkUs, 0.03);
+
+                    for (int i = 0; i < allTrunkUs.Count - 1; i++)
+                    {
+                        XYZ pA = MakePt(allTrunkUs[i], wallPlane, trunkZ);
+                        XYZ pB = MakePt(allTrunkUs[i + 1], wallPlane, trunkZ);
+                        TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pA, pB, mainTrunkDn, $"AF | Ramal Tronco LSF #{i + 1} | Peso={totalWeight:F1}");
+                    }
+
+                    foreach (var item in fixtureNodes)
+                    {
+                        var f = item.Fixture;
+                        double u = item.U;
+                        double fixN = wallAlongX ? f.Center.Y : f.Center.X;
+                        double dirSign = fixN >= wallPlane ? 1.0 : -1.0;
+                        double stubN = wallPlane + (dirSign * 0.08 * FeetPerMeter);
+
+                        double targetZ = floorZ + (f.FeedElevationOffsetMeters * FeetPerMeter);
+                        XYZ pBaseNode = MakePt(u, wallPlane, trunkZ);
+
+                        if (f.IntermediateValveOffsetMeters.HasValue)
+                        {
+                            double valveZ = floorZ + (f.IntermediateValveOffsetMeters.Value * FeetPerMeter);
+                            XYZ pValve = MakePt(u, wallPlane, valveZ);
+                            XYZ pTop = MakePt(u, wallPlane, targetZ);
+                            XYZ pOut = MakePt(u, stubN, targetZ);
+
+                            TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pBaseNode, pValve, f.ColdWaterDiameterMm, $"AF | Sub-ramal {f.Name} | Peso={f.RelativeWeight:F1}");
+                            TryPlaceValveOnWall(doc, levelId, pValve, "pressao");
+                            TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pValve, pTop, f.ColdWaterDiameterMm, $"AF | Sub-ramal Ducha {f.Name} | Peso={f.RelativeWeight:F1}");
+                            TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pTop, pOut, f.ColdWaterDiameterMm, $"AF | Ponto {f.Name} | Peso={f.RelativeWeight:F1}");
+                        }
+                        else
+                        {
+                            XYZ pEndWall = MakePt(u, wallPlane, targetZ);
+                            XYZ pOut = MakePt(u, stubN, targetZ);
+
+                            TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pBaseNode, pEndWall, f.ColdWaterDiameterMm, $"AF | Sub-ramal {f.Name} | Peso={f.RelativeWeight:F1}");
+                            TryAddPipe(doc, cwPipes, cwSysTypeId, pipeTypeId, levelId, pEndWall, pOut, f.ColdWaterDiameterMm, $"AF | Ponto {f.Name} | Peso={f.RelativeWeight:F1}");
+                        }
+                    }
+
+                    doc.Regenerate();
+                    PipeFittingAutoConnector.ConnectPipesWithElbows(doc, cwPipes);
+                    allCreated.AddRange(cwPipes);
                 }
 
-                doc.Regenerate();
-                PipeFittingAutoConnector.ConnectPipesWithElbows(doc, createdPipes);
+                // =========================================================
+                // 2. REDE DE ESGOTO SANITÁRIO POR GRAVIDADE (NBR 8160)
+                // =========================================================
+                var sewerPipes = GenerateSanitarySewerBranch(doc, sanSysTypeId, pipeTypeId, levelId, sewerConsumers, wallAlongX, wallPlane, floorZ, dropU);
+                allCreated.AddRange(sewerPipes);
+
+                // =========================================================
+                // 3. AUDITORIA LSF E QUANTITATIVOS EXECUTIVOS
+                // =========================================================
+                ExecutiveDetailingGenerator.AuditAndMarkLsfPenetrations(doc, allCreated, floorZ);
+                ExecutiveDetailingGenerator.CreateHydraulicSchedules(doc);
 
                 if (ownTransaction && tx != null)
                     tx.Commit();
@@ -196,7 +228,131 @@ namespace BahrHidro.Revit
                 throw;
             }
 
-            return createdPipes;
+            return allCreated;
+        }
+
+        private static List<Pipe> GenerateSanitarySewerBranch(
+            Document doc,
+            ElementId sanSysTypeId,
+            ElementId pipeTypeId,
+            ElementId levelId,
+            List<SemanticFixtureNode> sewerConsumers,
+            bool wallAlongX,
+            double wallPlane,
+            double floorZ,
+            double stackU)
+        {
+            var sewerPipes = new List<Pipe>();
+            if (sanSysTypeId == ElementId.InvalidElementId || sewerConsumers.Count == 0)
+                return sewerPipes;
+
+            XYZ MakePt(double u, double n, double z) => wallAlongX ? new XYZ(u, n, z) : new XYZ(n, u, z);
+
+            double subFloorZ = floorZ - (0.14 * FeetPerMeter);
+            var toilet = sewerConsumers.FirstOrDefault(f => f.Role == HydraulicFixtureRole.Toilet);
+            var secondary = sewerConsumers.Where(f => f.Role != HydraulicFixtureRole.Toilet).ToList();
+
+            // Localiza caixa sifonada (ralo do box ou ponto médio dos aparelhos secundários)
+            var drainNode = secondary.FirstOrDefault(f => f.Role == HydraulicFixtureRole.FloorDrain);
+            double csU = drainNode != null
+                ? (wallAlongX ? drainNode.Center.X : drainNode.Center.Y)
+                : (secondary.Count > 0 ? secondary.Average(f => wallAlongX ? f.Center.X : f.Center.Y) : stackU);
+            double csN = drainNode != null
+                ? (wallAlongX ? drainNode.Center.Y : drainNode.Center.X)
+                : wallPlane + (0.35 * FeetPerMeter);
+
+            XYZ pCaixaSifonada = MakePt(csU, csN, subFloorZ);
+
+            // Ramais secundários (DN40 / DN50) com declividade de 2% até a Caixa Sifonada
+            foreach (var f in secondary)
+            {
+                if (f.Role == HydraulicFixtureRole.FloorDrain) continue;
+
+                double u = wallAlongX ? f.Center.X : f.Center.Y;
+                double fixN = wallAlongX ? f.Center.Y : f.Center.X;
+                double dirSign = fixN >= wallPlane ? 1.0 : -1.0;
+                double stubN = wallPlane + (dirSign * 0.08 * FeetPerMeter);
+
+                double fixtureOutZ = f.Role switch
+                {
+                    HydraulicFixtureRole.Sink => floorZ + (0.50 * FeetPerMeter),
+                    HydraulicFixtureRole.LaundryTub => floorZ + (0.75 * FeetPerMeter),
+                    HydraulicFixtureRole.WashingMachine => floorZ + (0.75 * FeetPerMeter),
+                    _ => floorZ + (0.45 * FeetPerMeter)
+                };
+
+                XYZ pFixOut = MakePt(u, stubN, fixtureOutZ);
+                XYZ pWallEntry = MakePt(u, wallPlane, fixtureOutZ);
+                XYZ pWallDrop = MakePt(u, wallPlane, subFloorZ + 0.03 * FeetPerMeter);
+
+                TryAddPipe(doc, sewerPipes, sanSysTypeId, pipeTypeId, levelId, pFixOut, pWallEntry, f.SewerDiameterMm, $"ESG | Saída {f.Name} | UHC={f.UhC}");
+                TryAddPipe(doc, sewerPipes, sanSysTypeId, pipeTypeId, levelId, pWallEntry, pWallDrop, f.SewerDiameterMm, $"ESG | Descida {f.Name} | UHC={f.UhC}");
+
+                // Trecho horizontal inclinado a 2% até a Caixa Sifonada
+                double horizDist = Math.Sqrt(Math.Pow(csU - u, 2) + Math.Pow(csN - wallPlane, 2));
+                double dropDelta = Math.Max(0.02 * horizDist, 0.015);
+                XYZ pStartSlope = MakePt(u, wallPlane, subFloorZ + dropDelta);
+                TryAddPipe(doc, sewerPipes, sanSysTypeId, pipeTypeId, levelId, pStartSlope, pCaixaSifonada, f.SewerDiameterMm, $"ESG | Ramal i=2% {f.Name} | UHC={f.UhC}");
+            }
+
+            // Coletor principal DN100 (declividade 1%) do Vaso Sanitário até o Tubo de Queda
+            double collectorStartU = toilet != null ? (wallAlongX ? toilet.Center.X : toilet.Center.Y) : csU;
+            double collectorN = toilet != null ? (wallAlongX ? toilet.Center.Y : toilet.Center.X) : csN;
+            double endStackU = Math.Abs(stackU - collectorStartU) > 0.30 ? stackU : collectorStartU + (0.80 * FeetPerMeter);
+
+            XYZ pCollectorStart = MakePt(collectorStartU, collectorN, subFloorZ - 0.02 * FeetPerMeter);
+            double mainDist = Math.Abs(endStackU - collectorStartU);
+            XYZ pCollectorEnd = MakePt(endStackU, collectorN, subFloorZ - 0.02 * FeetPerMeter - (0.01 * mainDist));
+
+            int totalUhc = sewerConsumers.Sum(s => s.UhC);
+            if (toilet != null)
+            {
+                XYZ pToiletFloor = MakePt(collectorStartU, collectorN, floorZ);
+                TryAddPipe(doc, sewerPipes, sanSysTypeId, pipeTypeId, levelId, pToiletFloor, pCollectorStart, 100.0, "ESG | Saída Vaso Sanitário | UHC=6");
+            }
+
+            TryAddPipe(doc, sewerPipes, sanSysTypeId, pipeTypeId, levelId, pCollectorStart, pCollectorEnd, 100.0, $"ESG | Coletor Principal i=1% | UHC={totalUhc}");
+
+            // Saída DN50 da Caixa Sifonada (declividade 2%) ligando no coletor principal DN100
+            if (secondary.Count > 0)
+            {
+                double midU = (collectorStartU + endStackU) * 0.5;
+                XYZ pJoinMain = MakePt(midU, collectorN, subFloorZ - 0.02 * FeetPerMeter - (0.005 * mainDist));
+                TryAddPipe(doc, sewerPipes, sanSysTypeId, pipeTypeId, levelId, pCaixaSifonada, pJoinMain, 50.0, "ESG | Saída Caixa Sifonada i=2%");
+            }
+
+            doc.Regenerate();
+            PipeFittingAutoConnector.ConnectPipesWithElbows(doc, sewerPipes);
+            return sewerPipes;
+        }
+
+        private static void TryPlaceValveOnWall(Document doc, ElementId levelId, XYZ location, string kindHint)
+        {
+            try
+            {
+                var valveSymbol = new FilteredElementCollector(doc)
+                    .OfCategory(BuiltInCategory.OST_PipeAccessory)
+                    .OfClass(typeof(FamilySymbol))
+                    .Cast<FamilySymbol>()
+                    .FirstOrDefault(s =>
+                    {
+                        string n = NormalizeText($"{s.FamilyName} {s.Name}");
+                        return n.Contains(kindHint) || n.Contains("registro") || n.Contains("valve");
+                    });
+
+                if (valveSymbol == null) return;
+                if (!valveSymbol.IsActive)
+                {
+                    valveSymbol.Activate();
+                    doc.Regenerate();
+                }
+
+                if (doc.GetElement(levelId) is Level lvl)
+                    doc.Create.NewFamilyInstance(location, valveSymbol, lvl, StructuralType.NonStructural);
+            }
+            catch
+            {
+            }
         }
 
         private static void TryAddPipe(
@@ -210,7 +366,7 @@ namespace BahrHidro.Revit
             double diameterMm,
             string tagComment)
         {
-            if (p1.DistanceTo(p2) < 0.02) return; // Evita trechos menores que ~6mm
+            if (p1.DistanceTo(p2) < 0.02) return;
             var pipe = Pipe.Create(doc, sysTypeId, pipeTypeId, levelId, p1, p2);
             if (pipe == null) return;
 
@@ -221,6 +377,10 @@ namespace BahrHidro.Revit
             var cmtParam = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
             if (cmtParam != null && !cmtParam.IsReadOnly)
                 cmtParam.Set($"BahrHidro | {tagComment}");
+
+            var markParam = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_MARK);
+            if (markParam != null && !markParam.IsReadOnly)
+                markParam.Set($"DN{(int)diameterMm}");
 
             list.Add(pipe);
         }
@@ -247,8 +407,8 @@ namespace BahrHidro.Revit
                     double baseZ = Math.Min(minPt.Z, maxPt.Z);
 
                     string fingerprint = BuildElementFingerprint(targetDoc, el);
-                    var role = ClassifyFixture(fingerprint, maxPt.Z - minPt.Z);
-                    if (role == HydraulicFixtureRole.Unknown || role == HydraulicFixtureRole.DrainOrAccessory)
+                    var role = ClassifyFixture(fingerprint);
+                    if (role == HydraulicFixtureRole.Unknown || role == HydraulicFixtureRole.Accessory)
                         continue;
 
                     var node = new SemanticFixtureNode
@@ -267,12 +427,7 @@ namespace BahrHidro.Revit
 
             ScanDocument(doc, Transform.Identity);
 
-            var links = new FilteredElementCollector(doc)
-                .OfClass(typeof(RevitLinkInstance))
-                .Cast<RevitLinkInstance>()
-                .ToList();
-
-            foreach (var link in links)
+            foreach (var link in new FilteredElementCollector(doc).OfClass(typeof(RevitLinkInstance)).Cast<RevitLinkInstance>())
             {
                 var linkDoc = link.GetLinkDocument();
                 if (linkDoc != null)
@@ -310,11 +465,13 @@ namespace BahrHidro.Revit
             return NormalizeText(sb.ToString());
         }
 
-        private static HydraulicFixtureRole ClassifyFixture(string text, double heightFeet)
+        private static HydraulicFixtureRole ClassifyFixture(string text)
         {
-            if (text.Contains("ralo") || text.Contains("grelha") || text.Contains("sifao") ||
-                text.Contains("caixa sifonada") || text.Contains("registro de pressao") || text.Contains("registro de gaveta"))
-                return HydraulicFixtureRole.DrainOrAccessory;
+            if (text.Contains("registro de pressao") || text.Contains("registro de gaveta") || text.Contains("torneira"))
+                return HydraulicFixtureRole.Accessory;
+
+            if (text.Contains("ralo") || text.Contains("grelha") || text.Contains("caixa sifonada") || text.Contains("sifao"))
+                return HydraulicFixtureRole.FloorDrain;
 
             if (text.Contains("reservatorio") || text.Contains("caixa d'agua") || text.Contains("caixa dagua") ||
                 text.Contains("cisterna") || text.Contains("tank"))
@@ -343,34 +500,52 @@ namespace BahrHidro.Revit
             switch (node.Role)
             {
                 case HydraulicFixtureRole.WaterTank:
-                    node.DiameterMm = 32.0;
+                    node.ColdWaterDiameterMm = 32.0;
                     node.RelativeWeight = 0.0;
+                    node.NeedsColdWater = false;
+                    node.NeedsSewer = false;
+                    break;
+                case HydraulicFixtureRole.FloorDrain:
+                    node.NeedsColdWater = false;
+                    node.NeedsSewer = true;
+                    node.SewerDiameterMm = 40.0;
+                    node.UhC = 2;
                     break;
                 case HydraulicFixtureRole.Shower:
                     node.FeedElevationOffsetMeters = 2.10;
                     node.IntermediateValveOffsetMeters = 1.10;
-                    node.DiameterMm = 20.0;
+                    node.ColdWaterDiameterMm = 20.0;
                     node.RelativeWeight = 0.4;
+                    node.SewerDiameterMm = 40.0;
+                    node.UhC = 2;
                     break;
                 case HydraulicFixtureRole.Toilet:
                     node.FeedElevationOffsetMeters = 0.20;
-                    node.DiameterMm = 20.0;
+                    node.ColdWaterDiameterMm = 20.0;
                     node.RelativeWeight = 0.3;
+                    node.SewerDiameterMm = 100.0;
+                    node.UhC = 6;
                     break;
                 case HydraulicFixtureRole.Sink:
                     node.FeedElevationOffsetMeters = 0.60;
-                    node.DiameterMm = 20.0;
+                    node.ColdWaterDiameterMm = 20.0;
                     node.RelativeWeight = 0.3;
+                    node.SewerDiameterMm = 40.0;
+                    node.UhC = 1;
                     break;
                 case HydraulicFixtureRole.LaundryTub:
                     node.FeedElevationOffsetMeters = 1.00;
-                    node.DiameterMm = 20.0;
+                    node.ColdWaterDiameterMm = 20.0;
                     node.RelativeWeight = 0.7;
+                    node.SewerDiameterMm = 40.0;
+                    node.UhC = 3;
                     break;
                 case HydraulicFixtureRole.WashingMachine:
                     node.FeedElevationOffsetMeters = 0.90;
-                    node.DiameterMm = 20.0;
+                    node.ColdWaterDiameterMm = 20.0;
                     node.RelativeWeight = 1.0;
+                    node.SewerDiameterMm = 50.0;
+                    node.UhC = 3;
                     break;
             }
         }
@@ -415,7 +590,6 @@ namespace BahrHidro.Revit
                         double dy = Math.Abs(pMax.Y - pMin.Y);
                         double dz = Math.Abs(pMax.Z - pMin.Z);
 
-                        // Montante vertical LSF: altura > 1.5m e seção < 0.30m
                         if (dz < 1.5 * FeetPerMeter || dx > 0.30 * FeetPerMeter || dy > 0.30 * FeetPerMeter)
                             continue;
 
@@ -450,6 +624,31 @@ namespace BahrHidro.Revit
                     .ToList();
 
                 return DeduplicateSorted(wallStudUs, 0.15);
+            }
+
+            // Fallback: detecta parede arquitetônica nativa próxima aos aparelhos
+            var walls = new FilteredElementCollector(doc)
+                .WhereElementIsNotElementType()
+                .OfCategory(BuiltInCategory.OST_Walls)
+                .Cast<Wall>()
+                .ToList();
+
+            double bestDist = 1.0 * FeetPerMeter;
+            foreach (var w in walls)
+            {
+                if (w.Location is not LocationCurve lc || lc.Curve is not Line line) continue;
+                XYZ p0 = line.GetEndPoint(0);
+                XYZ p1 = line.GetEndPoint(1);
+                bool wAlongX = Math.Abs(p1.X - p0.X) >= Math.Abs(p1.Y - p0.Y);
+                if (wAlongX != wallAlongX) continue;
+
+                double wPlane = wallAlongX ? (p0.Y + p1.Y) * 0.5 : (p0.X + p1.X) * 0.5;
+                double d = Math.Abs(wPlane - avgFixtureN);
+                if (d < bestDist)
+                {
+                    bestDist = d;
+                    detectedWallPlane = wPlane;
+                }
             }
 
             return new List<double>();
