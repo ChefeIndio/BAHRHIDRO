@@ -1554,5 +1554,41 @@ namespace BahrHidro.UI
             }
         }
 
+
+        private void AuditarFuracaoLsf_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.AuditLsfStudPunching();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.HoleDetails);
+                MessageBox.Show(
+                    res.Summary,
+                    "Bahr Hidro - Validação de Furação em Montantes LSF",
+                    MessageBoxButton.OK,
+                    res.WarningHoles > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao auditar furação LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void CotasFabricacaoElevacoes_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.ApplyFabricationCoordinatesToElevations();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                MessageBox.Show(res.Summary, "Bahr Hidro - Cotas de Fabricação X e H (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao aplicar cotas X e H:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
 }
 }

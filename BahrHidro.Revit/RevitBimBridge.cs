@@ -335,6 +335,16 @@ namespace BahrHidro.Revit
             return RevitVisualAuditManager.ApplyOverrides(_uidoc, result, new Dictionary<Guid, ElementId>());
         }
 
+        public LsfPunchingAuditResult AuditLsfStudPunching()
+        {
+            return RevitLsfFabricationManager.RunLsfPunchingAudit(_doc);
+        }
+
+        public (int ViewsAnnotated, int CalloutsPlaced, string Summary) ApplyFabricationCoordinatesToElevations()
+        {
+            return RevitLsfFabricationManager.ApplyFabricationCoordinatesToElevations(_uidoc);
+        }
+
         public (int ClearedCount, string Summary) ClearHydraulicVisualAudit()
         {
             return RevitVisualAuditManager.ClearOverrides(_uidoc);

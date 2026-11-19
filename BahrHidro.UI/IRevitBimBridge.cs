@@ -88,6 +88,13 @@ namespace BahrHidro.UI
         int LowPressureCount,
         string Summary);
 
+    public sealed record LsfPunchingAuditResult(
+        int TotalHoles,
+        int ApprovedHoles,
+        int WarningHoles,
+        string Summary,
+        List<string> HoleDetails);
+
     public interface IRevitBimBridge
     {
         RevitNetworkImportData ImportNetworkAutomaticallyFromRevit();
@@ -114,5 +121,7 @@ namespace BahrHidro.UI
         (int DeletedCount, string Summary) ClearGeneratedRouting(string disciplineMode);
         VisualAuditSummaryResult ApplyHydraulicVisualAudit(NetworkCalculationResult result);
         (int ClearedCount, string Summary) ClearHydraulicVisualAudit();
+        LsfPunchingAuditResult AuditLsfStudPunching();
+        (int ViewsAnnotated, int CalloutsPlaced, string Summary) ApplyFabricationCoordinatesToElevations();
     }
 }

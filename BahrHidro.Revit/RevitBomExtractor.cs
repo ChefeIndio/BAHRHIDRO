@@ -172,12 +172,15 @@ namespace BahrHidro.Revit
                     "un"));
             }
 
+            var lsfHoles = RevitLsfFabricationManager.AnalyzeLsfPunchingHoles(doc);
+
             return new BimMaterialTakeoff(
                 string.IsNullOrWhiteSpace(projectName) ? "Projeto BIM Revit" : projectName,
                 safeWaste,
                 pipeItems,
                 fittingItems,
-                kitItems);
+                kitItems,
+                lsfHoles);
         }
 
         private static string ReadConnectorSizes(FamilyInstance fi)

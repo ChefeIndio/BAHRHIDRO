@@ -267,6 +267,73 @@ namespace BahrHidro.Core.Reporting
                     wsKits.Columns().AdjustToContents();
                 }
 
+                    // 4. Aba de Furação Controlada em Montantes LSF (Fábrica)
+                    var wsFuros = workbook.Worksheets.Add("Furacao Montantes (LSF)");
+                    wsFuros.Cell(1, 1).Value = "CONTROLE DE FURAÇÃO EM MONTANTES STEEL FRAME — PRÉ-MONTAGEM INDUSTRIALIZADA";
+                    wsFuros.Cell(1, 1).Style.Font.Bold = true;
+                    wsFuros.Cell(1, 1).Style.Font.FontSize = 14;
+
+                    string[] headersFuros =
+                    {
+                        "Furo ID",
+                        "Parede / Kit",
+                        "Perfil Montante LSF",
+                        "Sistema",
+                        "Tubo DN (mm)",
+                        "Furo c/ Bucha (mm)",
+                        "Alma Perfil (mm)",
+                        "Ocupação (%)",
+                        "Cota X Canto (m)",
+                        "Altura H Piso (m)",
+                        "Status Estrutural"
+                    };
+
+                    for (int c = 0; c < headersFuros.Length; c++)
+                    {
+                        var cell = wsFuros.Cell(3, c + 1);
+                        cell.Value = headersFuros[c];
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#312E81");
+                        cell.Style.Font.FontColor = XLColor.White;
+                    }
+
+                    int rowF = 4;
+                    if (takeoff.LsfPunchingHoles.Count == 0)
+                    {
+                        wsFuros.Cell(rowF, 1).Value = "Nenhuma perfuração horizontal detectada nos montantes metálicos (traçado livre).";
+                        wsFuros.Cell(rowF, 1).Style.Font.Italic = true;
+                    }
+                    else
+                    {
+                        foreach (var h in takeoff.LsfPunchingHoles)
+                        {
+                            wsFuros.Cell(rowF, 1).Value = h.HoleId;
+                            wsFuros.Cell(rowF, 2).Value = h.WallOrKitName;
+                            wsFuros.Cell(rowF, 3).Value = h.StudName;
+                            wsFuros.Cell(rowF, 4).Value = h.SystemName;
+                            wsFuros.Cell(rowF, 5).Value = h.PipeDiameterMm;
+                            wsFuros.Cell(rowF, 6).Value = h.RequiredHoleMm;
+                            wsFuros.Cell(rowF, 7).Value = h.StudWebWidthMm;
+                            wsFuros.Cell(rowF, 8).Value = h.OccupancyPercent;
+                            wsFuros.Cell(rowF, 9).Value = h.PositionXFromWallStartMeters;
+                            wsFuros.Cell(rowF, 10).Value = h.HeightHFromFloorMeters;
+                            wsFuros.Cell(rowF, 11).Value = h.Status;
+
+                            bool ok = h.Status.StartsWith("APROVADO", StringComparison.OrdinalIgnoreCase);
+                            wsFuros.Cell(rowF, 11).Style.Font.Bold = true;
+                            wsFuros.Cell(rowF, 11).Style.Fill.BackgroundColor = ok
+                                ? XLColor.FromHtml("#DCFCE7")
+                                : XLColor.FromHtml("#FEE2E2");
+                            wsFuros.Cell(rowF, 11).Style.Font.FontColor = ok
+                                ? XLColor.FromHtml("#166534")
+                                : XLColor.FromHtml("#991B1B");
+
+                            rowF++;
+                        }
+                    }
+
+                    wsFuros.Columns().AdjustToContents();
+
                 workbook.SaveAs(filePath);
             }
         }
