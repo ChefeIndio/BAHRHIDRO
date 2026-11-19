@@ -147,8 +147,23 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Background="#0284C7" CornerRadius="6" Padding="8,4" Margin="0,0,10,0">
-                        <TextBlock Text="BH" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12"/>
+                    <Border CornerRadius="8" Width="40" Height="38" Margin="0,0,10,0" VerticalAlignment="Center">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#0284C7" Offset="0"/>
+                                <GradientStop Color="#0369A1" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="BH" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12.5" HorizontalAlignment="Center" Margin="0,0,0,1"/>
+                            <Canvas Width="24" Height="11" HorizontalAlignment="Center">
+                                <Line X1="1" Y1="6" X2="6.5" Y2="6" Stroke="#BAE6FD" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Line X1="1" Y1="4" X2="1" Y2="8" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Line X1="17.5" Y1="6" X2="23" Y2="6" Stroke="#BAE6FD" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Line X1="23" Y1="4" X2="23" Y2="8" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Path Data="M 12,0.5 C 12,0.5 15.5,4.6 15.5,6.8 A 3.5,3.5 0 1 1 8.5,6.8 C 8.5,4.6 12,0.5 12,0.5 Z" Fill="#E0F2FE"/>
+                            </Canvas>
+                        </StackPanel>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="BAHR HIDRO BIM" FontWeight="Bold" FontSize="13" Foreground="#0F172A"/>
