@@ -1,0 +1,296 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Plumbing;
+using Autodesk.Revit.UI;
+
+namespace BahrHidro.Revit
+{
+    public static class RevitDocumentationGenerator
+    {
+        public static (int TaggedCount, string Message) TagPipesInActiveView(UIDocument uidoc)
+        {
+            Document doc = uidoc.Document;
+            View activeView = doc.ActiveView;
+
+            if (activeView == null)
+                throw new InvalidOperationException("Nenhuma vista ativa encontrada no Revit.");
+
+            if (activeView is ViewSchedule || activeView is ViewSheet)
+                throw new InvalidOperationException("Abra uma Planta Baixa, Corte ou Vista 3D antes de identificar (taggear) os tubos.");
+
+            var pipesInView = new FilteredElementCollector(doc, activeView.Id)
+                .OfClass(typeof(Pipe))
+                .WhereElementIsNotElementType()
+                .Cast<Pipe>()
+                .ToList();
+
+            if (pipesInView.Count == 0)
+                return (0, "Nenhuma tubulação visível foi encontrada na vista ativa.");
+
+            // Coleta IDs de tubos que já possuem tag nesta vista para evitar duplicidade
+            var alreadyTaggedPipeIds = new HashSet<long>();
+            var existingTags = new FilteredElementCollector(doc, activeView.Id)
+                .OfClass(typeof(IndependentTag))
+                .Cast<IndependentTag>()
+                .ToList();
+
+            foreach (var tag in existingTags)
+            {
+                try
+                {
+                    foreach (var elemId in tag.GetTaggedLocalElementIds())
+                        alreadyTaggedPipeIds.Add(elemId.Value);
+                }
+                catch { }
+            }
+
+            int taggedCount = 0;
+
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Identificar Tubulações na Vista"))
+            {
+                tx.Start();
+
+                if (activeView is View3D v3d && !v3d.IsLocked)
+                {
+                    if (v3d.CanSaveOrientation())
+                        v3d.SaveOrientationAndLock();
+                    else
+                        throw new InvalidOperationException("Salve ou renomeie a vista 3D '{3D}' padrão antes de inserir tags.");
+                }
+
+                foreach (Pipe pipe in pipesInView)
+                {
+                    if (alreadyTaggedPipeIds.Contains(pipe.Id.Value))
+                        continue;
+
+                    if (pipe.Location is not LocationCurve lc)
+                        continue;
+
+                    // Ignora trechos muito curtos (< 12 cm) para não poluir o desenho
+                    if (lc.Curve.Length < UnitUtils.ConvertToInternalUnits(0.12, UnitTypeId.Meters))
+                        continue;
+
+                    XYZ midPt = lc.Curve.Evaluate(0.5, normalized: true);
+                    XYZ tagPos = midPt + new XYZ(
+                        UnitUtils.ConvertToInternalUnits(0.12, UnitTypeId.Meters),
+                        UnitUtils.ConvertToInternalUnits(0.12, UnitTypeId.Meters),
+                        UnitUtils.ConvertToInternalUnits(0.08, UnitTypeId.Meters));
+
+                    try
+                    {
+                        IndependentTag.Create(
+                            doc,
+                            activeView.Id,
+                            new Reference(pipe),
+                            addLeader: true,
+                            TagMode.TM_ADDBY_CATEGORY,
+                            TagOrientation.Horizontal,
+                            tagPos);
+
+                        taggedCount++;
+                    }
+                    catch { }
+                }
+
+                tx.Commit();
+            }
+
+            string msg = taggedCount > 0
+                ? $"{taggedCount} tubulação(ões) identificada(s) com sucesso na vista '{activeView.Name}'."
+                : "Todas as tubulações elegíveis desta vista já estão identificadas (ou não há família de Tag de Tubo carregada no template).";
+
+            return (taggedCount, msg);
+        }
+
+        public static (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews(UIDocument uidoc)
+        {
+            Document doc = uidoc.Document;
+
+            var allPipes = new FilteredElementCollector(doc)
+                .OfClass(typeof(Pipe))
+                .WhereElementIsNotElementType()
+                .Cast<Pipe>()
+                .ToList();
+
+            if (allPipes.Count == 0)
+                throw new InvalidOperationException("Nenhuma tubulação encontrada no modelo 3D. Gere o traçado antes de criar as vistas isométricas.");
+
+            var viewFamilyType = new FilteredElementCollector(doc)
+                .OfClass(typeof(ViewFamilyType))
+                .Cast<ViewFamilyType>()
+                .FirstOrDefault(vft => vft.ViewFamily == ViewFamily.ThreeDimensional);
+
+            if (viewFamilyType == null)
+                throw new InvalidOperationException("Tipo de Vista 3D não encontrado no template do Revit.");
+
+            // Agrupa tubos por núcleos hidráulicos (ambientes molhados com raio de agrupamento de 2,40 m)
+            double clusterRadiusFeet = UnitUtils.ConvertToInternalUnits(2.40, UnitTypeId.Meters);
+            var clusters = ClusterPipesByProximity(allPipes, clusterRadiusFeet);
+
+            var existingViewNames = new HashSet<string>(
+                new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>().Select(v => v.Name),
+                StringComparer.OrdinalIgnoreCase);
+
+            int viewsCreated = 0;
+            int totalTagsPlaced = 0;
+            View3D? firstCreatedView = null;
+
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Vistas Isométricas 3D"))
+            {
+                tx.Start();
+
+                for (int i = 0; i < clusters.Count; i++)
+                {
+                    var clusterPipes = clusters[i];
+                    if (clusterPipes.Count == 0) continue;
+
+                    // Calcula BoundingBox envolvente do núcleo hidráulico
+                    double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
+                    double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
+
+                    foreach (var pipe in clusterPipes)
+                    {
+                        BoundingBoxXYZ? bb = pipe.get_BoundingBox(null);
+                        if (bb == null) continue;
+                        if (bb.Min.X < minX) minX = bb.Min.X;
+                        if (bb.Min.Y < minY) minY = bb.Min.Y;
+                        if (bb.Min.Z < minZ) minZ = bb.Min.Z;
+                        if (bb.Max.X > maxX) maxX = bb.Max.X;
+                        if (bb.Max.Y > maxY) maxY = bb.Max.Y;
+                        if (bb.Max.Z > maxZ) maxZ = bb.Max.Z;
+                    }
+
+                    if (minX > maxX) continue;
+
+                    double marginFeet = UnitUtils.ConvertToInternalUnits(0.55, UnitTypeId.Meters);
+                    var sectionBox = new BoundingBoxXYZ
+                    {
+                        Min = new XYZ(minX - marginFeet, minY - marginFeet, minZ - marginFeet),
+                        Max = new XYZ(maxX + marginFeet, maxY + marginFeet, maxZ + marginFeet)
+                    };
+
+                    View3D isoView = View3D.CreateIsometric(doc, viewFamilyType.Id);
+
+                    string baseName = $"BahrHidro - Isométrico {i + 1:D2}";
+                    string finalName = baseName;
+                    int suffix = 1;
+                    while (existingViewNames.Contains(finalName))
+                    {
+                        finalName = $"{baseName} ({suffix++})";
+                    }
+                    existingViewNames.Add(finalName);
+
+                    try
+                    {
+                        isoView.Name = finalName;
+                        isoView.Scale = 25; // Escala 1:25 padrão detalhamento isométrico
+                        isoView.DetailLevel = ViewDetailLevel.Fine;
+                        isoView.SetSectionBox(sectionBox);
+                        isoView.IsSectionBoxActive = true;
+
+                        if (isoView.CanSaveOrientation())
+                            isoView.SaveOrientationAndLock();
+                    }
+                    catch { }
+
+                    viewsCreated++;
+                    firstCreatedView ??= isoView;
+
+                    // Insere Tags automáticas nos tubos dentro da vista isométrica travada
+                    if (isoView.IsLocked)
+                    {
+                        foreach (var pipe in clusterPipes)
+                        {
+                            if (pipe.Location is not LocationCurve lc) continue;
+                            if (lc.Curve.Length < UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters)) continue;
+
+                            XYZ midPt = lc.Curve.Evaluate(0.5, normalized: true);
+                            XYZ tagPos = midPt + new XYZ(
+                                UnitUtils.ConvertToInternalUnits(0.14, UnitTypeId.Meters),
+                                UnitUtils.ConvertToInternalUnits(0.14, UnitTypeId.Meters),
+                                UnitUtils.ConvertToInternalUnits(0.10, UnitTypeId.Meters));
+
+                            try
+                            {
+                                IndependentTag.Create(
+                                    doc,
+                                    isoView.Id,
+                                    new Reference(pipe),
+                                    addLeader: true,
+                                    TagMode.TM_ADDBY_CATEGORY,
+                                    TagOrientation.Horizontal,
+                                    tagPos);
+
+                                totalTagsPlaced++;
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                tx.Commit();
+            }
+
+            if (firstCreatedView != null)
+            {
+                try { uidoc.ActiveView = firstCreatedView; } catch { }
+            }
+
+            string summary = $"Documentação 3D Concluída: {viewsCreated} vista(s) isométrica(s) recortada(s) (1:25) criada(s) com {totalTagsPlaced} identificador(es) aplicado(s).";
+            return (viewsCreated, totalTagsPlaced, summary);
+        }
+
+        private static List<List<Pipe>> ClusterPipesByProximity(List<Pipe> pipes, double maxDistanceFeet)
+        {
+            var centers = new Dictionary<long, XYZ>();
+            foreach (var p in pipes)
+            {
+                if (p.Location is LocationCurve lc)
+                    centers[p.Id.Value] = lc.Curve.Evaluate(0.5, true);
+            }
+
+            var visited = new HashSet<long>();
+            var clusters = new List<List<Pipe>>();
+
+            foreach (var seed in pipes)
+            {
+                if (visited.Contains(seed.Id.Value) || !centers.ContainsKey(seed.Id.Value))
+                    continue;
+
+                var cluster = new List<Pipe>();
+                var queue = new Queue<Pipe>();
+                queue.Enqueue(seed);
+                visited.Add(seed.Id.Value);
+
+                while (queue.Count > 0)
+                {
+                    var curr = queue.Dequeue();
+                    cluster.Add(curr);
+                    XYZ c1 = centers[curr.Id.Value];
+
+                    foreach (var other in pipes)
+                    {
+                        if (visited.Contains(other.Id.Value) || !centers.ContainsKey(other.Id.Value))
+                            continue;
+
+                        XYZ c2 = centers[other.Id.Value];
+                        double distXY = Math.Sqrt(Math.Pow(c1.X - c2.X, 2) + Math.Pow(c1.Y - c2.Y, 2));
+                        double distZ = Math.Abs(c1.Z - c2.Z);
+
+                        if (distXY <= maxDistanceFeet && distZ <= UnitUtils.ConvertToInternalUnits(3.5, UnitTypeId.Meters))
+                        {
+                            visited.Add(other.Id.Value);
+                            queue.Enqueue(other);
+                        }
+                    }
+                }
+
+                clusters.Add(cluster);
+            }
+
+            return clusters;
+        }
+    }
+}

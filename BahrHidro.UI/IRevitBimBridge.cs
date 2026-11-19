@@ -88,5 +88,7 @@ namespace BahrHidro.UI
         DetectedRoutingPoint? PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId);
         RevitAutoRoutingResult ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request);
         BimMaterialTakeoff ExtractBomFromRevit(string projectName, double wasteMarginPercent);
+        (int TaggedCount, string Message) TagPipesInActiveView();
+        (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews();
     }
 }

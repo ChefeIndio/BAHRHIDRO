@@ -195,7 +195,9 @@
                                         <TextBlock Text="Sistema a Traçar no 3D" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                         <ComboBox x:Name="TracadoDisciplinaComboBox" SelectedIndex="0" Margin="0,0,0,10" Padding="6" SelectionChanged="TracadoDisciplinaComboBox_SelectionChanged">
                                             <ComboBoxItem Content="Água Fria (ABNT NBR 5626 — Alimentação + Ramais)" Tag="ColdWater"/>
+                                            <ComboBoxItem Content="Água Quente (ABNT NBR 7198 — Afastado 15 cm da Água Fria)" Tag="HotWater"/>
                                             <ComboBoxItem Content="Esgoto Sanitário (ABNT NBR 8160 — Com Declividade 1% e 2%)" Tag="SanitarySewer"/>
+                                            <ComboBoxItem Content="Ventilação Sanitária (ABNT NBR 8160 — Colunas DN 50 mm)" Tag="Ventilation"/>
                                         </ComboBox>
 
                                         <TextBlock Text="Direção do Traçado Principal" FontWeight="SemiBold" Margin="0,0,0,4"/>
@@ -317,7 +319,19 @@
                                         </StackPanel>
 
                                         <TextBlock x:Name="TracadoResumoGeracaoText" Text="Resultado: Aguardando geração do traçado." FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
-                                        <TextBox x:Name="TracadoLogTextBox" Height="115" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Background="#F8FAFC" FontSize="11"/>
+                                        <TextBox x:Name="TracadoLogTextBox" Height="95" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Background="#F8FAFC" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Card 4: Documentação Automática BIM (Isométricos 3D e Tags) -->
+                                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="14">
+                                    <StackPanel>
+                                        <TextBlock Text="4. Documentação Automática BIM (Esquemas Isométricos e Tags)" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Gera vistas isométricas 3D recortadas (1:25) por ambiente molhado e aplica identificadores (Tags) nos tubos." FontSize="11" Foreground="#1E40AF" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="Gerar Isométricos 3D (c/ Tags)" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,0" Click="GerarIsometricos3D_Click"/>
+                                            <Button Content="Taggear Tubos na Vista Atual" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Click="TaggearTubosVistaAtual_Click"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

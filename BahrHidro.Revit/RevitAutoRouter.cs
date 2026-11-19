@@ -168,10 +168,15 @@ namespace BahrHidro.Revit
 
         public static RevitAutoRoutingResult ExecuteRouting(Document doc, RevitAutoRoutingRequest request)
         {
+            if (string.Equals(request.DisciplineMode, "HotWater", StringComparison.OrdinalIgnoreCase))
+                return ExecuteHotWaterRouting(doc, request);
+
             if (string.Equals(request.DisciplineMode, "SanitarySewer", StringComparison.OrdinalIgnoreCase))
-            {
                 return ExecuteSanitarySewerRouting(doc, request);
-            }
+
+            if (string.Equals(request.DisciplineMode, "Ventilation", StringComparison.OrdinalIgnoreCase))
+                return ExecuteVentilationRouting(doc, request);
+
             return ExecuteColdWaterRouting(doc, request);
         }
 
@@ -593,6 +598,161 @@ namespace BahrHidro.Revit
             string summary = $"Esgoto 3D com Declividade (NBR 8160): {activePoints.Count} aparelho(s), {pipesCreated} tubo(s) ({totalLengthMeters:F2} m), {fittingsCreated} conexão(ões) e {steelClashesAvoided} desvio(s) Steel Frame.";
 
             return new RevitAutoRoutingResult(activePoints.Count, pipesCreated, fittingsCreated, steelClashesAvoided, totalLengthMeters, summary, logs);
+        }
+
+
+        // =====================================================================
+        // 3. ROTEAMENTO DE ÁGUA QUENTE 3D (ABNT NBR 7198 — AFASTADO DA ÁGUA FRIA)
+        // =====================================================================
+        private static RevitAutoRoutingResult ExecuteHotWaterRouting(Document doc, RevitAutoRoutingRequest request)
+        {
+            var logs = new List<string>();
+            var hotCategories = new[] { "Chuveiro", "Lavatório", "Pia de Cozinha", "Banheira", "Bidê" };
+
+            var hotPoints = request.Points
+                .Where(p => p.IsSelected && hotCategories.Any(c => p.FixtureCategory.Contains(c, StringComparison.OrdinalIgnoreCase)))
+                .Select(p => new DetectedRoutingPoint
+                {
+                    IsSelected = true,
+                    Name = $"{p.Name} (AQ)",
+                    FixtureCategory = p.FixtureCategory,
+                    SourceType = p.SourceType,
+                    // Afasta 15 cm lateralmente em relação ao ponto de Água Fria para evitar colisão paralela
+                    X = Math.Round(p.X + (Math.Abs(p.OutwardDirY) >= Math.Abs(p.OutwardDirX) ? 0.15 : 0.0), 3),
+                    Y = Math.Round(p.Y + (Math.Abs(p.OutwardDirY) >= Math.Abs(p.OutwardDirX) ? 0.0 : 0.15), 3),
+                    BaseZ = p.BaseZ,
+                    PointHeightMeters = p.PointHeightMeters,
+                    OutwardDirX = p.OutwardDirX,
+                    OutwardDirY = p.OutwardDirY,
+                    Weight = p.Weight,
+                    HostElementId = null
+                })
+                .ToList();
+
+            if (hotPoints.Count == 0)
+                throw new InvalidOperationException("Nenhum aparelho consumidor de Água Quente (Chuveiro, Lavatório, Pia ou Banheira) foi encontrado na lista.");
+
+            logs.Add($"Filtro NBR 7198: {hotPoints.Count} ponto(s) de Água Quente selecionado(s) com afastamento lateral de 15 cm da rede fria.");
+
+            var hwRequest = request with
+            {
+                DisciplineMode = "ColdWater",
+                Points = hotPoints
+            };
+
+            var baseRes = ExecuteColdWaterRouting(doc, hwRequest);
+            logs.AddRange(baseRes.Logs);
+
+            string planoLabel = request.RouteFromAbove ? "Por Cima (Entreforro)" : "Por Baixo (Piso)";
+            string summary = $"Água Quente 3D ({planoLabel}): {hotPoints.Count} ponto(s), {baseRes.PipesCreated} tubo(s) ({baseRes.TotalLengthMeters:F2} m), {baseRes.FittingsCreated} conexão(ões) e {baseRes.SteelClashesAvoided} desvio(s) Steel Frame.";
+
+            return new RevitAutoRoutingResult(
+                hotPoints.Count,
+                baseRes.PipesCreated,
+                baseRes.FittingsCreated,
+                baseRes.SteelClashesAvoided,
+                baseRes.TotalLengthMeters,
+                summary,
+                logs);
+        }
+
+        // =====================================================================
+        // 4. ROTEAMENTO DE VENTILAÇÃO SANITÁRIA 3D (ABNT NBR 8160 — DN 50 MM)
+        // =====================================================================
+        private static RevitAutoRoutingResult ExecuteVentilationRouting(Document doc, RevitAutoRoutingRequest request)
+        {
+            var logs = new List<string>();
+            var activePoints = request.Points.Where(p => p.IsSelected).ToList();
+
+            if (activePoints.Count == 0)
+                throw new InvalidOperationException("Nenhum ponto selecionado. Detecte os aparelhos (IFC/DWG) antes de gerar a ventilação.");
+
+            var pipeTypeId = new ElementId(request.PipeTypeId);
+            var systemTypeId = new ElementId(request.PipingSystemTypeId);
+
+            if (doc.GetElement(pipeTypeId) is not PipeType)
+                throw new InvalidOperationException("Selecione um Tipo de Tubo válido do template.");
+            if (doc.GetElement(systemTypeId) is not PipingSystemType)
+                throw new InvalidOperationException("Selecione um Sistema de Ventilação/Sanitário válido do template.");
+
+            Level? baseLevel = request.LevelId.HasValue
+                ? doc.GetElement(new ElementId(request.LevelId.Value)) as Level
+                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
+
+            if (baseLevel == null)
+                throw new InvalidOperationException("Nenhum Nível (Level) encontrado no projeto Revit.");
+
+            var steelObstacles = request.AvoidSteelFrameClashes
+                ? CollectSteelFrameBoundingBoxes(doc)
+                : new List<WorldBox>();
+
+            // Agrupa pontos por núcleo sanitário (raio de 2,5 m) para criar 1 coluna/ramal de ventilação por ambiente
+            var ventClusters = new List<DetectedRoutingPoint>();
+            foreach (var pt in activePoints)
+            {
+                bool alreadyCovered = ventClusters.Any(v =>
+                    Math.Sqrt(Math.Pow(v.X - pt.X, 2) + Math.Pow(v.Y - pt.Y, 2)) < 2.50);
+                if (!alreadyCovered)
+                    ventClusters.Add(pt);
+            }
+
+            double dia50Feet = UnitUtils.ConvertToInternalUnits(50.0, UnitTypeId.Millimeters);
+            double topVentZ = baseLevel.Elevation + UnitUtils.ConvertToInternalUnits(Math.Max(2.80, request.TrunkOffsetMeters), UnitTypeId.Meters);
+            double bottomVentZ = baseLevel.Elevation - UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters);
+
+            int pipesCreated = 0;
+            int fittingsCreated = 0;
+            int steelClashesAvoided = 0;
+            double totalLengthFeet = 0;
+
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Ventilação Sanitária 3D (NBR 8160)"))
+            {
+                tx.Start();
+
+                for (int i = 0; i < ventClusters.Count; i++)
+                {
+                    var anchor = ventClusters[i];
+                    double xFeet = UnitUtils.ConvertToInternalUnits(anchor.X, UnitTypeId.Meters);
+                    double yFeet = UnitUtils.ConvertToInternalUnits(anchor.Y, UnitTypeId.Meters);
+
+                    // Afasta 20 cm do aparelho para subir dentro da parede
+                    double safeX = xFeet + UnitUtils.ConvertToInternalUnits(0.20, UnitTypeId.Meters);
+                    double safeY = yFeet;
+
+                    if (request.AvoidSteelFrameClashes && steelObstacles.Count > 0)
+                    {
+                        double clearance = (dia50Feet / 2.0) + UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters);
+                        bool shifted = FindClashFreeVerticalDrop(
+                            safeX, safeY, bottomVentZ, topVentZ, clearance, preferShiftAlongX: true, steelObstacles,
+                            out double outX, out double outY);
+
+                        if (shifted)
+                        {
+                            safeX = outX;
+                            safeY = outY;
+                            steelClashesAvoided++;
+                            logs.Add($"[Steel Frame] Coluna de Ventilação {i + 1:D2} deslocada para vão livre entre montantes.");
+                        }
+                    }
+
+                    XYZ pBottom = new XYZ(safeX, safeY, bottomVentZ);
+                    XYZ pTop = new XYZ(safeX, safeY, topVentZ);
+
+                    Pipe ventPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pBottom, pTop);
+                    SetPipeDiameter(ventPipe, dia50Feet);
+                    pipesCreated++;
+                    totalLengthFeet += GetPipeLengthFeet(ventPipe);
+
+                    logs.Add($"Coluna de Ventilação {i + 1:D2} (DN 50 mm): subindo de -0,15 m até +{UnitUtils.ConvertFromInternalUnits(topVentZ - baseLevel.Elevation, UnitTypeId.Meters):F2} m.");
+                }
+
+                tx.Commit();
+            }
+
+            double totalLengthMeters = Math.Round(UnitUtils.ConvertFromInternalUnits(totalLengthFeet, UnitTypeId.Meters), 2);
+            string summary = $"Ventilação 3D (NBR 8160): {ventClusters.Count} coluna(s) DN 50 mm criada(s) ({totalLengthMeters:F2} m) e {steelClashesAvoided} desvio(s) Steel Frame.";
+
+            return new RevitAutoRoutingResult(ventClusters.Count, pipesCreated, fittingsCreated, steelClashesAvoided, totalLengthMeters, summary, logs);
         }
 
         // =====================================================================

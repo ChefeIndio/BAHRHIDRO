@@ -315,6 +315,16 @@ namespace BahrHidro.Revit
             return RevitAutoRouter.PickManualPoint(_uidoc, ownerWindow, fixtureCategory, levelId);
         }
 
+        public (int TaggedCount, string Message) TagPipesInActiveView()
+        {
+            return RevitDocumentationGenerator.TagPipesInActiveView(_uidoc);
+        }
+
+        public (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews()
+        {
+            return RevitDocumentationGenerator.GenerateWetZoneIsometricViews(_uidoc);
+        }
+
         public BimMaterialTakeoff ExtractBomFromRevit(string projectName, double wasteMarginPercent)
         {
             return RevitBomExtractor.ExtractFromDocument(_doc, projectName, wasteMarginPercent);

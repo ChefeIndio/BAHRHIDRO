@@ -1166,7 +1166,32 @@ namespace BahrHidro.UI
             if (TracadoPlanoComboBox == null || TracadoOffsetTextBox == null) return;
             string disc = (TracadoDisciplinaComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "ColdWater";
 
-            if (disc == "SanitarySewer")
+            if (disc == "HotWater")
+            {
+                TracadoPlanoComboBox.SelectedIndex = 0; // Por Cima
+                TracadoOffsetTextBox.Text = "2,45";
+                if (TracadoSystemTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> sysList)
+                {
+                    var aq = sysList.FirstOrDefault(s => s.Name.Contains("Quente", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Hot", StringComparison.OrdinalIgnoreCase));
+                    if (aq != null) TracadoSystemTypeComboBox.SelectedItem = aq;
+                }
+                if (TracadoPipeTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> pipeList)
+                {
+                    var pAq = pipeList.FirstOrDefault(p => p.Name.Contains("CPVC", StringComparison.OrdinalIgnoreCase) || p.Name.Contains("PPR", StringComparison.OrdinalIgnoreCase) || p.Name.Contains("Quente", StringComparison.OrdinalIgnoreCase));
+                    if (pAq != null) TracadoPipeTypeComboBox.SelectedItem = pAq;
+                }
+            }
+            else if (disc == "Ventilation")
+            {
+                TracadoPlanoComboBox.SelectedIndex = 0; // Por Cima
+                TracadoOffsetTextBox.Text = "3,20";
+                if (TracadoSystemTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> sysList)
+                {
+                    var vent = sysList.FirstOrDefault(s => s.Name.Contains("Vent", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Esgoto", StringComparison.OrdinalIgnoreCase));
+                    if (vent != null) TracadoSystemTypeComboBox.SelectedItem = vent;
+                }
+            }
+            else if (disc == "SanitarySewer")
             {
                 TracadoPlanoComboBox.SelectedIndex = 1; // Por Baixo
                 TracadoOffsetTextBox.Text = "-0,22";
@@ -1341,5 +1366,35 @@ namespace BahrHidro.UI
                 MessageBox.Show($"Erro ao gerar traçado 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-    }
+    
+        private void GerarIsometricos3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.GenerateWetZoneIsometricViews();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                MessageBox.Show(res.Summary, "Bahr Hidro - Vistas Isométricas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao gerar vistas isométricas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void TaggearTubosVistaAtual_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.TagPipesInActiveView();
+                MessageBox.Show(res.Message, "Bahr Hidro - Identificação de Tubulações", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao identificar tubos:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+}
 }
