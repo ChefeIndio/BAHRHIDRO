@@ -196,7 +196,7 @@
                                         <ComboBox x:Name="TracadoDisciplinaComboBox" SelectedIndex="0" Margin="0,0,0,10" Padding="6" SelectionChanged="TracadoDisciplinaComboBox_SelectionChanged">
                                             <ComboBoxItem Content="Água Fria (ABNT NBR 5626 — Alimentação + Ramais)" Tag="ColdWater"/>
                                             <ComboBoxItem Content="Água Quente (ABNT NBR 7198 — Afastado 15 cm da Água Fria)" Tag="HotWater"/>
-                                            <ComboBoxItem Content="Esgoto Sanitário (ABNT NBR 8160 — Com Declividade 1% e 2%)" Tag="SanitarySewer"/>
+                                            <ComboBoxItem Content="Esgoto Sanitário (ABNT NBR 8160 — Caixa Sifonada + Dimensionamento UHC)" Tag="SanitarySewer"/>
                                             <ComboBoxItem Content="Ventilação Sanitária (ABNT NBR 8160 — Colunas DN 50 mm)" Tag="Ventilation"/>
                                             <ComboBoxItem Content="Águas Pluviais (ABNT NBR 10844 — Condutores Verticais do Telhado)" Tag="StormDrainage"/>
                                         </ComboBox>
@@ -224,7 +224,7 @@
                                         </Grid>
 
                                         <CheckBox x:Name="ChkDesviarSteelFrame" IsChecked="True"
-                                                  Content="Desviar automaticamente de perfis Steel Frame (zero colisão / sem furação)"
+                                                  Content="Guiar pelas paredes + desviar de perfis Steel Frame e vãos de portas/janelas"
                                                   FontSize="12" FontWeight="SemiBold" Foreground="#166534"/>
                                     </StackPanel>
                                 </Border>
