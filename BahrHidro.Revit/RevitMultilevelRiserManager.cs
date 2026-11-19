@@ -168,12 +168,15 @@ namespace BahrHidro.Revit
                             XYZ pB = new XYZ(wallX, wallY, columnNodesZ[i + 1]);
                             if (pA.DistanceTo(pB) < MinSegmentFeet) continue;
 
+                            PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                             Pipe vPipe = Pipe.Create(doc, sysTypeId, pipeTypeId, lowestLevel.Id, pA, pB);
                             SetPipeDiameter(vPipe, riserDiaFeet);
                             SetPipeComment(vPipe, $"BahrHidroRiser|{riserCode}|Disc={disc}");
                             verticalSegments.Add(vPipe);
                             pipesCreated++;
                         }
+                        PipeFittingAutoConnector.ConnectPipesWithElbows(doc, verticalSegments);
+
 
                         if (verticalSegments.Count > 0)
                         {
@@ -192,6 +195,7 @@ namespace BahrHidro.Revit
                                 XYZ floorAttachPt = GetClosestPointOnPipe(nearestFloorPipe, jPt);
                                 if (floorAttachPt.DistanceTo(jPt) < MinSegmentFeet) continue;
 
+                                PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                                 Pipe tiePipe = Pipe.Create(doc, sysTypeId, pipeTypeId, lowestLevel.Id, floorAttachPt, jPt);
                                 SetPipeDiameter(tiePipe, riserDiaFeet);
                                 SetPipeComment(tiePipe, $"BahrHidroRiser|{riserCode}-Ramal|Disc={disc}");

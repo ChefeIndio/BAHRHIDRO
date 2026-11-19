@@ -597,6 +597,7 @@ namespace BahrHidro.Revit
                         catch { }
                     }
 
+                    PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                     // Corpo vertical da Caixa Sifonada (DN 100 mm)
                     Pipe csBody = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pBoxTop, pBoxBottom);
                     SetPipeDiameter(csBody, dia100Feet);
@@ -772,6 +773,7 @@ namespace BahrHidro.Revit
                         XYZ b = orderedCollector[i + 1].Point;
                         if (a.DistanceTo(b) < MinSegmentFeet) continue;
 
+                        PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                         Pipe cPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, a, b);
                         SetPipeDiameter(cPipe, diaSubcollectorFeet);
                         SetPipeComment(cPipe, $"BahrHidroAuto|Disc={request.DisciplineMode}");
@@ -779,8 +781,11 @@ namespace BahrHidro.Revit
                         pipesCreated++;
                         totalLengthFeet += GetPipeLengthFeet(cPipe);
                     }
+                    PipeFittingAutoConnector.ConnectPipesWithElbows(doc, collectorPipes);
+
 
                     XYZ pDropDown = new XYZ(pOutletTop.X, pOutletTop.Y, pOutletTop.Z - UnitUtils.ConvertToInternalUnits(0.80, UnitTypeId.Meters));
+                    PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                     Pipe dropPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pOutletTop, pDropDown);
                     SetPipeDiameter(dropPipe, diaSubcollectorFeet);
                     SetPipeComment(dropPipe, $"BahrHidroAuto|Disc={request.DisciplineMode}");
@@ -964,6 +969,7 @@ namespace BahrHidro.Revit
                     XYZ pBottom = new XYZ(safeX, safeY, bottomVentZ);
                     XYZ pTop = new XYZ(safeX, safeY, topVentZ);
 
+                    PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                     Pipe ventPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pBottom, pTop);
                     SetPipeDiameter(ventPipe, dia50Feet);
                     SetPipeComment(ventPipe, $"BahrHidroAuto|Disc={request.DisciplineMode}");
@@ -1695,6 +1701,7 @@ namespace BahrHidro.Revit
                 XYZ b = orderedJunctions[i + 1].Point;
                 if (a.DistanceTo(b) < MinSegmentFeet) continue;
 
+                PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                 Pipe trunkPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, a, b);
                 SetPipeDiameter(trunkPipe, diameterFeet);
                 SetPipeComment(trunkPipe, $"BahrHidroAuto|Disc={GetSystemTagFromPipe(trunkPipe)}");
@@ -1702,6 +1709,8 @@ namespace BahrHidro.Revit
                 pipesCreated++;
                 totalLengthFeet += GetPipeLengthFeet(trunkPipe);
             }
+            PipeFittingAutoConnector.ConnectPipesWithElbows(doc, trunkSegments);
+
 
             for (int i = 0; i < orderedJunctions.Count; i++)
             {
@@ -1916,6 +1925,7 @@ namespace BahrHidro.Revit
             {
                 if (points[i].DistanceTo(points[i + 1]) < MinSegmentFeet) continue;
 
+                PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                 Pipe pipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, points[i], points[i + 1]);
                 SetPipeDiameter(pipe, diameterFeet);
                 SetPipeComment(pipe, $"BahrHidroAuto|Disc={GetSystemTagFromPipe(pipe)}");
@@ -1938,6 +1948,8 @@ namespace BahrHidro.Revit
 
                 createdPipes.Add(pipe);
             }
+            PipeFittingAutoConnector.ConnectPipesWithElbows(doc, createdPipes);
+
             return createdPipes;
         }
 
