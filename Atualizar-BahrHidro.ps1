@@ -44,7 +44,7 @@ $AddinXml = @"
     <Name>Bahr Hidro</Name>
     <Assembly>$AssemblyDllPath</Assembly>
     <AddInId>12345678-ABCD-1234-ABCD-1234567890AB</AddInId>
-    <FullClassName>BahrHidro.Revit.BahrHidroApp</FullClassName>
+    <FullClassName>BahrHidro.Revit.MainCommand</FullClassName>
     <VendorId>BAHR</VendorId>
     <VendorDescription>Bahr Engenharia - Hidraulica e LSF (ABNT NBR 5626 / 8160)</VendorDescription>
   </AddIn>
@@ -65,4 +65,4 @@ $StateObj = @{
 Set-Content -Path (Join-Path $AppDataBahr "version_state.json") -Value $StateObj -Encoding UTF8
 
 Write-Host ""
-Write-Host "CONCLUIDO COM SUCESSO! Versao [$Sha] instalada no Revit 2026." -ForegroundColor Green
+Write-Host "CONCLUIDO COM SUCESSO! Classe [BahrHidro.Revit.MainCommand] registrada no Revit 2026." -ForegroundColor Green
