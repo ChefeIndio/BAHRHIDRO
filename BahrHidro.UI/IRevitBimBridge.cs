@@ -70,6 +70,17 @@ namespace BahrHidro.UI
         string Summary,
         List<string> Logs);
 
+    public sealed record ClashCheckSummaryResult(
+        int TotalElementsChecked,
+        int ClashesFound,
+        string Summary,
+        List<string> ClashDetails);
+
+    public sealed record SheetGenerationResult(
+        int SheetsCreated,
+        int ViewportsPlaced,
+        string Summary);
+
     public interface IRevitBimBridge
     {
         RevitNetworkImportData ImportNetworkAutomaticallyFromRevit();
@@ -90,5 +101,7 @@ namespace BahrHidro.UI
         BimMaterialTakeoff ExtractBomFromRevit(string projectName, double wasteMarginPercent);
         (int TaggedCount, string Message) TagPipesInActiveView();
         (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews();
+        ClashCheckSummaryResult RunHydraulicClashCheck();
+        SheetGenerationResult GenerateHydraulicSheets();
     }
 }

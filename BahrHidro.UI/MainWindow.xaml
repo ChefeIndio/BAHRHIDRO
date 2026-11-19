@@ -323,15 +323,17 @@
                                     </StackPanel>
                                 </Border>
 
-                                <!-- Card 4: Documentação Automática BIM (Isométricos 3D e Tags) -->
+                                <!-- Card 4: Documentação Automática BIM, Clash Check e Pranchas -->
                                 <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="14">
                                     <StackPanel>
-                                        <TextBlock Text="4. Documentação Automática BIM (Esquemas Isométricos e Tags)" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
-                                        <TextBlock Text="Gera vistas isométricas 3D recortadas (1:25) por ambiente molhado e aplica identificadores (Tags) nos tubos." FontSize="11" Foreground="#1E40AF" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                        <StackPanel Orientation="Horizontal">
-                                            <Button Content="Gerar Isométricos 3D (c/ Tags)" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,8,0" Click="GerarIsometricos3D_Click"/>
-                                            <Button Content="Taggear Tubos na Vista Atual" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" Click="TaggearTubosVistaAtual_Click"/>
-                                        </StackPanel>
+                                        <TextBlock Text="4. Documentação Automática, Clash Check 3D e Pranchas" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4"/>
+                                        <TextBlock Text="Audita interferências contra o Steel Frame, gera vistas isométricas 3D (1:25 c/ Tags) e monta as pranchas de plotagem." FontSize="11" Foreground="#1E40AF" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                        <WrapPanel Orientation="Horizontal">
+                                            <Button Content="1. Verificar Colisões (Steel Frame)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="VerificarColisoesSteelFrame_Click"/>
+                                            <Button Content="2. Gerar Isométricos 3D (c/ Tags)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="GerarIsometricos3D_Click"/>
+                                            <Button Content="3. Gerar Pranchas (Plotagem)" Style="{StaticResource PrimaryButton}" Height="32" Padding="12,0" Margin="0,0,6,6" Click="GerarPranchasPlotagem_Click"/>
+                                            <Button Content="Taggear Vista Atual" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,0,6" Click="TaggearTubosVistaAtual_Click"/>
+                                        </WrapPanel>
                                     </StackPanel>
                                 </Border>
                             </StackPanel>

@@ -1396,5 +1396,41 @@ namespace BahrHidro.UI
             }
         }
 
+
+        private void VerificarColisoesSteelFrame_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.RunHydraulicClashCheck();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.ClashDetails);
+                MessageBox.Show(
+                    res.Summary,
+                    "Bahr Hidro - Verificação de Interferências 3D",
+                    MessageBoxButton.OK,
+                    res.ClashesFound == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro na verificação de colisões:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void GerarPranchasPlotagem_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = _revitBridge.GenerateHydraulicSheets();
+                TracadoResumoGeracaoText.Text = res.Summary;
+                MessageBox.Show(res.Summary, "Bahr Hidro - Pranchas de Plotagem", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao gerar pranchas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
 }
 }

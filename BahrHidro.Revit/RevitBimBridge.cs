@@ -320,6 +320,17 @@ namespace BahrHidro.Revit
             return RevitDocumentationGenerator.TagPipesInActiveView(_uidoc);
         }
 
+        public ClashCheckSummaryResult RunHydraulicClashCheck()
+        {
+            return RevitClashAndSheetGenerator.RunHydraulicClashCheck(_doc);
+        }
+
+        public SheetGenerationResult GenerateHydraulicSheets()
+        {
+            var info = GetProjectInfo();
+            return RevitClashAndSheetGenerator.GenerateHydraulicSheets(_uidoc, info.ProjectName);
+        }
+
         public (int ViewsCreated, int TotalTagsPlaced, string Summary) GenerateWetZoneIsometricViews()
         {
             return RevitDocumentationGenerator.GenerateWetZoneIsometricViews(_uidoc);
