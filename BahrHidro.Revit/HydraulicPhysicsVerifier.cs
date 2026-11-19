@@ -10,6 +10,7 @@ namespace BahrHidro.Revit
 {
     public sealed class HydraulicVerificationSummary
     {
+        public string SystemLabel { get; set; } = "Água Fria";
         public double TotalWeight { get; set; }
         public double DesignFlowLs { get; set; }
         public double MaxVelocityMs { get; set; }
@@ -30,23 +31,25 @@ namespace BahrHidro.Revit
             IEnumerable<Pipe> pipes,
             double sourceElevationFeet,
             double criticalOutletElevationFeet,
-            string criticalOutletName)
+            string criticalOutletName,
+            string systemLabel = "Água Fria")
         {
             var summary = new HydraulicVerificationSummary
             {
+                SystemLabel = systemLabel,
                 CriticalFixtureName = criticalOutletName
             };
 
-            var cwPipes = (pipes ?? Enumerable.Empty<Pipe>())
+            var targetPipes = (pipes ?? Enumerable.Empty<Pipe>())
                 .Where(p => p != null && p.IsValidObject)
                 .Where(p =>
                 {
                     string cmt = p.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? string.Empty;
-                    return !cmt.Contains("ESG |") && !cmt.Contains("VENT |");
+                    return !cmt.Contains("ESG |") && !cmt.Contains("VENT |") && !cmt.Contains("AP |");
                 })
                 .ToList();
 
-            if (doc == null || cwPipes.Count == 0)
+            if (doc == null || targetPipes.Count == 0)
             {
                 summary.IsNormativeCompliant = true;
                 return summary;
@@ -54,14 +57,13 @@ namespace BahrHidro.Revit
 
             double staticHeadM = Math.Max(0.20, (sourceElevationFeet - criticalOutletElevationFeet) / FeetPerMeter);
 
-            // Executa até 3 passagens de otimização caso Pdin < 1.0 m.c.a. (10 kPa) ou v > 3.0 m/s
             for (int pass = 0; pass < 3; pass++)
             {
                 double totalHeadLossM = 0.0;
                 double maxVel = 0.0;
                 double maxWeight = 0.0;
 
-                foreach (var pipe in cwPipes)
+                foreach (var pipe in targetPipes)
                 {
                     string cmt = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? string.Empty;
                     double weight = ExtractWeightFromComment(cmt);
@@ -70,7 +72,7 @@ namespace BahrHidro.Revit
 
                     double flowLs = 0.30 * Math.Sqrt(weight);
                     double dnMm = GetPipeDiameterMm(pipe);
-                    double internalMm = GetPvcInternalDiameterMm(dnMm);
+                    double internalMm = GetPlasticInternalDiameterMm(dnMm);
 
                     double velMs = ComputeVelocityMs(flowLs, internalMm);
                     if (velMs > 3.0)
@@ -80,7 +82,7 @@ namespace BahrHidro.Revit
                         {
                             SetPipeDiameterMm(pipe, nextDn);
                             dnMm = nextDn;
-                            internalMm = GetPvcInternalDiameterMm(dnMm);
+                            internalMm = GetPlasticInternalDiameterMm(dnMm);
                             velMs = ComputeVelocityMs(flowLs, internalMm);
                             summary.UpsizedPipesCount++;
                         }
@@ -89,12 +91,9 @@ namespace BahrHidro.Revit
                     if (velMs > maxVel) maxVel = velMs;
 
                     double lengthM = GetPipeLengthMeters(pipe);
-                    // Fair-Whipple-Hsiao para tubos plásticos (PVC/PEX): J = 8.59e5 * Q(L/s)^1.75 * D(mm)^-4.75
-                    // Fator 1.35 contempla perdas localizadas em joelhos, tês e registros
                     double unitLoss = 8.59e5 * Math.Pow(flowLs, 1.75) * Math.Pow(internalMm, -4.75);
                     double segLoss = unitLoss * lengthM * 1.35;
 
-                    // Soma ao caminho crítico se for prumada, barrilete ou sub-ramal do ponto crítico
                     if (cmt.Contains("Prumada") || cmt.Contains("Barrilete") || cmt.Contains("Tronco") ||
                         cmt.IndexOf(criticalOutletName, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
@@ -112,9 +111,8 @@ namespace BahrHidro.Revit
                 if (summary.IsNormativeCompliant)
                     break;
 
-                // Se Pdin < 1.0 m.c.a. (10 kPa), aumenta um degrau comercial nos trechos tronco/prumada
                 bool anyUpsized = false;
-                foreach (var pipe in cwPipes)
+                foreach (var pipe in targetPipes)
                 {
                     string cmt = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? string.Empty;
                     if (cmt.Contains("Prumada") || cmt.Contains("Barrilete") || cmt.Contains("Tronco"))
@@ -133,18 +131,18 @@ namespace BahrHidro.Revit
                 if (!anyUpsized) break;
             }
 
-            // Grava o memorial hidráulico calculado em cada segmento de tubo
-            foreach (var pipe in cwPipes)
+            foreach (var pipe in targetPipes)
             {
-                string cmt = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? "BahrHidro | AF";
+                string cmt = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? $"BahrHidro | {systemLabel}";
                 double weight = Math.Max(0.3, ExtractWeightFromComment(cmt));
                 double flowLs = 0.30 * Math.Sqrt(weight);
                 double dnMm = GetPipeDiameterMm(pipe);
-                double velMs = ComputeVelocityMs(flowLs, GetPvcInternalDiameterMm(dnMm));
+                double velMs = ComputeVelocityMs(flowLs, GetPlasticInternalDiameterMm(dnMm));
 
-                string cleanBase = Regex.Replace(cmt, @"\s*\|\s*NBR5626\[[^\]]*\]", string.Empty);
+                string cleanBase = Regex.Replace(cmt, @"\s*\|\s*NBR(?:5626|7198)\[[^\]]*\]", string.Empty);
                 string badge = summary.IsNormativeCompliant ? "OK" : "ALERTA_PRESSAO";
-                string stamp = $"NBR5626[Q={flowLs:F2}L/s; v={velMs:F2}m/s; Pdin={summary.CriticalDynamicPressureMca:F2}mca; {badge}]";
+                string normCode = cmt.Contains("AQ |") ? "NBR7198" : "NBR5626";
+                string stamp = $"{normCode}[Q={flowLs:F2}L/s; v={velMs:F2}m/s; Pdin={summary.CriticalDynamicPressureMca:F2}mca; {badge}]";
 
                 var cmtParam = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
                 if (cmtParam != null && !cmtParam.IsReadOnly)
@@ -166,12 +164,15 @@ namespace BahrHidro.Revit
             return qM3s / area;
         }
 
-        private static double GetPvcInternalDiameterMm(double nominalDnMm)
+        private static double GetPlasticInternalDiameterMm(double nominalDnMm)
         {
             return nominalDnMm switch
             {
+                <= 16.0 => 12.0,
                 <= 20.0 => 17.0,
+                <= 22.0 => 17.6,
                 <= 25.0 => 21.6,
+                <= 28.0 => 22.4,
                 <= 32.0 => 27.8,
                 <= 40.0 => 35.2,
                 <= 50.0 => 44.0,
