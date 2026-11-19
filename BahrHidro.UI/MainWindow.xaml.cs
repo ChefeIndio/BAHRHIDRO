@@ -66,7 +66,9 @@ namespace BahrHidro.UI
             _revitBridge = revitBridge;
 
             BtnImportarInicioRevit.Visibility = Visibility.Visible;
+            HeaderActionsTracado3D.Visibility = Visibility.Visible;
             HeaderActionsAguaFria.Visibility = Visibility.Visible;
+            CarregarOpcoesTemplateTracado();
             HeaderActionsAguaQuente.Visibility = Visibility.Visible;
             HeaderActionsReservatorios.Visibility = Visibility.Visible;
             HeaderActionsEsgoto.Visibility = Visibility.Visible;
@@ -110,6 +112,7 @@ namespace BahrHidro.UI
             if (PanelInicio == null) return;
 
             PanelInicio.Visibility = tag == "Inicio" ? Visibility.Visible : Visibility.Collapsed;
+            PanelTracado3D.Visibility = tag == "Tracado3D" ? Visibility.Visible : Visibility.Collapsed;
             PanelAguaFria.Visibility = tag == "AguaFria" ? Visibility.Visible : Visibility.Collapsed;
             PanelBomba.Visibility = tag == "Bomba" ? Visibility.Visible : Visibility.Collapsed;
             PanelAguaQuente.Visibility = tag == "AguaQuente" ? Visibility.Visible : Visibility.Collapsed;
@@ -123,6 +126,12 @@ namespace BahrHidro.UI
         {
             NavInicio.IsSelected = true;
             SelecionarPainel("Inicio");
+        }
+
+        private void BtnIrTracado3D_Click(object sender, RoutedEventArgs e)
+        {
+            NavTracado3D.IsSelected = true;
+            SelecionarPainel("Tracado3D");
         }
 
         private void BtnIrAguaFria_Click(object sender, RoutedEventArgs e)
@@ -1078,6 +1087,108 @@ namespace BahrHidro.UI
         {
             TrechoManualDiametroComboBox.SelectedIndex = 0;
             AplicarDiametroManualTrecho_Click(sender, e);
+        }
+
+
+        private void CarregarOpcoesTemplateTracado()
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var opts = _revitBridge.GetRoutingTemplateOptions();
+                TracadoPipeTypeComboBox.ItemsSource = opts.PipeTypes;
+                if (opts.PipeTypes.Count > 0)
+                {
+                    var pvc = opts.PipeTypes.FirstOrDefault(p => p.Name.Contains("PVC", StringComparison.OrdinalIgnoreCase) || p.Name.Contains("Sold", StringComparison.OrdinalIgnoreCase));
+                    TracadoPipeTypeComboBox.SelectedItem = pvc ?? opts.PipeTypes[0];
+                }
+
+                TracadoSystemTypeComboBox.ItemsSource = opts.PipingSystemTypes;
+                if (opts.PipingSystemTypes.Count > 0)
+                {
+                    var af = opts.PipingSystemTypes.FirstOrDefault(s => s.Name.Contains("Fria", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Cold", StringComparison.OrdinalIgnoreCase));
+                    TracadoSystemTypeComboBox.SelectedItem = af ?? opts.PipingSystemTypes[0];
+                }
+
+                TracadoNivelComboBox.ItemsSource = opts.Levels;
+                if (opts.Levels.Count > 0)
+                    TracadoNivelComboBox.SelectedIndex = 0;
+
+                TracadoTemplateStatusText.Text = $"Template carregado: {opts.PipeTypes.Count} tipo(s) de tubo, {opts.PipingSystemTypes.Count} sistema(s) e {opts.Levels.Count} nível(is).";
+            }
+            catch (Exception ex)
+            {
+                TracadoTemplateStatusText.Text = $"Aviso ao ler template: {ex.Message}";
+            }
+        }
+
+        private void AtualizarTemplateTracado_Click(object sender, RoutedEventArgs e)
+        {
+            CarregarOpcoesTemplateTracado();
+        }
+
+        private void TracadoPlanoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TracadoOffsetTextBox == null) return;
+            string tag = (TracadoPlanoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Top";
+            TracadoOffsetTextBox.Text = tag == "Bottom" ? "-0,15" : "2,60";
+        }
+
+        private void ExecutarTracado3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null)
+            {
+                MessageBox.Show("Esta função requer o Bahr Hidro aberto dentro do Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            try
+            {
+                if (TracadoPipeTypeComboBox.SelectedValue is not long pipeTypeId)
+                {
+                    MessageBox.Show("Selecione um Tipo de Tubo do template.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (TracadoSystemTypeComboBox.SelectedValue is not long systemTypeId)
+                {
+                    MessageBox.Show("Selecione um Sistema de Tubulação do template.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (!TryParsePtBrDouble(TracadoOffsetTextBox.Text, out double offsetM))
+                {
+                    MessageBox.Show("Informe um valor numérico válido para a cota relativa (m).", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
+                bool routeFromAbove = ((TracadoPlanoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Top") == "Top";
+                double initDia = double.TryParse((TracadoDiametroComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(), out double d) ? d : 25.0;
+                bool selectedOnly = ((TracadoEscopoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "All") == "Selection";
+
+                var req = new RevitAutoRoutingRequest(
+                    pipeTypeId,
+                    systemTypeId,
+                    levelId,
+                    routeFromAbove,
+                    offsetM,
+                    initDia,
+                    selectedOnly);
+
+                var res = _revitBridge.ExecuteAutomaticPipeRouting(this, req);
+
+                TracadoAparelhosText.Text = $"{res.FixturesConnected} aparelho(s)";
+                TracadoTubosText.Text = $"{res.PipesCreated} tubo(s)";
+                TracadoConexoesText.Text = $"{res.FittingsCreated} conexão(ões)";
+                TracadoMetragemText.Text = $"{res.TotalLengthMeters.ToString("F2", PtBr)} m";
+                TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Logs);
+
+                InicioProjetoStatusText.Text = _revitBridge.GetModelOverviewSummary();
+                MessageBox.Show(res.Summary, "Bahr Hidro - Traçado Automático 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar traçado 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
 }

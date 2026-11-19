@@ -85,6 +85,7 @@
                     <TreeViewItem x:Name="NavInicio" Header="Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
 
                     <TreeViewItem Header="HIDRÁULICA (NBR 5626)" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A">
+                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático 3D" Tag="Tracado3D" FontWeight="Normal" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavAguaFria" Header="Água Fria (Rede BIM 3D)" Tag="AguaFria" FontWeight="Normal" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavBomba" Header="Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#334155"/>
                         <TreeViewItem x:Name="NavAguaQuente" Header="Água Quente (Boiler)" Tag="AguaQuente" FontWeight="Normal" Foreground="#334155"/>
@@ -144,6 +145,7 @@
                                     <TextBlock Text="2. REDE HIDRÁULICA BIM 3D" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                     <TextBlock x:Name="InicioRedeStatusText" Text="Nenhuma rede carregada. Importe do modelo 3D do Revit para dimensionar." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
                                     <Button x:Name="BtnImportarInicioRevit" Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Height="36" Visibility="Collapsed" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="DetectarRedeAutoRevit_Click"/>
+                                    <Button Content="Traçado Automático de Tubos 3D" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrTracado3D_Click"/>
                                     <Button Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
                                 </StackPanel>
                             </Border>
@@ -160,6 +162,151 @@
                         </Grid>
                     </StackPanel>
                 </ScrollViewer>
+
+                <!-- 0B. TRAÇADO AUTOMÁTICO 3D (ROTEAMENTO BIM) -->
+                <DockPanel x:Name="PanelTracado3D" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <StackPanel x:Name="HeaderActionsTracado3D" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Atualizar Template Revit" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,0" Click="AtualizarTemplateTracado_Click"/>
+                                <Button Content="Gerar Traçado Automático no 3D" Style="{StaticResource RevitApplyButton}" Click="ExecutarTracado3D_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Traçado Automático de Tubulações 3D (Roteamento BIM)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Roteamento ortogonal automático de Água Fria a partir do reservatório até os aparelhos sanitários, usando as famílias do template." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1080" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.05*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="0.95*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Coluna Esquerda: Seletores de Roteamento -->
+                            <StackPanel Grid.Column="0">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <TextBlock Text="1. Plano e Cota da Linha Tronco de Distribuição" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10"/>
+
+                                        <TextBlock Text="Direção do Traçado Principal" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="TracadoPlanoComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6" SelectionChanged="TracadoPlanoComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="Por Cima (Entreforro / Laje — descendo até os pontos)" Tag="Top"/>
+                                            <ComboBoxItem Content="Por Baixo (Piso / Contrapiso — subindo até os pontos)" Tag="Bottom"/>
+                                        </ComboBox>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1.2*"/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Nível de Referência (Pavimento)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <ComboBox x:Name="TracadoNivelComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Padding="6"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Cota Relativa ao Nível (m)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="TracadoOffsetTextBox" Text="2,60"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <TextBlock Text="2. Padrões do Template Revit (Tubo e Sistema)" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10"/>
+
+                                        <TextBlock Text="Sistema de Tubulação (Piping System Type)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="TracadoSystemTypeComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Margin="0,0,0,12" Padding="6"/>
+
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1.4*"/>
+                                                <ColumnDefinition Width="14"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Tipo de Tubo (Pipe Type)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <ComboBox x:Name="TracadoPipeTypeComboBox" DisplayMemberPath="Name" SelectedValuePath="Id" Padding="6"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Bitola Inicial (mm)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <ComboBox x:Name="TracadoDiametroComboBox" SelectedIndex="1" Padding="6">
+                                                    <ComboBoxItem Content="20 mm (1/2&quot;)" Tag="20"/>
+                                                    <ComboBoxItem Content="25 mm (3/4&quot;)" Tag="25"/>
+                                                    <ComboBoxItem Content="32 mm (1&quot;)" Tag="32"/>
+                                                    <ComboBoxItem Content="40 mm (1 1/4&quot;)" Tag="40"/>
+                                                    <ComboBoxItem Content="50 mm (1 1/2&quot;)" Tag="50"/>
+                                                </ComboBox>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <TextBlock Text="Escopo de Aparelhos Sanitários" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="TracadoEscopoComboBox" SelectedIndex="0" Margin="0,0,0,16" Padding="6">
+                                            <ComboBoxItem Content="Todos os aparelhos livres do pavimento selecionado" Tag="All"/>
+                                            <ComboBoxItem Content="Selecionar aparelhos manualmente no 3D" Tag="Selection"/>
+                                        </ComboBox>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Content="Gerar Traçado Automático no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,10,0" Click="ExecutarTracado3D_Click"/>
+                                            <Button Content="Ir para Água Fria (Dimensionar)" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Coluna Direita: Relatório de Execução e Regras -->
+                            <StackPanel Grid.Column="2">
+                                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <TextBlock Text="Status e Relatório do Roteamento 3D" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                                        <TextBlock x:Name="TracadoTemplateStatusText" Text="Conecte ao Revit para carregar os tipos de tubo e sistemas do template." FontSize="12" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                        <Grid Margin="0,0,0,12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="190"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="26"/>
+                                                <RowDefinition Height="26"/>
+                                                <RowDefinition Height="26"/>
+                                                <RowDefinition Height="26"/>
+                                            </Grid.RowDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Aparelhos Conectados:" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="TracadoAparelhosText" Text="--" FontWeight="Bold"/>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Tubos Criados no 3D:" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TracadoTubosText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Conexões (Joelhos/Tês):" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="TracadoConexoesText" Text="--"/>
+
+                                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Extensão Total Gerada:" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Row="3" Grid.Column="1" x:Name="TracadoMetragemText" Text="--"/>
+                                        </Grid>
+
+                                        <TextBlock Text="Log Detalhado da Geração:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4"/>
+                                        <TextBox x:Name="TracadoLogTextBox" Height="175" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Background="#F8FAFC" FontSize="12"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="16">
+                                    <StackPanel>
+                                        <TextBlock Text="REGRAS DO TRAÇADO ORTOGONAL BIM" FontSize="12" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,6"/>
+                                        <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#14532D" LineHeight="18"
+                                                   Text="• Roteamento Ortogonal (X, Y, Z): Alinha a linha tronco principal ao eixo da edificação e cria descidas/subidas verticais até o conector de Água Fria de cada aparelho.&#x0a;• Conexões Nativas: Insere automaticamente joelhos e tês usando as Preferências de Roteamento do Tipo de Tubo selecionado no template.&#x0a;• Fluxo Integrado: Após gerar o traçado, acesse 'Água Fria (Rede BIM 3D)' e clique em 'Detectar Rede Automática' para calcular as bitolas finais pela NBR 5626."/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
 
                 <!-- 1. ÁGUA FRIA (REDE BIM 3D - SOMENTE LEITURA AUTOMÁTICA) -->
                 <DockPanel x:Name="PanelAguaFria" Visibility="Collapsed">

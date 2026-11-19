@@ -23,6 +23,32 @@ namespace BahrHidro.UI
         int TotalRoomsCount,
         string Summary);
 
+    public sealed record RevitLookupItem(long Id, string Name);
+
+    public sealed record RevitLevelLookupItem(long Id, string Name, double ElevationMeters);
+
+    public sealed record RevitTemplateRoutingOptions(
+        List<RevitLookupItem> PipeTypes,
+        List<RevitLookupItem> PipingSystemTypes,
+        List<RevitLevelLookupItem> Levels);
+
+    public sealed record RevitAutoRoutingRequest(
+        long PipeTypeId,
+        long PipingSystemTypeId,
+        long? LevelId,
+        bool RouteFromAbove,
+        double TrunkOffsetMeters,
+        double InitialDiameterMm,
+        bool SelectedFixturesOnly);
+
+    public sealed record RevitAutoRoutingResult(
+        int FixturesConnected,
+        int PipesCreated,
+        int FittingsCreated,
+        double TotalLengthMeters,
+        string Summary,
+        List<string> Logs);
+
     public interface IRevitBimBridge
     {
         RevitNetworkImportData ImportNetworkAutomaticallyFromRevit();
@@ -36,5 +62,7 @@ namespace BahrHidro.UI
         RevitRoofData? CaptureAllRoofsFromRevit();
         RevitRoofData? CaptureRoofFromRevit(Window ownerWindow);
         RevitPopulationEstimate EstimateBuildingPopulation();
+        RevitTemplateRoutingOptions GetRoutingTemplateOptions();
+        RevitAutoRoutingResult ExecuteAutomaticPipeRouting(Window ownerWindow, RevitAutoRoutingRequest request);
     }
 }

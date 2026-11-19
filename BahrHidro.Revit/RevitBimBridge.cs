@@ -299,6 +299,16 @@ namespace BahrHidro.Revit
             }
         }
 
+        public RevitTemplateRoutingOptions GetRoutingTemplateOptions()
+        {
+            return RevitAutoRouter.GetTemplateOptions(_doc);
+        }
+
+        public RevitAutoRoutingResult ExecuteAutomaticPipeRouting(Window ownerWindow, RevitAutoRoutingRequest request)
+        {
+            return RevitAutoRouter.ExecuteRouting(_uidoc, ownerWindow, request);
+        }
+
         public RevitPopulationEstimate EstimateBuildingPopulation()
         {
             var rooms = new FilteredElementCollector(_doc)
