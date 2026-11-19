@@ -1,3 +1,4 @@
+using System.Windows.Input;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -38,6 +39,7 @@ namespace BahrHidro.UI
         public MainWindow()
         {
             InitializeComponent();
+            InitializeKeyboardShortcuts();
             LoadOfficeProfileToUi();
 
             string catalogDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro");
@@ -1817,6 +1819,179 @@ namespace BahrHidro.UI
         {
             MessageBox.Show($"Erro ao limpar rede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+
+    private System.Collections.Generic.List<System.Windows.Controls.Primitives.ButtonBase> _navShortcutButtons = new();
+
+    private void InitializeKeyboardShortcuts()
+    {
+        this.PreviewKeyDown += MainWindow_PreviewKeyDown;
+        this.Loaded += (_, _) => DiscoverNavigationShortcutButtons();
+    }
+
+    private void DiscoverNavigationShortcutButtons()
+    {
+        _navShortcutButtons.Clear();
+        if (NavConfiguracoesBtn?.Parent is Panel navPanel)
+        {
+            foreach (UIElement child in navPanel.Children)
+            {
+                if (child is System.Windows.Controls.Primitives.ButtonBase btn && btn.Visibility == Visibility.Visible)
+                {
+                    _navShortcutButtons.Add(btn);
+                    int idx = _navShortcutButtons.Count;
+                    if (idx <= 9 && btn.Content is string txt && !txt.Contains("Ctrl+"))
+                    {
+                        btn.ToolTip = $"{txt.Trim()} (Atalho: Ctrl+{idx})";
+                    }
+                }
+            }
+        }
+    }
+
+    private void MainWindow_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        Key key = (e.Key == Key.System) ? e.SystemKey : e.Key;
+        ModifierKeys mods = Keyboard.Modifiers;
+
+        if (key == Key.F1)
+        {
+            e.Handled = true;
+            MostrarGuiaAtalhos_Click(this, new RoutedEventArgs());
+            return;
+        }
+
+        if (key == Key.F5)
+        {
+            e.Handled = true;
+            QuickRibbonCache_Click(this, new RoutedEventArgs());
+            return;
+        }
+
+        bool ctrl = (mods & ModifierKeys.Control) == ModifierKeys.Control;
+        bool shift = (mods & ModifierKeys.Shift) == ModifierKeys.Shift;
+
+        if (ctrl && shift)
+        {
+            if (key == Key.A)
+            {
+                e.Handled = true;
+                QuickRibbonAudit_Click(this, new RoutedEventArgs());
+                return;
+            }
+            if (key == Key.L)
+            {
+                e.Handled = true;
+                QuickRibbonLsf_Click(this, new RoutedEventArgs());
+                return;
+            }
+            if (key == Key.P)
+            {
+                e.Handled = true;
+                QuickRibbonSheets_Click(this, new RoutedEventArgs());
+                return;
+            }
+        }
+
+        if (ctrl && !shift)
+        {
+            if (key == Key.S && ConfiguracoesPanel.Visibility == Visibility.Visible)
+            {
+                e.Handled = true;
+                SalvarConfiguracoes_Click(this, new RoutedEventArgs());
+                return;
+            }
+
+            int numIndex = key switch
+            {
+                Key.D1 or Key.NumPad1 => 0,
+                Key.D2 or Key.NumPad2 => 1,
+                Key.D3 or Key.NumPad3 => 2,
+                Key.D4 or Key.NumPad4 => 3,
+                Key.D5 or Key.NumPad5 => 4,
+                Key.D6 or Key.NumPad6 => 5,
+                Key.D7 or Key.NumPad7 => 6,
+                _ => -1
+            };
+
+            if (numIndex >= 0 && numIndex < _navShortcutButtons.Count)
+            {
+                e.Handled = true;
+                var targetBtn = _navShortcutButtons[numIndex];
+                if (targetBtn is System.Windows.Controls.RadioButton rb)
+                    rb.IsChecked = true;
+                targetBtn.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+            }
+        }
+    }
+
+    private async void QuickRibbonCache_Click(object sender, RoutedEventArgs e)
+    {
+        if (_revitBridge == null) return;
+        try
+        {
+            var res = await _revitBridge.RebuildSpatialCache(); TracadoResumoGeracaoText.Text = res.Summary; TracadoLogTextBox.Text = res.Summary;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private async void QuickRibbonAudit_Click(object sender, RoutedEventArgs e)
+    {
+        if (_revitBridge == null) return;
+        try
+        {
+            var res = await _revitBridge.ApplyHydraulicVisualAudit(default!); MessageBox.Show(res.Summary, "Bahr Hidro - Auditoria 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro na Auditoria 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private async void QuickRibbonLsf_Click(object sender, RoutedEventArgs e)
+    {
+        if (_revitBridge == null) return;
+        try
+        {
+            var res = await _revitBridge.AuditLsfStudPunching(); MessageBox.Show(res.Summary, "Bahr Hidro - Furação LSF", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro na Validação LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private async void QuickRibbonSheets_Click(object sender, RoutedEventArgs e)
+    {
+        if (_revitBridge == null) return;
+        try
+        {
+            var res = await _revitBridge.GenerateHydraulicSheets(); MessageBox.Show(res.Summary, "Bahr Hidro - Pranchas Executivas", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro ao Gerar Pranchas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void MostrarGuiaAtalhos_Click(object sender, RoutedEventArgs e)
+    {
+        string guia =
+            "ATALHOS DE TECLADO — BAHR HIDRO BIM (REVIT 2026)\n" +
+            "──────────────────────────────────────────────────\n" +
+            "• Ctrl + 1 a Ctrl + 6  →  Alternar rapidamente entre as abas\n" +
+            "• F5                   →  Atualizar Cache Espacial LSF (2D)\n" +
+            "• Ctrl + Shift + A     →  Auditoria Visual 3D (NBR 5626)\n" +
+            "• Ctrl + Shift + L     →  Validar Furação nos Montantes LSF\n" +
+            "• Ctrl + Shift + P     →  Gerar Pranchas Executivas (1:20 / 1:25)\n" +
+            "• Ctrl + S             →  Salvar Perfil do Escritório (.json)\n" +
+            "• F1                   →  Exibir este guia de atalhos";
+
+        MessageBox.Show(guia, "Bahr Hidro — Atalhos Rápidos", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
 }
