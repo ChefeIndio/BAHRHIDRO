@@ -10,6 +10,7 @@ namespace BahrHidro.Revit
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (!BahrHidro.UI.LicenseService.EnsureLicensed()) return Result.Cancelled;
             try
             {
                 if (commandData.Application.ActiveUIDocument == null)
@@ -33,6 +34,7 @@ namespace BahrHidro.Revit
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (!BahrHidro.UI.LicenseService.EnsureLicensed()) return Result.Cancelled;
             try
             {
                 UIDocument uidoc = commandData.Application.ActiveUIDocument
@@ -55,6 +57,7 @@ namespace BahrHidro.Revit
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            if (!BahrHidro.UI.LicenseService.EnsureLicensed()) return Result.Cancelled;
             try
             {
                 if (commandData.Application.ActiveUIDocument == null)

@@ -1827,7 +1827,7 @@ namespace BahrHidro.UI
     private void InitializeKeyboardShortcuts()
     {
         this.PreviewKeyDown += MainWindow_PreviewKeyDown;
-        this.Loaded += (_, _) => DiscoverNavigationShortcutButtons();
+        this.Loaded += (_, _) => { if (!LicenseService.EnsureLicensed(this)) { this.Close(); return; } DiscoverNavigationShortcutButtons(); UpdateLicenseInfoCard(); };
     }
 
     private void DiscoverNavigationShortcutButtons()
@@ -1992,6 +1992,26 @@ namespace BahrHidro.UI
             "• F1                   →  Exibir este guia de atalhos";
 
         MessageBox.Show(guia, "Bahr Hidro — Atalhos Rápidos", MessageBoxButton.OK, MessageBoxImage.Information);
+    }
+
+
+    private void UpdateLicenseInfoCard()
+    {
+        var st = LicenseService.ValidateStoredLicense();
+        if (this.FindName("LicenseInfoText") is System.Windows.Controls.TextBlock tb)
+        {
+            tb.Text = st.IsValid
+                ? $"{st.Message} | ID desta Máquina: {LicenseService.GetMachineId()}"
+                : $"Não licenciado | ID desta Máquina: {LicenseService.GetMachineId()}";
+        }
+    }
+
+    private void GerenciarLicenca_Click(object sender, RoutedEventArgs e)
+    {
+        if (LicenseService.EnsureLicensed(this, forcePrompt: true))
+        {
+            UpdateLicenseInfoCard();
+        }
     }
 
 }

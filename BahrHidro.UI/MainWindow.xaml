@@ -1353,6 +1353,14 @@
                         </StackPanel>
                     </Border>
 
+                    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,4,0,12">
+                        <StackPanel>
+                            <TextBlock Text="5. Licença &amp; Chave de Segurança" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBlock x:Name="LicenseInfoText" Text="Verificando licença..." FontSize="12" Opacity="0.85" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                            <Button Content="Gerenciar / Alterar Chave de Segurança" Style="{StaticResource SecondaryButton}" Height="32" Padding="12,0" HorizontalAlignment="Left" Click="GerenciarLicenca_Click"/>
+                        </StackPanel>
+                    </Border>
+
                     <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap"/>
                 </StackPanel>
             </ScrollViewer>
