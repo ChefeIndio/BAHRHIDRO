@@ -33,6 +33,7 @@ namespace BahrHidro.UI
 
         private readonly List<SewerFixtureViewModel> _sewerFixtures;
         private readonly List<DetectedRoutingPoint> _pontosTracadoDetectados = new();
+        private BimMaterialTakeoff? _ultimoBomExtraido;
 
         public MainWindow()
         {
@@ -75,6 +76,7 @@ namespace BahrHidro.UI
             HeaderActionsEsgoto.Visibility = Visibility.Visible;
             HeaderActionsPluvial.Visibility = Visibility.Visible;
             SalvarDadosRevitButton.Visibility = Visibility.Visible;
+            BtnExtrairBom3D.Visibility = Visibility.Visible;
 
             var info = _revitBridge.GetProjectInfo();
             MemObraTextBox.Text = info.ProjectName;
@@ -832,19 +834,48 @@ namespace BahrHidro.UI
             }
         }
 
+        private void ExtrairBomRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                double margem = TryParsePtBrDouble(MemMargemPerdaTextBox.Text, out double m) && m >= 0 ? m : 10.0;
+                _ultimoBomExtraido = _revitBridge.ExtractBomFromRevit(MemObraTextBox.Text.Trim(), margem);
+
+                double totalMetros = _ultimoBomExtraido.Pipes.Sum(p => p.TotalLengthWithWasteMeters);
+                int totalVaras = _ultimoBomExtraido.Pipes.Sum(p => p.CommercialBars6m);
+                int totalPecas = _ultimoBomExtraido.Fittings.Sum(f => f.Quantity);
+
+                MemBomPreviewText.Text = $"Extraído do 3D: {_ultimoBomExtraido.Pipes.Count} linha(s) de tubo ({totalMetros:F2} m c/ perda = {totalVaras} varas de 6m) e {totalPecas} conexão(ões)/acessório(s).";
+                MessageBox.Show(MemBomPreviewText.Text, "Bahr Hidro - Quantitativo BIM 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao extrair lista de materiais:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
         private void ExportarMemorialAba_Click(object sender, RoutedEventArgs e)
         {
-            if (_ultimoResultadoDaRede == null)
+            if (_revitBridge != null)
             {
-                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria (Rede BIM 3D)' antes de gerar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-                NavAguaFria.IsSelected = true;
-                SelecionarPainel("AguaFria");
+                try
+                {
+                    double margem = TryParsePtBrDouble(MemMargemPerdaTextBox.Text, out double m) && m >= 0 ? m : 10.0;
+                    _ultimoBomExtraido = _revitBridge.ExtractBomFromRevit(MemObraTextBox.Text.Trim(), margem);
+                }
+                catch { }
+            }
+
+            if (_ultimoResultadoDaRede == null && (_ultimoBomExtraido == null || (_ultimoBomExtraido.Pipes.Count == 0 && _ultimoBomExtraido.Fittings.Count == 0)))
+            {
+                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria' ou gere o traçado 3D antes de exportar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                FileName = $"Memorial_Hidraulico_{(string.IsNullOrWhiteSpace(MemObraTextBox.Text) ? "BahrHidro" : MemObraTextBox.Text.Trim().Replace(" ", "_"))}",
+                FileName = $"Memorial_e_Materiais_{(string.IsNullOrWhiteSpace(MemObraTextBox.Text) ? "BahrHidro" : MemObraTextBox.Text.Trim().Replace(" ", "_"))}",
                 DefaultExt = ".xlsx",
                 Filter = "Ficheiro Excel (.xlsx)|*.xlsx"
             };
@@ -854,11 +885,11 @@ namespace BahrHidro.UI
                 try
                 {
                     if (_revitBridge != null)
-                        GerarExcelIsoladoNoRevit(_ultimoResultadoDaRede, dialog.FileName);
+                        GerarExcelIsoladoNoRevit(_ultimoResultadoDaRede, _ultimoBomExtraido, dialog.FileName);
                     else
-                        ExcelReportGenerator.GenerateNetworkReport(_ultimoResultadoDaRede, dialog.FileName);
+                        ExcelReportGenerator.GenerateProjectReportWithBom(_ultimoResultadoDaRede, _ultimoBomExtraido, dialog.FileName);
 
-                    MessageBox.Show("Memorial de cálculo exportado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Memorial de cálculo e Lista de Materiais exportados com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
@@ -868,22 +899,29 @@ namespace BahrHidro.UI
             }
         }
 
-        private static void GerarExcelIsoladoNoRevit(NetworkCalculationResult resultado, string caminhoArquivo)
+        private static void GerarExcelIsoladoNoRevit(NetworkCalculationResult? resultado, BimMaterialTakeoff? takeoff, string caminhoArquivo)
         {
             string coreDllPath = typeof(ExcelReportGenerator).Assembly.Location;
             string pluginDir = System.IO.Path.GetDirectoryName(coreDllPath)!;
-            string json = System.Text.Json.JsonSerializer.Serialize(resultado);
 
             var alc = new IsolatedExcelLoadContext(pluginDir);
             try
             {
                 var coreAsm = alc.LoadFromAssemblyPath(coreDllPath);
                 var resultType = coreAsm.GetType(typeof(NetworkCalculationResult).FullName!)!;
+                var takeoffType = coreAsm.GetType(typeof(BimMaterialTakeoff).FullName!)!;
                 var generatorType = coreAsm.GetType(typeof(ExcelReportGenerator).FullName!)!;
 
-                object? isolatedResult = System.Text.Json.JsonSerializer.Deserialize(json, resultType);
-                var method = generatorType.GetMethod(nameof(ExcelReportGenerator.GenerateNetworkReport))!;
-                method.Invoke(null, new[] { isolatedResult, caminhoArquivo });
+                object? isolatedResult = resultado != null
+                    ? System.Text.Json.JsonSerializer.Deserialize(System.Text.Json.JsonSerializer.Serialize(resultado), resultType)
+                    : null;
+
+                object? isolatedTakeoff = takeoff != null
+                    ? System.Text.Json.JsonSerializer.Deserialize(System.Text.Json.JsonSerializer.Serialize(takeoff), takeoffType)
+                    : null;
+
+                var method = generatorType.GetMethod(nameof(ExcelReportGenerator.GenerateProjectReportWithBom))!;
+                method.Invoke(null, new[] { isolatedResult, isolatedTakeoff, caminhoArquivo });
             }
             finally
             {
@@ -1123,6 +1161,43 @@ namespace BahrHidro.UI
             }
         }
 
+        private void TracadoDisciplinaComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TracadoPlanoComboBox == null || TracadoOffsetTextBox == null) return;
+            string disc = (TracadoDisciplinaComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "ColdWater";
+
+            if (disc == "SanitarySewer")
+            {
+                TracadoPlanoComboBox.SelectedIndex = 1; // Por Baixo
+                TracadoOffsetTextBox.Text = "-0,22";
+                if (TracadoSystemTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> sysList)
+                {
+                    var esg = sysList.FirstOrDefault(s => s.Name.Contains("Esgoto", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Sanit", StringComparison.OrdinalIgnoreCase));
+                    if (esg != null) TracadoSystemTypeComboBox.SelectedItem = esg;
+                }
+                if (TracadoPipeTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> pipeList)
+                {
+                    var pEsg = pipeList.FirstOrDefault(p => p.Name.Contains("Esgoto", StringComparison.OrdinalIgnoreCase) || p.Name.Contains("Sanit", StringComparison.OrdinalIgnoreCase));
+                    if (pEsg != null) TracadoPipeTypeComboBox.SelectedItem = pEsg;
+                }
+            }
+            else
+            {
+                TracadoPlanoComboBox.SelectedIndex = 0; // Por Cima
+                TracadoOffsetTextBox.Text = "2,60";
+                if (TracadoSystemTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> sysList)
+                {
+                    var af = sysList.FirstOrDefault(s => s.Name.Contains("Fria", StringComparison.OrdinalIgnoreCase) || s.Name.Contains("Cold", StringComparison.OrdinalIgnoreCase));
+                    if (af != null) TracadoSystemTypeComboBox.SelectedItem = af;
+                }
+                if (TracadoPipeTypeComboBox.ItemsSource is IEnumerable<RevitLookupItem> pipeList)
+                {
+                    var pAf = pipeList.FirstOrDefault(p => p.Name.Contains("Sold", StringComparison.OrdinalIgnoreCase) || p.Name.Contains("PVC", StringComparison.OrdinalIgnoreCase));
+                    if (pAf != null) TracadoPipeTypeComboBox.SelectedItem = pAf;
+                }
+            }
+        }
+
         private void TracadoPlanoComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (TracadoOffsetTextBox == null) return;
@@ -1237,16 +1312,20 @@ namespace BahrHidro.UI
                 }
 
                 long? levelId = TracadoNivelComboBox.SelectedValue is long lid ? lid : null;
+                string discipline = (TracadoDisciplinaComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "ColdWater";
                 bool routeFromAbove = ((TracadoPlanoComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Top") == "Top";
                 double initDia = double.TryParse((TracadoDiametroComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(), out double d) ? d : 25.0;
+                bool avoidSteel = ChkDesviarSteelFrame.IsChecked == true;
 
                 var req = new RevitAutoRoutingRequest(
+                    discipline,
                     pipeTypeId,
                     systemTypeId,
                     levelId,
                     routeFromAbove,
                     offsetM,
                     initDia,
+                    avoidSteel,
                     _pontosTracadoDetectados.ToList());
 
                 var res = _revitBridge.ExecuteAutomaticPipeRouting(req);

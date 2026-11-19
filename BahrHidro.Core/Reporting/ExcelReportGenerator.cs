@@ -103,5 +103,132 @@ namespace BahrHidro.Core.Reporting
             ws.Columns(1, 8).AdjustToContents();
             workbook.SaveAs(filePath);
         }
-    }
+    
+        public static void GenerateProjectReportWithBom(
+            NetworkCalculationResult? networkResult,
+            BimMaterialTakeoff? takeoff,
+            string filePath)
+        {
+            XLWorkbook workbook;
+            if (networkResult != null)
+            {
+                GenerateNetworkReport(networkResult, filePath);
+                workbook = new XLWorkbook(filePath);
+            }
+            else
+            {
+                workbook = new XLWorkbook();
+            }
+
+            using (workbook)
+            {
+                if (takeoff != null)
+                {
+                    // Aba de Tubulações (BOM)
+                    var wsTubos = workbook.Worksheets.Add("Lista de Tubos (BOM 3D)");
+                    wsTubos.Cell(1, 1).Value = "LISTA EXECUTIVA DE TUBULAÇÕES — QUANTITATIVO BIM 3D";
+                    wsTubos.Cell(1, 1).Style.Font.Bold = true;
+                    wsTubos.Cell(1, 1).Style.Font.FontSize = 14;
+
+                    wsTubos.Cell(2, 1).Value = $"Obra: {takeoff.ProjectName} | Margem de Perda Aplicada: {takeoff.WasteMarginPercent:F1}%";
+                    wsTubos.Cell(2, 1).Style.Font.Italic = true;
+
+                    string[] headersTubos =
+                    {
+                        "Sistema",
+                        "Tipo de Tubo / Material",
+                        "Diâmetro (mm)",
+                        "Comprimento Líquido (m)",
+                        "Perda (%)",
+                        "Comprimento c/ Perda (m)",
+                        "Varas Comerciais (6,0 m)"
+                    };
+
+                    for (int c = 0; c < headersTubos.Length; c++)
+                    {
+                        var cell = wsTubos.Cell(4, c + 1);
+                        cell.Value = headersTubos[c];
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1E3A8A");
+                        cell.Style.Font.FontColor = XLColor.White;
+                    }
+
+                    int row = 5;
+                    foreach (var p in takeoff.Pipes)
+                    {
+                        wsTubos.Cell(row, 1).Value = p.SystemName;
+                        wsTubos.Cell(row, 2).Value = p.PipeTypeName;
+                        wsTubos.Cell(row, 3).Value = p.DiameterMm;
+                        wsTubos.Cell(row, 4).Value = Math.Round(p.NetLengthMeters, 2);
+                        wsTubos.Cell(row, 5).Value = Math.Round(p.WastePercentage, 1);
+                        wsTubos.Cell(row, 6).Value = Math.Round(p.TotalLengthWithWasteMeters, 2);
+                        wsTubos.Cell(row, 7).Value = p.CommercialBars6m;
+                        row++;
+                    }
+
+                    if (takeoff.Pipes.Count > 0)
+                    {
+                        wsTubos.Cell(row, 1).Value = "TOTAL GERAL";
+                        wsTubos.Cell(row, 1).Style.Font.Bold = true;
+                        wsTubos.Cell(row, 4).FormulaA1 = $"SUM(D5:D{row - 1})";
+                        wsTubos.Cell(row, 4).Style.Font.Bold = true;
+                        wsTubos.Cell(row, 6).FormulaA1 = $"SUM(F5:F{row - 1})";
+                        wsTubos.Cell(row, 6).Style.Font.Bold = true;
+                        wsTubos.Cell(row, 7).FormulaA1 = $"SUM(G5:G{row - 1})";
+                        wsTubos.Cell(row, 7).Style.Font.Bold = true;
+                    }
+
+                    wsTubos.Columns().AdjustToContents();
+
+                    // Aba de Conexões e Acessórios (BOM)
+                    var wsConexoes = workbook.Worksheets.Add("Conexoes e Acessorios (3D)");
+                    wsConexoes.Cell(1, 1).Value = "LISTA DE CONEXÕES, REGISTROS E ACESSÓRIOS — QUANTITATIVO BIM 3D";
+                    wsConexoes.Cell(1, 1).Style.Font.Bold = true;
+                    wsConexoes.Cell(1, 1).Style.Font.FontSize = 14;
+
+                    string[] headersConex =
+                    {
+                        "Sistema",
+                        "Categoria",
+                        "Família / Especificação Comercial",
+                        "Bitola / Dimensão",
+                        "Quantidade (un)"
+                    };
+
+                    for (int c = 0; c < headersConex.Length; c++)
+                    {
+                        var cell = wsConexoes.Cell(3, c + 1);
+                        cell.Value = headersConex[c];
+                        cell.Style.Font.Bold = true;
+                        cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#0F766E");
+                        cell.Style.Font.FontColor = XLColor.White;
+                    }
+
+                    int rowC = 4;
+                    foreach (var f in takeoff.Fittings)
+                    {
+                        wsConexoes.Cell(rowC, 1).Value = f.SystemName;
+                        wsConexoes.Cell(rowC, 2).Value = f.CategoryName;
+                        wsConexoes.Cell(rowC, 3).Value = f.FamilyAndType;
+                        wsConexoes.Cell(rowC, 4).Value = f.SizeDescription;
+                        wsConexoes.Cell(rowC, 5).Value = f.Quantity;
+                        rowC++;
+                    }
+
+                    if (takeoff.Fittings.Count > 0)
+                    {
+                        wsConexoes.Cell(rowC, 1).Value = "TOTAL DE PEÇAS";
+                        wsConexoes.Cell(rowC, 1).Style.Font.Bold = true;
+                        wsConexoes.Cell(rowC, 5).FormulaA1 = $"SUM(E4:E{rowC - 1})";
+                        wsConexoes.Cell(rowC, 5).Style.Font.Bold = true;
+                    }
+
+                    wsConexoes.Columns().AdjustToContents();
+                }
+
+                workbook.SaveAs(filePath);
+            }
+        }
+
+}
 }

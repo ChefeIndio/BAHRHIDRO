@@ -59,10 +59,8 @@ namespace BahrHidro.Revit
                 ? UnitUtils.ConvertFromInternalUnits(baseLevel.Elevation, UnitTypeId.Meters)
                 : 0.0;
 
-            // 1. Varre elementos do próprio modelo Revit (se existirem)
             CollectFromDocumentElements(doc, Transform.Identity, "Revit", baseLevelZ, isHostDocument: true, rawPoints);
 
-            // 2. Varre todos os Vínculos (Revit Links / Arquivos IFC vinculados)
             var links = new FilteredElementCollector(doc)
                 .OfClass(typeof(RevitLinkInstance))
                 .Cast<RevitLinkInstance>()
@@ -77,7 +75,6 @@ namespace BahrHidro.Revit
                 CollectFromDocumentElements(linkDoc, linkTransform, linkLabel, baseLevelZ, isHostDocument: false, rawPoints);
             }
 
-            // 3. Varre arquivos DWG importados ou vinculados (Blocos CAD)
             var imports = new FilteredElementCollector(doc)
                 .OfClass(typeof(ImportInstance))
                 .Cast<ImportInstance>()
@@ -88,7 +85,6 @@ namespace BahrHidro.Revit
                 CollectFromDwgImport(doc, imp, baseLevelZ, rawPoints);
             }
 
-            // 4. Filtra pelo pavimento selecionado (faixa de -0,6m a +3,2m do nível) e remove duplicados próximos (< 25 cm)
             var filteredByLevel = levelId.HasValue
                 ? rawPoints.Where(p => p.BaseZ >= baseLevelZ - 0.60 && p.BaseZ <= baseLevelZ + 3.20).ToList()
                 : rawPoints;
@@ -114,6 +110,665 @@ namespace BahrHidro.Revit
             return deduplicated;
         }
 
+        public static DetectedRoutingPoint? PickManualPoint(UIDocument uidoc, Window ownerWindow, string fixtureCategory, long? levelId)
+        {
+            Document doc = uidoc.Document;
+            Level? baseLevel = levelId.HasValue
+                ? doc.GetElement(new ElementId(levelId.Value)) as Level
+                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
+
+            double baseZ = baseLevel != null
+                ? Math.Round(UnitUtils.ConvertFromInternalUnits(baseLevel.Elevation, UnitTypeId.Meters), 3)
+                : 0.0;
+
+            var spec = ClassifyFixture(fixtureCategory) ?? ("Ponto Hidráulico", 0.60, 0.4);
+
+            try
+            {
+                ownerWindow.Hide();
+
+                using (Transaction tx = new Transaction(doc, "Bahr Hidro - Plano de Trabalho"))
+                {
+                    tx.Start();
+                    if (doc.ActiveView.SketchPlane == null)
+                    {
+                        double zFeet = baseLevel?.Elevation ?? 0.0;
+                        Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, zFeet));
+                        doc.ActiveView.SketchPlane = SketchPlane.Create(doc, plane);
+                    }
+                    tx.Commit();
+                }
+
+                XYZ picked = uidoc.Selection.PickPoint($"Clique no local onde fica '{spec.Category}' no DWG/3D:");
+
+                return new DetectedRoutingPoint
+                {
+                    IsSelected = true,
+                    Name = $"{spec.Category} (Manual)",
+                    FixtureCategory = spec.Category,
+                    SourceType = "Manual",
+                    X = Math.Round(UnitUtils.ConvertFromInternalUnits(picked.X, UnitTypeId.Meters), 3),
+                    Y = Math.Round(UnitUtils.ConvertFromInternalUnits(picked.Y, UnitTypeId.Meters), 3),
+                    BaseZ = baseZ,
+                    PointHeightMeters = spec.DefaultHeightM,
+                    OutwardDirX = 0,
+                    OutwardDirY = 1,
+                    Weight = spec.Weight
+                };
+            }
+            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
+            {
+                return null;
+            }
+            finally
+            {
+                ownerWindow.ShowDialog();
+            }
+        }
+
+        public static RevitAutoRoutingResult ExecuteRouting(Document doc, RevitAutoRoutingRequest request)
+        {
+            if (string.Equals(request.DisciplineMode, "SanitarySewer", StringComparison.OrdinalIgnoreCase))
+            {
+                return ExecuteSanitarySewerRouting(doc, request);
+            }
+            return ExecuteColdWaterRouting(doc, request);
+        }
+
+        // =====================================================================
+        // 1. ROTEAMENTO DE ÁGUA FRIA COM DESVIO AUTOMÁTICO DE PERFIS STEEL FRAME
+        // =====================================================================
+        private static RevitAutoRoutingResult ExecuteColdWaterRouting(Document doc, RevitAutoRoutingRequest request)
+        {
+            var logs = new List<string>();
+            var activePoints = request.Points.Where(p => p.IsSelected).ToList();
+
+            if (activePoints.Count == 0)
+                throw new InvalidOperationException("Nenhum ponto selecionado na lista. Detecte os pontos (IFC/DWG) ou adicione pontos manualmente antes de traçar.");
+
+            var pipeTypeId = new ElementId(request.PipeTypeId);
+            var systemTypeId = new ElementId(request.PipingSystemTypeId);
+
+            if (doc.GetElement(pipeTypeId) is not PipeType)
+                throw new InvalidOperationException("Selecione um Tipo de Tubo válido do template.");
+            if (doc.GetElement(systemTypeId) is not PipingSystemType)
+                throw new InvalidOperationException("Selecione um Sistema de Tubulação válido do template.");
+
+            Level? baseLevel = request.LevelId.HasValue
+                ? doc.GetElement(new ElementId(request.LevelId.Value)) as Level
+                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
+
+            if (baseLevel == null)
+                throw new InvalidOperationException("Nenhum Nível (Level) encontrado no projeto Revit.");
+
+            // Coleta perfis metálicos (Steel Frame) do projeto e dos vínculos RVT/IFC
+            var steelObstacles = request.AvoidSteelFrameClashes
+                ? CollectSteelFrameBoundingBoxes(doc)
+                : new List<WorldBox>();
+
+            if (request.AvoidSteelFrameClashes)
+                logs.Add($"Proteção Steel Frame ativa: {steelObstacles.Count} perfil(is) metálico(s) mapeado(s) no modelo/vínculos.");
+
+            double offsetFeet = UnitUtils.ConvertToInternalUnits(request.TrunkOffsetMeters, UnitTypeId.Meters);
+            double trunkZ = baseLevel.Elevation + offsetFeet;
+            double diameterFeet = UnitUtils.ConvertToInternalUnits(request.InitialDiameterMm, UnitTypeId.Millimeters);
+            double clearanceFeet = (diameterFeet / 2.0) + UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters); // Folga 3,5cm do aço
+
+            var supplyInfo = FindSupplyConnector(doc);
+
+            var basePtsFeet = activePoints.Select(p => new XYZ(
+                UnitUtils.ConvertToInternalUnits(p.X, UnitTypeId.Meters),
+                UnitUtils.ConvertToInternalUnits(p.Y, UnitTypeId.Meters),
+                UnitUtils.ConvertToInternalUnits(p.BaseZ + p.PointHeightMeters, UnitTypeId.Meters))).ToList();
+
+            double minX = basePtsFeet.Min(p => p.X);
+            double maxX = basePtsFeet.Max(p => p.X);
+            double minY = basePtsFeet.Min(p => p.Y);
+            double maxY = basePtsFeet.Max(p => p.Y);
+
+            bool trunkAlongX = (maxX - minX) >= (maxY - minY);
+            double trunkConstCoord = trunkAlongX
+                ? (supplyInfo.HasValue ? supplyInfo.Value.Origin.Y : basePtsFeet.Average(p => p.Y))
+                : (supplyInfo.HasValue ? supplyInfo.Value.Origin.X : basePtsFeet.Average(p => p.X));
+
+            int pipesCreated = 0;
+            int fittingsCreated = 0;
+            int steelClashesAvoided = 0;
+            double totalLengthFeet = 0;
+
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Traçado Água Fria 3D (Steel Frame)"))
+            {
+                tx.Start();
+
+                var trunkJunctions = new List<TrunkJunction>();
+
+                for (int i = 0; i < activePoints.Count; i++)
+                {
+                    var pt = activePoints[i];
+                    XYZ dirXY = new XYZ(pt.OutwardDirX, pt.OutwardDirY, 0);
+                    dirXY = dirXY.GetLength() < 0.05 ? XYZ.BasisY : dirXY.Normalize();
+
+                    double origXFeet = UnitUtils.ConvertToInternalUnits(pt.X, UnitTypeId.Meters);
+                    double origYFeet = UnitUtils.ConvertToInternalUnits(pt.Y, UnitTypeId.Meters);
+                    double zPointFeet = UnitUtils.ConvertToInternalUnits(pt.BaseZ + pt.PointHeightMeters, UnitTypeId.Meters);
+
+                    // Verifica se a descida/subida vertical bate em algum montante Steel Frame
+                    double dropXFeet = origXFeet;
+                    double dropYFeet = origYFeet;
+                    bool wasShifted = false;
+
+                    if (request.AvoidSteelFrameClashes && steelObstacles.Count > 0)
+                    {
+                        double zLow = Math.Min(zPointFeet, trunkZ);
+                        double zHigh = Math.Max(zPointFeet, trunkZ);
+                        wasShifted = FindClashFreeVerticalDrop(
+                            origXFeet, origYFeet, zLow, zHigh, clearanceFeet, trunkAlongX, steelObstacles,
+                            out dropXFeet, out dropYFeet);
+
+                        if (wasShifted)
+                        {
+                            steelClashesAvoided++;
+                            double shiftCm = Math.Round(UnitUtils.ConvertFromInternalUnits(
+                                Math.Sqrt(Math.Pow(dropXFeet - origXFeet, 2) + Math.Pow(dropYFeet - origYFeet, 2)),
+                                UnitTypeId.Centimeters), 1);
+                            logs.Add($"[Steel Frame] '{pt.Name}': prumada deslocada {shiftCm:F1} cm para vão livre (zero colisão/sem furação).");
+                        }
+                    }
+
+                    XYZ pWallFixture = new XYZ(origXFeet, origYFeet, zPointFeet);
+                    XYZ pStub = pWallFixture + dirXY * UnitUtils.ConvertToInternalUnits(0.08, UnitTypeId.Meters);
+                    XYZ pWallDropBottom = new XYZ(dropXFeet, dropYFeet, zPointFeet);
+                    XYZ pWallDropTop = new XYZ(dropXFeet, dropYFeet, trunkZ);
+
+                    double rawCoord = trunkAlongX ? pWallDropTop.X : pWallDropTop.Y;
+                    double adjustedCoord = EnsureUniqueTrunkCoord(rawCoord, trunkJunctions.Select(j => j.CoordAlongTrunk).ToList());
+
+                    XYZ pWallTopAdj = trunkAlongX
+                        ? new XYZ(adjustedCoord, pWallDropTop.Y, trunkZ)
+                        : new XYZ(pWallDropTop.X, adjustedCoord, trunkZ);
+
+                    XYZ pTrunk = trunkAlongX
+                        ? new XYZ(adjustedCoord, trunkConstCoord, trunkZ)
+                        : new XYZ(trunkConstCoord, adjustedCoord, trunkZ);
+
+                    var branchPoints = BuildCleanPolyline(new[] { pStub, pWallFixture, pWallDropBottom, pWallDropTop, pWallTopAdj, pTrunk });
+                    var branchPipes = CreatePipeChain(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, branchPoints, ref fittingsCreated);
+
+                    if (branchPipes.Count > 0)
+                    {
+                        pipesCreated += branchPipes.Count;
+                        totalLengthFeet += branchPipes.Sum(GetPipeLengthFeet);
+
+                        SetPipeComment(branchPipes[0], $"BahrHidro|{pt.Name}|{pt.Weight.ToString("F2", CultureInfo.InvariantCulture)}");
+
+                        if (pt.HostElementId.HasValue && doc.GetElement(new ElementId(pt.HostElementId.Value)) is FamilyInstance hostFi)
+                        {
+                            Connector? cwConn = FindColdWaterConnector(hostFi);
+                            Connector? startConn = GetClosestConnector(branchPipes[0], pWallFixture);
+                            if (cwConn != null && !cwConn.IsConnected && startConn != null && !startConn.IsConnected)
+                            {
+                                try { startConn.ConnectTo(cwConn); } catch { }
+                            }
+                        }
+
+                        Pipe lastBranchPipe = branchPipes[^1];
+                        Connector? trunkEndConn = GetClosestConnector(lastBranchPipe, pTrunk);
+                        trunkJunctions.Add(new TrunkJunction(adjustedCoord, pTrunk, trunkEndConn, false));
+
+                        logs.Add($"Traçado AF: {pt.Name} [{pt.SourceType}] (H = {pt.PointHeightMeters:F2} m | ΣP = {pt.Weight:F2}) → {branchPipes.Count} tubo(s).");
+                    }
+                }
+
+                if (supplyInfo.HasValue)
+                {
+                    XYZ s0 = supplyInfo.Value.Origin;
+                    XYZ s1 = s0 + supplyInfo.Value.OutwardDirXY * UnitUtils.ConvertToInternalUnits(0.20, UnitTypeId.Meters);
+                    XYZ s2 = new XYZ(s1.X, s1.Y, trunkZ);
+                    XYZ sTrunk = trunkAlongX
+                        ? new XYZ(s2.X, trunkConstCoord, trunkZ)
+                        : new XYZ(trunkConstCoord, s2.Y, trunkZ);
+
+                    double supplyCoord = trunkAlongX ? sTrunk.X : sTrunk.Y;
+                    var supplyPoints = BuildCleanPolyline(new[] { s0, s1, s2, sTrunk });
+                    var supplyPipes = CreatePipeChain(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, supplyPoints, ref fittingsCreated);
+
+                    if (supplyPipes.Count > 0)
+                    {
+                        pipesCreated += supplyPipes.Count;
+                        totalLengthFeet += supplyPipes.Sum(GetPipeLengthFeet);
+
+                        Connector? sConn = GetClosestConnector(supplyPipes[0], s0);
+                        if (sConn != null && !sConn.IsConnected && !supplyInfo.Value.Connector.IsConnected)
+                        {
+                            try { sConn.ConnectTo(supplyInfo.Value.Connector); } catch { }
+                        }
+
+                        Connector? trunkEntryConn = GetClosestConnector(supplyPipes[^1], sTrunk);
+                        trunkJunctions.Add(new TrunkJunction(supplyCoord, sTrunk, trunkEntryConn, true));
+                        logs.Insert(0, $"Alimentação conectada em '{supplyInfo.Value.Name}'.");
+                    }
+                }
+                else if (trunkJunctions.Count > 0)
+                {
+                    var orderedPreview = trunkJunctions.OrderBy(j => j.CoordAlongTrunk).ToList();
+                    double firstCoord = orderedPreview[0].CoordAlongTrunk - UnitUtils.ConvertToInternalUnits(0.80, UnitTypeId.Meters);
+                    XYZ pSupplyStart = trunkAlongX
+                        ? new XYZ(firstCoord, trunkConstCoord, trunkZ)
+                        : new XYZ(trunkConstCoord, firstCoord, trunkZ);
+
+                    trunkJunctions.Add(new TrunkJunction(firstCoord, pSupplyStart, null, true));
+                    logs.Insert(0, "Origem da linha tronco criada a 0,80 m do primeiro ramal (pronta para ligar ao barrilete/prumada).");
+                }
+
+                ConnectTrunkSegments(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, trunkJunctions, ref pipesCreated, ref fittingsCreated, ref totalLengthFeet);
+                tx.Commit();
+            }
+
+            double totalLengthMeters = Math.Round(UnitUtils.ConvertFromInternalUnits(totalLengthFeet, UnitTypeId.Meters), 2);
+            string planoLabel = request.RouteFromAbove ? "Por Cima (Entreforro)" : "Por Baixo (Piso)";
+            string summary = $"Água Fria 3D ({planoLabel}): {activePoints.Count} ponto(s), {pipesCreated} tubo(s) ({totalLengthMeters:F2} m), {fittingsCreated} conexão(ões) e {steelClashesAvoided} desvio(s) Steel Frame.";
+
+            return new RevitAutoRoutingResult(activePoints.Count, pipesCreated, fittingsCreated, steelClashesAvoided, totalLengthMeters, summary, logs);
+        }
+
+        // =====================================================================
+        // 2. ROTEAMENTO DE ESGOTO SANITÁRIO 3D COM DECLIVIDADE (ABNT NBR 8160)
+        // =====================================================================
+        private static RevitAutoRoutingResult ExecuteSanitarySewerRouting(Document doc, RevitAutoRoutingRequest request)
+        {
+            var logs = new List<string>();
+            var activePoints = request.Points.Where(p => p.IsSelected).ToList();
+
+            if (activePoints.Count == 0)
+                throw new InvalidOperationException("Nenhum ponto selecionado na lista. Detecte os pontos (IFC/DWG) antes de traçar o esgoto.");
+
+            var pipeTypeId = new ElementId(request.PipeTypeId);
+            var systemTypeId = new ElementId(request.PipingSystemTypeId);
+
+            if (doc.GetElement(pipeTypeId) is not PipeType)
+                throw new InvalidOperationException("Selecione um Tipo de Tubo de Esgoto válido do template.");
+            if (doc.GetElement(systemTypeId) is not PipingSystemType)
+                throw new InvalidOperationException("Selecione um Sistema Sanitário válido do template.");
+
+            Level? baseLevel = request.LevelId.HasValue
+                ? doc.GetElement(new ElementId(request.LevelId.Value)) as Level
+                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
+
+            if (baseLevel == null)
+                throw new InvalidOperationException("Nenhum Nível (Level) encontrado no projeto Revit.");
+
+            var steelObstacles = request.AvoidSteelFrameClashes
+                ? CollectSteelFrameBoundingBoxes(doc)
+                : new List<WorldBox>();
+
+            // Subcoletor principal DN 100 mm abaixo do piso (padrão -0,22 m do nível)
+            double collectorStartOffsetM = request.TrunkOffsetMeters < 0 ? request.TrunkOffsetMeters : -0.22;
+            double collectorStartZ = baseLevel.Elevation + UnitUtils.ConvertToInternalUnits(collectorStartOffsetM, UnitTypeId.Meters);
+
+            double dia100Feet = UnitUtils.ConvertToInternalUnits(100.0, UnitTypeId.Millimeters);
+            double dia50Feet = UnitUtils.ConvertToInternalUnits(50.0, UnitTypeId.Millimeters);
+
+            var ptsFeet = activePoints.Select(p => new XYZ(
+                UnitUtils.ConvertToInternalUnits(p.X, UnitTypeId.Meters),
+                UnitUtils.ConvertToInternalUnits(p.Y, UnitTypeId.Meters),
+                UnitUtils.ConvertToInternalUnits(p.BaseZ, UnitTypeId.Meters))).ToList();
+
+            double minX = ptsFeet.Min(p => p.X);
+            double maxX = ptsFeet.Max(p => p.X);
+            double minY = ptsFeet.Min(p => p.Y);
+            double maxY = ptsFeet.Max(p => p.Y);
+
+            bool trunkAlongX = (maxX - minX) >= (maxY - minY);
+            double trunkConstCoord = trunkAlongX
+                ? ptsFeet.Average(p => p.Y) + UnitUtils.ConvertToInternalUnits(0.35, UnitTypeId.Meters)
+                : ptsFeet.Average(p => p.X) + UnitUtils.ConvertToInternalUnits(0.35, UnitTypeId.Meters);
+
+            // Ordena pontos do montante (início do subcoletor) para jusante (tubo de queda)
+            var orderedPoints = activePoints
+                .OrderBy(p => trunkAlongX ? p.X : p.Y)
+                .ToList();
+
+            double firstAxisCoord = trunkAlongX
+                ? UnitUtils.ConvertToInternalUnits(orderedPoints[0].X, UnitTypeId.Meters)
+                : UnitUtils.ConvertToInternalUnits(orderedPoints[0].Y, UnitTypeId.Meters);
+
+            int pipesCreated = 0;
+            int fittingsCreated = 0;
+            int steelClashesAvoided = 0;
+            double totalLengthFeet = 0;
+
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Traçado Esgoto 3D (NBR 8160)"))
+            {
+                tx.Start();
+
+                var collectorNodes = new List<(double AxisCoord, XYZ Point, Connector? BranchConn)>();
+
+                foreach (var pt in orderedPoints)
+                {
+                    bool isToilet = pt.FixtureCategory.Contains("Vaso", StringComparison.OrdinalIgnoreCase) ||
+                                    pt.FixtureCategory.Contains("Bacia", StringComparison.OrdinalIgnoreCase);
+
+                    double branchDiaFeet = isToilet ? dia100Feet : dia50Feet;
+                    double slope = isToilet ? 0.01 : 0.02; // 1% para DN 100, 2% para DN 50 (NBR 8160)
+                    string dnLabel = isToilet ? "DN 100 (i=1%)" : "DN 50 (i=2%)";
+
+                    double origXFeet = UnitUtils.ConvertToInternalUnits(pt.X, UnitTypeId.Meters);
+                    double origYFeet = UnitUtils.ConvertToInternalUnits(pt.Y, UnitTypeId.Meters);
+                    double floorZFeet = UnitUtils.ConvertToInternalUnits(pt.BaseZ, UnitTypeId.Meters);
+
+                    // Ponto de saída no piso (vaso sai no piso 0,0m; pias/lavatórios descem da parede a 0,50m até -0,10m)
+                    double startZFeet = isToilet
+                        ? floorZFeet
+                        : floorZFeet + UnitUtils.ConvertToInternalUnits(0.50, UnitTypeId.Meters);
+
+                    double subFloorZFeet = floorZFeet - UnitUtils.ConvertToInternalUnits(0.10, UnitTypeId.Meters);
+
+                    double dropXFeet = origXFeet;
+                    double dropYFeet = origYFeet;
+
+                    if (!isToilet && request.AvoidSteelFrameClashes && steelObstacles.Count > 0)
+                    {
+                        double clearance = (branchDiaFeet / 2.0) + UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters);
+                        bool shifted = FindClashFreeVerticalDrop(
+                            origXFeet, origYFeet, subFloorZFeet, startZFeet, clearance, trunkAlongX, steelObstacles,
+                            out dropXFeet, out dropYFeet);
+                        if (shifted)
+                        {
+                            steelClashesAvoided++;
+                            logs.Add($"[Steel Frame] Descida de esgoto '{pt.Name}' deslocada para vão livre entre montantes.");
+                        }
+                    }
+
+                    double rawCoord = trunkAlongX ? dropXFeet : dropYFeet;
+                    double adjCoord = EnsureUniqueTrunkCoord(rawCoord, collectorNodes.Select(n => n.AxisCoord).ToList());
+
+                    double distAlongCollector = Math.Max(0, adjCoord - firstAxisCoord);
+                    double collectorZAtJunction = collectorStartZ - (distAlongCollector * 0.01); // Subcoletor DN 100 com 1% de queda
+
+                    XYZ pCollector = trunkAlongX
+                        ? new XYZ(adjCoord, trunkConstCoord, collectorZAtJunction)
+                        : new XYZ(trunkConstCoord, adjCoord, collectorZAtJunction);
+
+                    XYZ pSubFloor = new XYZ(dropXFeet, dropYFeet, subFloorZFeet);
+                    double horizDist = Math.Sqrt(Math.Pow(pCollector.X - pSubFloor.X, 2) + Math.Pow(pCollector.Y - pSubFloor.Y, 2));
+                    double slopedEndZ = Math.Max(collectorZAtJunction + UnitUtils.ConvertToInternalUnits(0.03, UnitTypeId.Meters), subFloorZFeet - (horizDist * slope));
+                    XYZ pBeforeDrop = new XYZ(pCollector.X, pCollector.Y, slopedEndZ);
+
+                    var rawPts = new List<XYZ>();
+                    if (!isToilet)
+                        rawPts.Add(new XYZ(origXFeet, origYFeet, startZFeet));
+
+                    rawPts.Add(pSubFloor);
+                    rawPts.Add(pBeforeDrop);
+                    rawPts.Add(pCollector);
+
+                    var branchPoints = BuildCleanPolyline(rawPts);
+                    var branchPipes = CreatePipeChain(doc, systemTypeId, pipeTypeId, baseLevel.Id, branchDiaFeet, branchPoints, ref fittingsCreated);
+
+                    if (branchPipes.Count > 0)
+                    {
+                        pipesCreated += branchPipes.Count;
+                        totalLengthFeet += branchPipes.Sum(GetPipeLengthFeet);
+
+                        Connector? endConn = GetClosestConnector(branchPipes[^1], pCollector);
+                        collectorNodes.Add((adjCoord, pCollector, endConn));
+                        logs.Add($"Ramal Esgoto: {pt.Name} → {dnLabel} ({branchPipes.Count} trecho(s)).");
+                    }
+                }
+
+                // Cria o Subcoletor Principal DN 100 (declividade 1%) + Tubo de Queda na extremidade final
+                var orderedCollector = collectorNodes.OrderBy(n => n.AxisCoord).ToList();
+                if (orderedCollector.Count > 0)
+                {
+                    var lastNode = orderedCollector[^1];
+                    double outletCoord = lastNode.AxisCoord + UnitUtils.ConvertToInternalUnits(0.60, UnitTypeId.Meters);
+                    double outletZ = lastNode.Point.Z - UnitUtils.ConvertToInternalUnits(0.60 * 0.01, UnitTypeId.Meters);
+                    XYZ pOutletTop = trunkAlongX
+                        ? new XYZ(outletCoord, trunkConstCoord, outletZ)
+                        : new XYZ(trunkConstCoord, outletCoord, outletZ);
+
+                    orderedCollector.Add((outletCoord, pOutletTop, null));
+
+                    var collectorPipes = new List<Pipe>();
+                    for (int i = 0; i < orderedCollector.Count - 1; i++)
+                    {
+                        XYZ a = orderedCollector[i].Point;
+                        XYZ b = orderedCollector[i + 1].Point;
+                        if (a.DistanceTo(b) < MinSegmentFeet) continue;
+
+                        Pipe cPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, a, b);
+                        SetPipeDiameter(cPipe, dia100Feet);
+                        collectorPipes.Add(cPipe);
+                        pipesCreated++;
+                        totalLengthFeet += GetPipeLengthFeet(cPipe);
+                    }
+
+                    // Tubo de Queda vertical DN 100 na saída
+                    XYZ pDropDown = new XYZ(pOutletTop.X, pOutletTop.Y, pOutletTop.Z - UnitUtils.ConvertToInternalUnits(0.80, UnitTypeId.Meters));
+                    Pipe dropPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, pOutletTop, pDropDown);
+                    SetPipeDiameter(dropPipe, dia100Feet);
+                    pipesCreated++;
+                    totalLengthFeet += GetPipeLengthFeet(dropPipe);
+
+                    if (collectorPipes.Count > 0)
+                    {
+                        Connector? c1 = GetClosestConnector(collectorPipes[^1], pOutletTop);
+                        Connector? c2 = GetClosestConnector(dropPipe, pOutletTop);
+                        if (c1 != null && c2 != null)
+                        {
+                            try { doc.Create.NewElbowFitting(c1, c2); fittingsCreated++; } catch { }
+                        }
+                    }
+
+                    for (int i = 0; i < orderedCollector.Count; i++)
+                    {
+                        var node = orderedCollector[i];
+                        if (node.BranchConn == null) continue;
+
+                        var touching = new List<Connector>();
+                        foreach (var cp in collectorPipes)
+                        {
+                            Connector? c = GetClosestConnector(cp, node.Point);
+                            if (c != null && c.Origin.DistanceTo(node.Point) <= ConnectorToleranceFeet)
+                                touching.Add(c);
+                        }
+
+                        if (touching.Count == 1)
+                        {
+                            try { doc.Create.NewElbowFitting(touching[0], node.BranchConn); fittingsCreated++; } catch { }
+                        }
+                        else if (touching.Count >= 2)
+                        {
+                            try { doc.Create.NewTeeFitting(touching[0], touching[1], node.BranchConn); fittingsCreated++; } catch { }
+                        }
+                    }
+
+                    logs.Insert(0, "Subcoletor Principal DN 100 mm criado com declividade contínua de 1,0% e Tubo de Queda na saída.");
+                }
+
+                tx.Commit();
+            }
+
+            double totalLengthMeters = Math.Round(UnitUtils.ConvertFromInternalUnits(totalLengthFeet, UnitTypeId.Meters), 2);
+            string summary = $"Esgoto 3D com Declividade (NBR 8160): {activePoints.Count} aparelho(s), {pipesCreated} tubo(s) ({totalLengthMeters:F2} m), {fittingsCreated} conexão(ões) e {steelClashesAvoided} desvio(s) Steel Frame.";
+
+            return new RevitAutoRoutingResult(activePoints.Count, pipesCreated, fittingsCreated, steelClashesAvoided, totalLengthMeters, summary, logs);
+        }
+
+        // =====================================================================
+        // MOTOR ANTI-COLISÃO LIGHT STEEL FRAME (RVT + IFC ESTRUTURAL)
+        // =====================================================================
+        private static List<WorldBox> CollectSteelFrameBoundingBoxes(Document doc)
+        {
+            var boxes = new List<WorldBox>();
+            CollectSteelFromDoc(doc, Transform.Identity, boxes);
+
+            var links = new FilteredElementCollector(doc)
+                .OfClass(typeof(RevitLinkInstance))
+                .Cast<RevitLinkInstance>()
+                .ToList();
+
+            foreach (var link in links)
+            {
+                Document? linkDoc = link.GetLinkDocument();
+                if (linkDoc == null) continue;
+                CollectSteelFromDoc(linkDoc, link.GetTotalTransform(), boxes);
+            }
+
+            return boxes;
+        }
+
+        private static void CollectSteelFromDoc(Document targetDoc, Transform tr, List<WorldBox> output)
+        {
+            var categories = new[]
+            {
+                BuiltInCategory.OST_StructuralFraming,
+                BuiltInCategory.OST_StructuralColumns,
+                BuiltInCategory.OST_GenericModel
+            };
+
+            var elements = new FilteredElementCollector(targetDoc)
+                .WherePasses(new ElementMulticategoryFilter(categories))
+                .WhereElementIsNotElementType()
+                .ToElements();
+
+            foreach (Element elem in elements)
+            {
+                if (elem.Category?.Id.Value == (long)BuiltInCategory.OST_GenericModel)
+                {
+                    string name = RemoverAcentos(BuildElementSearchString(elem)).ToLowerInvariant();
+                    if (!name.Contains("stud") && !name.Contains("montante") && !name.Contains("perfil") &&
+                        !name.Contains("steel") && !name.Contains("lsf") && !name.Contains("column") &&
+                        !name.Contains("beam") && !name.Contains("member"))
+                        continue;
+                }
+
+                BoundingBoxXYZ? bb = elem.get_BoundingBox(null);
+                if (bb == null) continue;
+
+                WorldBox wb = TransformBoundingBox(bb, tr);
+                double dx = UnitUtils.ConvertFromInternalUnits(wb.MaxX - wb.MinX, UnitTypeId.Meters);
+                double dy = UnitUtils.ConvertFromInternalUnits(wb.MaxY - wb.MinY, UnitTypeId.Meters);
+                double dz = UnitUtils.ConvertFromInternalUnits(wb.MaxZ - wb.MinZ, UnitTypeId.Meters);
+
+                // Ignora caixas gigantes (lajes/prédio inteiro) e elementos planos demais
+                if ((dx > 3.5 && dy > 3.5) || dz < 0.05) continue;
+
+                output.Add(wb);
+            }
+        }
+
+        private static WorldBox TransformBoundingBox(BoundingBoxXYZ bb, Transform tr)
+        {
+            XYZ[] corners =
+            {
+                new(bb.Min.X, bb.Min.Y, bb.Min.Z),
+                new(bb.Max.X, bb.Min.Y, bb.Min.Z),
+                new(bb.Min.X, bb.Max.Y, bb.Min.Z),
+                new(bb.Max.X, bb.Max.Y, bb.Min.Z),
+                new(bb.Min.X, bb.Min.Y, bb.Max.Z),
+                new(bb.Max.X, bb.Min.Y, bb.Max.Z),
+                new(bb.Min.X, bb.Max.Y, bb.Max.Z),
+                new(bb.Max.X, bb.Max.Y, bb.Max.Z)
+            };
+
+            double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
+            double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
+
+            foreach (var c in corners)
+            {
+                XYZ p = tr.OfPoint(c);
+                if (p.X < minX) minX = p.X;
+                if (p.Y < minY) minY = p.Y;
+                if (p.Z < minZ) minZ = p.Z;
+                if (p.X > maxX) maxX = p.X;
+                if (p.Y > maxY) maxY = p.Y;
+                if (p.Z > maxZ) maxZ = p.Z;
+            }
+
+            return new WorldBox(minX, minY, minZ, maxX, maxY, maxZ);
+        }
+
+        private static bool FindClashFreeVerticalDrop(
+            double xFeet,
+            double yFeet,
+            double zMinFeet,
+            double zMaxFeet,
+            double clearanceFeet,
+            bool preferShiftAlongX,
+            List<WorldBox> obstacles,
+            out double safeXFeet,
+            out double safeYFeet)
+        {
+            safeXFeet = xFeet;
+            safeYFeet = yFeet;
+
+            if (!HasVerticalClash(xFeet, yFeet, zMinFeet, zMaxFeet, clearanceFeet, obstacles))
+                return false;
+
+            double[] offsetsCm = { 8, -8, 12, -12, 16, -16, 20, -20, 25, -25, 30, -30 };
+
+            // 1. Tenta deslocar no eixo principal da parede (preserva alinhamento dentro do painel LSF)
+            foreach (double cm in offsetsCm)
+            {
+                double delta = UnitUtils.ConvertToInternalUnits(cm / 100.0, UnitTypeId.Meters);
+                double candX = preferShiftAlongX ? xFeet + delta : xFeet;
+                double candY = preferShiftAlongX ? yFeet : yFeet + delta;
+
+                if (!HasVerticalClash(candX, candY, zMinFeet, zMaxFeet, clearanceFeet, obstacles))
+                {
+                    safeXFeet = candX;
+                    safeYFeet = candY;
+                    return true;
+                }
+            }
+
+            // 2. Tenta deslocar no eixo perpendicular
+            foreach (double cm in offsetsCm)
+            {
+                double delta = UnitUtils.ConvertToInternalUnits(cm / 100.0, UnitTypeId.Meters);
+                double candX = preferShiftAlongX ? xFeet : xFeet + delta;
+                double candY = preferShiftAlongX ? yFeet + delta : yFeet;
+
+                if (!HasVerticalClash(candX, candY, zMinFeet, zMaxFeet, clearanceFeet, obstacles))
+                {
+                    safeXFeet = candX;
+                    safeYFeet = candY;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool HasVerticalClash(
+            double xFeet,
+            double yFeet,
+            double zMinFeet,
+            double zMaxFeet,
+            double clearanceFeet,
+            List<WorldBox> obstacles)
+        {
+            double pMinX = xFeet - clearanceFeet;
+            double pMaxX = xFeet + clearanceFeet;
+            double pMinY = yFeet - clearanceFeet;
+            double pMaxY = yFeet + clearanceFeet;
+
+            foreach (var box in obstacles)
+            {
+                bool overlapX = pMinX <= box.MaxX && pMaxX >= box.MinX;
+                bool overlapY = pMinY <= box.MaxY && pMaxY >= box.MinY;
+                bool overlapZ = zMinFeet <= box.MaxZ && zMaxFeet >= box.MinZ;
+
+                if (overlapX && overlapY && overlapZ)
+                    return true;
+            }
+            return false;
+        }
+
+        // =====================================================================
+        // MÉTODOS AUXILIARES DE DETECÇÃO IFC / DWG / REVIT E CONEXÕES
+        // =====================================================================
         private static void CollectFromDocumentElements(
             Document targetDoc,
             Transform transform,
@@ -140,17 +795,13 @@ namespace BahrHidro.Revit
             {
                 string rawText = BuildElementSearchString(elem);
                 var spec = ClassifyFixture(rawText);
-                if (spec == null) continue;
-
-                // Ignora reservatórios/caixas d'água (são fontes, não pontos de consumo)
-                if (spec.Value.Category == "Reservatório") continue;
+                if (spec == null || spec.Value.Category == "Reservatório") continue;
 
                 XYZ? originFeet = null;
                 XYZ dirXY = XYZ.BasisY;
 
                 if (elem is FamilyInstance fi)
                 {
-                    // Se tiver conector MEP livre no host, usa posição exata dele
                     Connector? cwConn = isHostDocument ? FindColdWaterConnector(fi) : null;
                     if (cwConn != null)
                     {
@@ -244,10 +895,8 @@ namespace BahrHidro.Revit
                                         }
                                     }
                                 }
-                                string blockName = "";
-                                string layerName = sbLayers.ToString();
 
-                                var spec = ClassifyFixture($"{blockName} {layerName}");
+                                var spec = ClassifyFixture(sbLayers.ToString());
                                 if (spec == null || spec.Value.Category == "Reservatório") continue;
 
                                 Transform tr = blockInst.Transform;
@@ -283,281 +932,65 @@ namespace BahrHidro.Revit
             catch { }
         }
 
-        public static DetectedRoutingPoint? PickManualPoint(UIDocument uidoc, Window ownerWindow, string fixtureCategory, long? levelId)
+        private static void ConnectTrunkSegments(
+            Document doc,
+            ElementId systemTypeId,
+            ElementId pipeTypeId,
+            ElementId levelId,
+            double diameterFeet,
+            List<TrunkJunction> trunkJunctions,
+            ref int pipesCreated,
+            ref int fittingsCreated,
+            ref double totalLengthFeet)
         {
-            Document doc = uidoc.Document;
-            Level? baseLevel = levelId.HasValue
-                ? doc.GetElement(new ElementId(levelId.Value)) as Level
-                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
+            var orderedJunctions = trunkJunctions.OrderBy(j => j.CoordAlongTrunk).ToList();
+            var trunkSegments = new List<Pipe>();
 
-            double baseZ = baseLevel != null
-                ? Math.Round(UnitUtils.ConvertFromInternalUnits(baseLevel.Elevation, UnitTypeId.Meters), 3)
-                : 0.0;
-
-            var spec = ClassifyFixture(fixtureCategory) ?? ("Ponto Hidráulico", 0.60, 0.4);
-
-            try
+            for (int i = 0; i < orderedJunctions.Count - 1; i++)
             {
-                ownerWindow.Hide();
+                XYZ a = orderedJunctions[i].Point;
+                XYZ b = orderedJunctions[i + 1].Point;
+                if (a.DistanceTo(b) < MinSegmentFeet) continue;
 
-                // Garante plano de trabalho ativo na vista para permitir clicar direto sobre linhas do DWG
-                using (Transaction tx = new Transaction(doc, "Bahr Hidro - Plano de Trabalho"))
-                {
-                    tx.Start();
-                    if (doc.ActiveView.SketchPlane == null)
-                    {
-                        double zFeet = baseLevel?.Elevation ?? 0.0;
-                        Plane plane = Plane.CreateByNormalAndOrigin(XYZ.BasisZ, new XYZ(0, 0, zFeet));
-                        doc.ActiveView.SketchPlane = SketchPlane.Create(doc, plane);
-                    }
-                    tx.Commit();
-                }
-
-                XYZ picked = uidoc.Selection.PickPoint($"Clique no local onde fica '{spec.Category}' no DWG/3D:");
-
-                return new DetectedRoutingPoint
-                {
-                    IsSelected = true,
-                    Name = $"{spec.Category} (Manual)",
-                    FixtureCategory = spec.Category,
-                    SourceType = "Manual",
-                    X = Math.Round(UnitUtils.ConvertFromInternalUnits(picked.X, UnitTypeId.Meters), 3),
-                    Y = Math.Round(UnitUtils.ConvertFromInternalUnits(picked.Y, UnitTypeId.Meters), 3),
-                    BaseZ = baseZ,
-                    PointHeightMeters = spec.DefaultHeightM,
-                    OutwardDirX = 0,
-                    OutwardDirY = 1,
-                    Weight = spec.Weight
-                };
-            }
-            catch (Autodesk.Revit.Exceptions.OperationCanceledException)
-            {
-                return null;
-            }
-            finally
-            {
-                ownerWindow.ShowDialog();
-            }
-        }
-
-        public static RevitAutoRoutingResult ExecuteRouting(Document doc, RevitAutoRoutingRequest request)
-        {
-            var logs = new List<string>();
-            var activePoints = request.Points.Where(p => p.IsSelected).ToList();
-
-            if (activePoints.Count == 0)
-                throw new InvalidOperationException("Nenhum ponto selecionado na lista. Detecte os pontos (IFC/DWG) ou adicione pontos manualmente antes de traçar.");
-
-            var pipeTypeId = new ElementId(request.PipeTypeId);
-            var systemTypeId = new ElementId(request.PipingSystemTypeId);
-
-            if (doc.GetElement(pipeTypeId) is not PipeType)
-                throw new InvalidOperationException("Selecione um Tipo de Tubo válido do template.");
-
-            if (doc.GetElement(systemTypeId) is not PipingSystemType)
-                throw new InvalidOperationException("Selecione um Sistema de Tubulação válido do template.");
-
-            Level? baseLevel = request.LevelId.HasValue
-                ? doc.GetElement(new ElementId(request.LevelId.Value)) as Level
-                : new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>().OrderBy(l => l.Elevation).FirstOrDefault();
-
-            if (baseLevel == null)
-                throw new InvalidOperationException("Nenhum Nível (Level) encontrado no projeto Revit.");
-
-            double offsetFeet = UnitUtils.ConvertToInternalUnits(request.TrunkOffsetMeters, UnitTypeId.Meters);
-            double trunkZ = baseLevel.Elevation + offsetFeet;
-            double diameterFeet = UnitUtils.ConvertToInternalUnits(request.InitialDiameterMm, UnitTypeId.Millimeters);
-
-            var supplyInfo = FindSupplyConnector(doc);
-
-            var basePtsFeet = activePoints.Select(p => new XYZ(
-                UnitUtils.ConvertToInternalUnits(p.X, UnitTypeId.Meters),
-                UnitUtils.ConvertToInternalUnits(p.Y, UnitTypeId.Meters),
-                UnitUtils.ConvertToInternalUnits(p.BaseZ + p.PointHeightMeters, UnitTypeId.Meters))).ToList();
-
-            double minX = basePtsFeet.Min(p => p.X);
-            double maxX = basePtsFeet.Max(p => p.X);
-            double minY = basePtsFeet.Min(p => p.Y);
-            double maxY = basePtsFeet.Max(p => p.Y);
-
-            bool trunkAlongX = (maxX - minX) >= (maxY - minY);
-            double trunkConstCoord = trunkAlongX
-                ? (supplyInfo.HasValue ? supplyInfo.Value.Origin.Y : basePtsFeet.Average(p => p.Y))
-                : (supplyInfo.HasValue ? supplyInfo.Value.Origin.X : basePtsFeet.Average(p => p.X));
-
-            int pipesCreated = 0;
-            int fittingsCreated = 0;
-            double totalLengthFeet = 0;
-
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Traçado Automático 3D"))
-            {
-                tx.Start();
-
-                var trunkJunctions = new List<TrunkJunction>();
-
-                for (int i = 0; i < activePoints.Count; i++)
-                {
-                    var pt = activePoints[i];
-                    XYZ dirXY = new XYZ(pt.OutwardDirX, pt.OutwardDirY, 0);
-                    dirXY = dirXY.GetLength() < 0.05 ? XYZ.BasisY : dirXY.Normalize();
-
-                    double xFeet = UnitUtils.ConvertToInternalUnits(pt.X, UnitTypeId.Meters);
-                    double yFeet = UnitUtils.ConvertToInternalUnits(pt.Y, UnitTypeId.Meters);
-                    double zPointFeet = UnitUtils.ConvertToInternalUnits(pt.BaseZ + pt.PointHeightMeters, UnitTypeId.Meters);
-
-                    // Geometria estilo QiBuilder:
-                    // pStub (saída na parede a 8cm) -> pWallPoint (joelho na parede na altura Z) -> pWallTop (subida/descida vertical) -> pTrunk (linha tronco)
-                    XYZ pWallPoint = new XYZ(xFeet, yFeet, zPointFeet);
-                    XYZ pStub = pWallPoint + dirXY * UnitUtils.ConvertToInternalUnits(0.08, UnitTypeId.Meters);
-                    XYZ pWallTop = new XYZ(xFeet, yFeet, trunkZ);
-
-                    double rawCoord = trunkAlongX ? pWallTop.X : pWallTop.Y;
-                    double adjustedCoord = EnsureUniqueTrunkCoord(rawCoord, trunkJunctions.Select(j => j.CoordAlongTrunk).ToList());
-
-                    XYZ pWallTopAdj = trunkAlongX
-                        ? new XYZ(adjustedCoord, pWallTop.Y, trunkZ)
-                        : new XYZ(pWallTop.X, adjustedCoord, trunkZ);
-
-                    XYZ pTrunk = trunkAlongX
-                        ? new XYZ(adjustedCoord, trunkConstCoord, trunkZ)
-                        : new XYZ(trunkConstCoord, adjustedCoord, trunkZ);
-
-                    var branchPoints = BuildCleanPolyline(new[] { pStub, pWallPoint, pWallTop, pWallTopAdj, pTrunk });
-                    var branchPipes = CreatePipeChain(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, branchPoints, ref fittingsCreated);
-
-                    if (branchPipes.Count > 0)
-                    {
-                        pipesCreated += branchPipes.Count;
-                        totalLengthFeet += branchPipes.Sum(GetPipeLengthFeet);
-
-                        // Grava metadados NBR 5626 no tubo de ponta para o dimensionamento automático reconhecer o peso!
-                        SetPipeComment(branchPipes[0], $"BahrHidro|{pt.Name}|{pt.Weight.ToString("F2", CultureInfo.InvariantCulture)}");
-
-                        // Se houver família Revit nativa no host com conector livre, conecta automaticamente
-                        if (pt.HostElementId.HasValue && doc.GetElement(new ElementId(pt.HostElementId.Value)) is FamilyInstance hostFi)
-                        {
-                            Connector? cwConn = FindColdWaterConnector(hostFi);
-                            Connector? startConn = GetClosestConnector(branchPipes[0], pWallPoint);
-                            if (cwConn != null && !cwConn.IsConnected && startConn != null && !startConn.IsConnected)
-                            {
-                                try { startConn.ConnectTo(cwConn); } catch { }
-                            }
-                        }
-
-                        Pipe lastBranchPipe = branchPipes[^1];
-                        Connector? trunkEndConn = GetClosestConnector(lastBranchPipe, pTrunk);
-                        trunkJunctions.Add(new TrunkJunction(adjustedCoord, pTrunk, trunkEndConn, false));
-
-                        logs.Add($"Traçado: {pt.Name} [{pt.SourceType}] (H = {pt.PointHeightMeters:F2} m | ΣP = {pt.Weight:F2}) → {branchPipes.Count} tubo(s).");
-                    }
-                }
-
-                // Alimentação (Reservatório existente ou ponto inicial da linha tronco)
-                if (supplyInfo.HasValue)
-                {
-                    XYZ s0 = supplyInfo.Value.Origin;
-                    XYZ s1 = s0 + supplyInfo.Value.OutwardDirXY * UnitUtils.ConvertToInternalUnits(0.20, UnitTypeId.Meters);
-                    XYZ s2 = new XYZ(s1.X, s1.Y, trunkZ);
-                    XYZ sTrunk = trunkAlongX
-                        ? new XYZ(s2.X, trunkConstCoord, trunkZ)
-                        : new XYZ(trunkConstCoord, s2.Y, trunkZ);
-
-                    double supplyCoord = trunkAlongX ? sTrunk.X : sTrunk.Y;
-                    var supplyPoints = BuildCleanPolyline(new[] { s0, s1, s2, sTrunk });
-                    var supplyPipes = CreatePipeChain(doc, systemTypeId, pipeTypeId, baseLevel.Id, diameterFeet, supplyPoints, ref fittingsCreated);
-
-                    if (supplyPipes.Count > 0)
-                    {
-                        pipesCreated += supplyPipes.Count;
-                        totalLengthFeet += supplyPipes.Sum(GetPipeLengthFeet);
-
-                        Connector? sConn = GetClosestConnector(supplyPipes[0], s0);
-                        if (sConn != null && !sConn.IsConnected && !supplyInfo.Value.Connector.IsConnected)
-                        {
-                            try { sConn.ConnectTo(supplyInfo.Value.Connector); } catch { }
-                        }
-
-                        Connector? trunkEntryConn = GetClosestConnector(supplyPipes[^1], sTrunk);
-                        trunkJunctions.Add(new TrunkJunction(supplyCoord, sTrunk, trunkEntryConn, true));
-                        logs.Insert(0, $"Alimentação conectada em '{supplyInfo.Value.Name}'.");
-                    }
-                }
-                else if (trunkJunctions.Count > 0)
-                {
-                    var orderedPreview = trunkJunctions.OrderBy(j => j.CoordAlongTrunk).ToList();
-                    double firstCoord = orderedPreview[0].CoordAlongTrunk - UnitUtils.ConvertToInternalUnits(0.80, UnitTypeId.Meters);
-                    XYZ pSupplyStart = trunkAlongX
-                        ? new XYZ(firstCoord, trunkConstCoord, trunkZ)
-                        : new XYZ(trunkConstCoord, firstCoord, trunkZ);
-
-                    trunkJunctions.Add(new TrunkJunction(firstCoord, pSupplyStart, null, true));
-                    logs.Insert(0, "Origem da linha tronco criada a 0,80 m do primeiro ramal (pronta para ligar ao barrilete/prumada).");
-                }
-
-                // Gera Linha Tronco Principal + Tês / Cotovelos
-                var orderedJunctions = trunkJunctions.OrderBy(j => j.CoordAlongTrunk).ToList();
-                var trunkSegments = new List<Pipe>();
-
-                for (int i = 0; i < orderedJunctions.Count - 1; i++)
-                {
-                    XYZ a = orderedJunctions[i].Point;
-                    XYZ b = orderedJunctions[i + 1].Point;
-                    if (a.DistanceTo(b) < MinSegmentFeet) continue;
-
-                    Pipe trunkPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, baseLevel.Id, a, b);
-                    SetPipeDiameter(trunkPipe, diameterFeet);
-                    trunkSegments.Add(trunkPipe);
-                    pipesCreated++;
-                    totalLengthFeet += GetPipeLengthFeet(trunkPipe);
-                }
-
-                for (int i = 0; i < orderedJunctions.Count; i++)
-                {
-                    var junction = orderedJunctions[i];
-                    if (junction.BranchConnector == null) continue;
-
-                    var touchingTrunkConns = new List<Connector>();
-                    foreach (var tp in trunkSegments)
-                    {
-                        Connector? c = GetClosestConnector(tp, junction.Point);
-                        if (c != null && c.Origin.DistanceTo(junction.Point) <= ConnectorToleranceFeet)
-                            touchingTrunkConns.Add(c);
-                    }
-
-                    if (touchingTrunkConns.Count == 1)
-                    {
-                        try
-                        {
-                            doc.Create.NewElbowFitting(touchingTrunkConns[0], junction.BranchConnector);
-                            fittingsCreated++;
-                        }
-                        catch { }
-                    }
-                    else if (touchingTrunkConns.Count >= 2)
-                    {
-                        try
-                        {
-                            doc.Create.NewTeeFitting(touchingTrunkConns[0], touchingTrunkConns[1], junction.BranchConnector);
-                            fittingsCreated++;
-                        }
-                        catch { }
-                    }
-                }
-
-                tx.Commit();
+                Pipe trunkPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, a, b);
+                SetPipeDiameter(trunkPipe, diameterFeet);
+                trunkSegments.Add(trunkPipe);
+                pipesCreated++;
+                totalLengthFeet += GetPipeLengthFeet(trunkPipe);
             }
 
-            double totalLengthMeters = Math.Round(UnitUtils.ConvertFromInternalUnits(totalLengthFeet, UnitTypeId.Meters), 2);
-            string planoLabel = request.RouteFromAbove ? "Por Cima (Entreforro/Laje)" : "Por Baixo (Piso)";
-            string summary = $"Traçado 3D Concluído ({planoLabel}): {activePoints.Count} ponto(s) atendido(s), {pipesCreated} tubo(s) ({totalLengthMeters:F2} m) e {fittingsCreated} conexão(ões) criada(s).";
+            for (int i = 0; i < orderedJunctions.Count; i++)
+            {
+                var junction = orderedJunctions[i];
+                if (junction.BranchConnector == null) continue;
 
-            return new RevitAutoRoutingResult(
-                activePoints.Count,
-                pipesCreated,
-                fittingsCreated,
-                totalLengthMeters,
-                summary,
-                logs);
+                var touchingTrunkConns = new List<Connector>();
+                foreach (var tp in trunkSegments)
+                {
+                    Connector? c = GetClosestConnector(tp, junction.Point);
+                    if (c != null && c.Origin.DistanceTo(junction.Point) <= ConnectorToleranceFeet)
+                        touchingTrunkConns.Add(c);
+                }
+
+                if (touchingTrunkConns.Count == 1)
+                {
+                    try
+                    {
+                        doc.Create.NewElbowFitting(touchingTrunkConns[0], junction.BranchConnector);
+                        fittingsCreated++;
+                    }
+                    catch { }
+                }
+                else if (touchingTrunkConns.Count >= 2)
+                {
+                    try
+                    {
+                        doc.Create.NewTeeFitting(touchingTrunkConns[0], touchingTrunkConns[1], junction.BranchConnector);
+                        fittingsCreated++;
+                    }
+                    catch { }
+                }
+            }
         }
 
         private static (string Category, double DefaultHeightM, double Weight)? ClassifyFixture(string rawName)
@@ -794,5 +1227,6 @@ namespace BahrHidro.Revit
         }
 
         private sealed record TrunkJunction(double CoordAlongTrunk, XYZ Point, Connector? BranchConnector, bool IsSupply);
+        private sealed record WorldBox(double MinX, double MinY, double MinZ, double MaxX, double MaxY, double MaxZ);
     }
 }

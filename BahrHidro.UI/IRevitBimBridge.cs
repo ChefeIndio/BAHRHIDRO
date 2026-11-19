@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using BahrHidro.Core.Hydraulic.Network;
+using BahrHidro.Core.Reporting;
 
 namespace BahrHidro.UI
 {
@@ -37,7 +38,7 @@ namespace BahrHidro.UI
         public bool IsSelected { get; set; } = true;
         public string Name { get; set; } = "";
         public string FixtureCategory { get; set; } = "";
-        public string SourceType { get; set; } = ""; // IFC, DWG, Revit, Manual
+        public string SourceType { get; set; } = "";
         public double X { get; set; }
         public double Y { get; set; }
         public double BaseZ { get; set; }
@@ -50,18 +51,21 @@ namespace BahrHidro.UI
     }
 
     public sealed record RevitAutoRoutingRequest(
+        string DisciplineMode, // "ColdWater" ou "SanitarySewer"
         long PipeTypeId,
         long PipingSystemTypeId,
         long? LevelId,
         bool RouteFromAbove,
         double TrunkOffsetMeters,
         double InitialDiameterMm,
+        bool AvoidSteelFrameClashes,
         List<DetectedRoutingPoint> Points);
 
     public sealed record RevitAutoRoutingResult(
         int FixturesConnected,
         int PipesCreated,
         int FittingsCreated,
+        int SteelClashesAvoided,
         double TotalLengthMeters,
         string Summary,
         List<string> Logs);
@@ -83,5 +87,6 @@ namespace BahrHidro.UI
         List<DetectedRoutingPoint> DetectRoutingPointsFromModel(long? levelId);
         DetectedRoutingPoint? PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId);
         RevitAutoRoutingResult ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request);
+        BimMaterialTakeoff ExtractBomFromRevit(string projectName, double wasteMarginPercent);
     }
 }

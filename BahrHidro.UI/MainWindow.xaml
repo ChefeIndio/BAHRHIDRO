@@ -190,7 +190,13 @@
                             <StackPanel Grid.Column="0">
                                 <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,12">
                                     <StackPanel>
-                                        <TextBlock Text="1. Plano e Cota da Linha Tronco" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                                        <TextBlock Text="1. Disciplina, Plano e Proteção Steel Frame" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+
+                                        <TextBlock Text="Sistema a Traçar no 3D" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="TracadoDisciplinaComboBox" SelectedIndex="0" Margin="0,0,0,10" Padding="6" SelectionChanged="TracadoDisciplinaComboBox_SelectionChanged">
+                                            <ComboBoxItem Content="Água Fria (ABNT NBR 5626 — Alimentação + Ramais)" Tag="ColdWater"/>
+                                            <ComboBoxItem Content="Esgoto Sanitário (ABNT NBR 8160 — Com Declividade 1% e 2%)" Tag="SanitarySewer"/>
+                                        </ComboBox>
 
                                         <TextBlock Text="Direção do Traçado Principal" FontWeight="SemiBold" Margin="0,0,0,4"/>
                                         <ComboBox x:Name="TracadoPlanoComboBox" SelectedIndex="0" Margin="0,0,0,10" Padding="6" SelectionChanged="TracadoPlanoComboBox_SelectionChanged">
@@ -198,7 +204,7 @@
                                             <ComboBoxItem Content="Por Baixo (Piso / Contrapiso — subindo até os pontos)" Tag="Bottom"/>
                                         </ComboBox>
 
-                                        <Grid>
+                                        <Grid Margin="0,0,0,10">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="1.2*"/>
                                                 <ColumnDefinition Width="12"/>
@@ -213,6 +219,10 @@
                                                 <TextBox x:Name="TracadoOffsetTextBox" Text="2,60"/>
                                             </StackPanel>
                                         </Grid>
+
+                                        <CheckBox x:Name="ChkDesviarSteelFrame" IsChecked="True"
+                                                  Content="Desviar automaticamente de perfis Steel Frame (zero colisão / sem furação)"
+                                                  FontSize="12" FontWeight="SemiBold" Foreground="#166534"/>
                                     </StackPanel>
                                 </Border>
 
@@ -959,9 +969,30 @@
                                         </StackPanel>
                                     </Grid>
 
+                                    <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="5" Padding="12" Margin="0,0,0,12">
+                                        <StackPanel>
+                                            <TextBlock Text="Quantitativo Executivo de Materiais (BOM 3D — Tubos e Conexões)" FontSize="12" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,6"/>
+                                            <Grid Margin="0,0,0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="160"/>
+                                                    <ColumnDefinition Width="12"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0">
+                                                    <TextBlock Text="Margem de Perda (%)" FontSize="11" FontWeight="SemiBold" Foreground="#14532D" Margin="0,0,0,2"/>
+                                                    <TextBox x:Name="MemMargemPerdaTextBox" Text="10"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
+                                                    <Button x:Name="BtnExtrairBom3D" Content="Extrair Lista de Materiais do 3D" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" HorizontalAlignment="Left" Click="ExtrairBomRevit_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                            <TextBlock x:Name="MemBomPreviewText" Text="Gere o traçado ou dimensione a rede para incluir o quantitativo completo de tubos (varas 6m) e conexões no Excel." FontSize="11" Foreground="#14532D" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Border>
+
                                     <StackPanel Orientation="Horizontal">
                                         <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Projeto Revit" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" Margin="0,0,10,0" Click="SalvarDadosRevit_Click"/>
-                                        <Button x:Name="ExportarMemorialAbaButton" Content="Exportar Memorial de Cálculo (.xlsx)" Style="{StaticResource PrimaryButton}" Click="ExportarMemorialAba_Click"/>
+                                        <Button x:Name="ExportarMemorialAbaButton" Content="Exportar Memorial + Lista de Materiais (.xlsx)" Style="{StaticResource PrimaryButton}" Click="ExportarMemorialAba_Click"/>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

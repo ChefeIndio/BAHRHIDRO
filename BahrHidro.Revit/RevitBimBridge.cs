@@ -10,6 +10,7 @@ using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 using BahrHidro.Core.Hydraulic.Network;
+using BahrHidro.Core.Reporting;
 using BahrHidro.UI;
 
 namespace BahrHidro.Revit
@@ -312,6 +313,11 @@ namespace BahrHidro.Revit
         public DetectedRoutingPoint? PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId)
         {
             return RevitAutoRouter.PickManualPoint(_uidoc, ownerWindow, fixtureCategory, levelId);
+        }
+
+        public BimMaterialTakeoff ExtractBomFromRevit(string projectName, double wasteMarginPercent)
+        {
+            return RevitBomExtractor.ExtractFromDocument(_doc, projectName, wasteMarginPercent);
         }
 
         public RevitAutoRoutingResult ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request)
