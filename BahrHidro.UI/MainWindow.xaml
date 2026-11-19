@@ -146,6 +146,7 @@
                                     <TextBlock x:Name="InicioRedeStatusText" Text="Nenhuma rede carregada. Importe do modelo 3D do Revit para dimensionar." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
                                     <Button x:Name="BtnImportarInicioRevit" Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Height="36" Visibility="Collapsed" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="DetectarRedeAutoRevit_Click"/>
                                     <Button Content="Traçado Automático de Tubos 3D" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrTracado3D_Click"/>
+                <Button x:Name="NavConfiguracoesBtn" Content="⚙ Configurações" Style="{StaticResource SecondaryButton}" Height="36" Margin="0,0,0,8" Click="NavConfiguracoes_Click"/>
                                     <Button Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
                                 </StackPanel>
                             </Border>
@@ -1078,6 +1079,128 @@
                         </Grid>
                     </ScrollViewer>
                 </DockPanel>
+
+            <!-- Painel de Configurações Técnicas do Escritório (.json) -->
+            <ScrollViewer x:Name="ConfiguracoesPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="14">
+                <StackPanel>
+                    <TextBlock Text="Padrões Técnicos do Escritório (LSF &amp; ABNT NBR 5626 / 8160)" FontSize="15" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="Configure as cotas padrão de pontos, critérios de furação em montantes Steel Frame e limites hidráulicos. Salve ou exporte em .json para padronizar toda a equipe." TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,12"/>
+
+                    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Identificação do Perfil Técnico" FontWeight="SemiBold" Margin="0,0,0,6"/>
+                            <TextBox x:Name="CfgProfileNameTextBox" Height="28" Padding="6,3"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="1. Alturas Padrão de Pontos Hidráulicos (H em metros)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="10"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                    <TextBlock Text="Lavatório (m)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgAlturaLavatorioBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                    <TextBlock Text="Vaso Sanitário (m)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgAlturaVasoBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="4">
+                                    <TextBlock Text="Chuveiro / Misturador (m)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgAlturaChuveiroBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                    <TextBlock Text="Pia de Cozinha (m)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgAlturaPiaBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="2" Grid.Column="2">
+                                    <TextBlock Text="Tanque / Máquina (m)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgAlturaTanqueBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="2. Regras Estruturais de Furação LSF (Steel Frame)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Máx. Furo na Alma (%)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgMaxFuroAlmaBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Dist. Mínima Guia (cm)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgDistMinGuiaBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Folga do Furo (mm)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgFolgaFuroBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="3. Auditoria Hidráulica (NBR 5626) &amp; Quantitativo" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Velocidade Máx. (m/s)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgVelMaxBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Pressão Mín. Dinâmica (m.c.a.)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgPressaoMinBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="4">
+                                    <TextBlock Text="Vara Comercial Tubo (m)" FontSize="12" Margin="0,0,0,3"/>
+                                    <TextBox x:Name="CfgVaraTuboBox" Height="28" Padding="6,3"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <WrapPanel Margin="0,0,0,8">
+                        <Button Content="Salvar Padrão do Escritório" Style="{StaticResource PrimaryButton}" Height="34" Padding="14,0" Margin="0,0,8,6" Click="SalvarConfiguracoes_Click"/>
+                        <Button Content="Exportar Perfil (.json)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,6" Click="ExportarPerfilJson_Click"/>
+                        <Button Content="Importar Perfil (.json)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,6" Click="ImportarPerfilJson_Click"/>
+                        <Button Content="Restaurar Padrão NBR" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,6" Click="RestaurarPadraoNbr_Click"/>
+                    </WrapPanel>
+
+                    <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap"/>
+                </StackPanel>
+            </ScrollViewer>
             </Grid>
         </Border>
     </DockPanel>

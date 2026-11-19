@@ -652,5 +652,33 @@ namespace BahrHidro.Revit
             public bool AllowElement(Element elem) => elem?.Category != null && elem.Category.Id.Value == (long)_category;
             public bool AllowReference(Reference reference, XYZ position) => false;
         }
-    }
+    
+        internal RevitBimBridge(UIApplication uiApp)
+        {
+            _runner = null!;
+            if (uiApp.ActiveUIDocument != null)
+            {
+                _uidoc = uiApp.ActiveUIDocument;
+                _doc = _uidoc.Document;
+            }
+        }
+
+        internal VisualAuditSummaryResult ExecuteVisualAuditSync()
+        {
+            if (_doc == null)
+                throw new InvalidOperationException("Abra um projeto no Revit antes de executar a auditoria.");
+            NetworkCalculationResult result = default!;
+            return RevitVisualAuditManager.ApplyOverrides(_uidoc, result, new Dictionary<Guid, ElementId>());
+        }
+
+        internal SheetGenerationResult ExecuteSheetGenerationSync()
+        {
+            if (_uidoc == null || _doc == null)
+                throw new InvalidOperationException("Abra um projeto no Revit antes de gerar as pranchas.");
+
+            var info = GetProjectInfoCore();
+            return RevitClashAndSheetGenerator.GenerateHydraulicSheets(_uidoc, info.ProjectName);
+        }
+
+}
 }

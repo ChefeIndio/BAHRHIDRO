@@ -38,6 +38,7 @@ namespace BahrHidro.UI
         public MainWindow()
         {
             InitializeComponent();
+            LoadOfficeProfileToUi();
 
             string catalogDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "BahrHidro");
             if (!System.IO.Directory.Exists(catalogDir))
@@ -1630,6 +1631,140 @@ namespace BahrHidro.UI
         {
             MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+    }
+
+
+    private void NavConfiguracoes_Click(object sender, RoutedEventArgs e)
+    {
+        PanelInicio.Visibility = Visibility.Collapsed;
+        PanelTracado3D.Visibility = Visibility.Collapsed;
+        PanelAguaFria.Visibility = Visibility.Collapsed;
+        PanelBomba.Visibility = Visibility.Collapsed;
+        PanelAguaQuente.Visibility = Visibility.Collapsed;
+        PanelReservatorios.Visibility = Visibility.Collapsed;
+        PanelEsgoto.Visibility = Visibility.Collapsed;
+        PanelPluvial.Visibility = Visibility.Collapsed;
+        PanelMemorial.Visibility = Visibility.Collapsed;
+        ConfiguracoesPanel.Visibility = Visibility.Visible;
+        LoadOfficeProfileToUi();
+    }
+
+    private void LoadOfficeProfileToUi(OfficeProfileConfig? cfg = null)
+    {
+        cfg ??= OfficeProfileService.LoadCurrent();
+        if (CfgProfileNameTextBox == null) return;
+
+        CfgProfileNameTextBox.Text = cfg.ProfileName;
+        CfgAlturaLavatorioBox.Text = cfg.AlturaLavatorioM.ToString("F2", CultureInfo.InvariantCulture);
+        CfgAlturaVasoBox.Text = cfg.AlturaVasoSanitarioM.ToString("F2", CultureInfo.InvariantCulture);
+        CfgAlturaChuveiroBox.Text = cfg.AlturaChuveiroM.ToString("F2", CultureInfo.InvariantCulture);
+        CfgAlturaPiaBox.Text = cfg.AlturaPiaCozinhaM.ToString("F2", CultureInfo.InvariantCulture);
+        CfgAlturaTanqueBox.Text = cfg.AlturaTanqueMaquinaM.ToString("F2", CultureInfo.InvariantCulture);
+
+        CfgMaxFuroAlmaBox.Text = cfg.MaxFuroAlmaPercent.ToString("F0", CultureInfo.InvariantCulture);
+        CfgDistMinGuiaBox.Text = cfg.DistanciaMinimaGuiaCm.ToString("F0", CultureInfo.InvariantCulture);
+        CfgFolgaFuroBox.Text = cfg.FolgaFuroMm.ToString("F0", CultureInfo.InvariantCulture);
+
+        CfgVelMaxBox.Text = cfg.VelocidadeMaximaMs.ToString("F1", CultureInfo.InvariantCulture);
+        CfgPressaoMinBox.Text = cfg.PressaoMinimaDinamicaMca.ToString("F1", CultureInfo.InvariantCulture);
+        CfgVaraTuboBox.Text = cfg.ComprimentoVaraTuboM.ToString("F1", CultureInfo.InvariantCulture);
+
+        CfgStatusText.Text = $"Perfil ativo: {cfg.ProfileName} | Arquivo: {OfficeProfileService.DefaultProfilePath}";
+    }
+
+    private OfficeProfileConfig ReadOfficeProfileFromUi()
+    {
+        static double ParseD(string? txt, double fallback)
+        {
+            if (string.IsNullOrWhiteSpace(txt)) return fallback;
+            string norm = txt.Trim().Replace(',', '.');
+            return double.TryParse(norm, NumberStyles.Any, CultureInfo.InvariantCulture, out double v) ? v : fallback;
+        }
+
+        return new OfficeProfileConfig
+        {
+            ProfileName = string.IsNullOrWhiteSpace(CfgProfileNameTextBox.Text) ? "Padrão Escritório LSF" : CfgProfileNameTextBox.Text.Trim(),
+            AlturaLavatorioM = ParseD(CfgAlturaLavatorioBox.Text, 0.60),
+            AlturaVasoSanitarioM = ParseD(CfgAlturaVasoBox.Text, 0.20),
+            AlturaChuveiroM = ParseD(CfgAlturaChuveiroBox.Text, 2.10),
+            AlturaPiaCozinhaM = ParseD(CfgAlturaPiaBox.Text, 0.60),
+            AlturaTanqueMaquinaM = ParseD(CfgAlturaTanqueBox.Text, 0.90),
+            MaxFuroAlmaPercent = ParseD(CfgMaxFuroAlmaBox.Text, 50.0),
+            DistanciaMinimaGuiaCm = ParseD(CfgDistMinGuiaBox.Text, 25.0),
+            FolgaFuroMm = ParseD(CfgFolgaFuroBox.Text, 6.0),
+            VelocidadeMaximaMs = ParseD(CfgVelMaxBox.Text, 3.0),
+            PressaoMinimaDinamicaMca = ParseD(CfgPressaoMinBox.Text, 1.0),
+            ComprimentoVaraTuboM = ParseD(CfgVaraTuboBox.Text, 6.0)
+        };
+    }
+
+    private void SalvarConfiguracoes_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var cfg = ReadOfficeProfileFromUi();
+            OfficeProfileService.SaveCurrent(cfg);
+            CfgStatusText.Text = $"Configurações salvas com sucesso às {DateTime.Now:HH:mm:ss} em {OfficeProfileService.DefaultProfilePath}";
+            MessageBox.Show("Padrão técnico do escritório salvo com sucesso!", "Bahr Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro ao salvar configurações:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void ExportarPerfilJson_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var cfg = ReadOfficeProfileFromUi();
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Perfil Bahr Hidro (*.json)|*.json",
+                FileName = "BahrHidro_PerfilEscritorio.json",
+                Title = "Exportar Perfil Técnico do Escritório"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                OfficeProfileService.ExportToFile(cfg, dlg.FileName);
+                CfgStatusText.Text = $"Perfil exportado para: {dlg.FileName}";
+                MessageBox.Show($"Perfil exportado com sucesso!\n{dlg.FileName}", "Bahr Hidro - Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro ao exportar perfil:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void ImportarPerfilJson_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Perfil Bahr Hidro (*.json)|*.json",
+                Title = "Importar Perfil Técnico do Escritório"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                var loaded = OfficeProfileService.ImportFromFile(dlg.FileName);
+                LoadOfficeProfileToUi(loaded);
+                MessageBox.Show($"Perfil '{loaded.ProfileName}' importado e definido como padrão!", "Bahr Hidro - Importar JSON", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Erro ao importar perfil:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void RestaurarPadraoNbr_Click(object sender, RoutedEventArgs e)
+    {
+        var def = new OfficeProfileConfig();
+        OfficeProfileService.SaveCurrent(def);
+        LoadOfficeProfileToUi(def);
+        MessageBox.Show("Valores padrão ABNT NBR 5626 / 8160 e Steel Frame restaurados.", "Bahr Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
 }
