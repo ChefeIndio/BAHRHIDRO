@@ -1000,6 +1000,112 @@
                                 <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                                 <TextBlock Text="Cálculo de acumulação de água quente (NBR 7198 / NBR 5626), classificação de pressão e especificação de componentes." FontSize="12" Foreground="#64748B"/>
                             
+                            
+                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="RESERVATÓRIOS (INFERIOR / SUPERIOR), RECALQUE, AMT E BOMBAS (ABNT NBR 5626)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Dimensiona reserva potável e de incêndio (RTI), tubulações de sucção e recalque (Bresse / Hazen-Williams), Altura Manométrica Total (AMT), NPSH e seleção de bombas (1+1)." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="Tipologia Predial (NBR 5626)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="ResTypologyComboBox" SelectedIndex="1" Padding="6,4">
+                                                <ComboBoxItem Content="Residencial Unifamiliar (150 L/d)"/>
+                                                <ComboBoxItem Content="Residencial Multifamiliar (200 L/d)"/>
+                                                <ComboBoxItem Content="Comercial / Escritório (50 L/d)"/>
+                                                <ComboBoxItem Content="Hotel / Pousada (250 L/d)"/>
+                                                <ComboBoxItem Content="Escola / Hospital (120 L/d)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="População Total (Pessoas)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResOccupantsTextBox" Text="40" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="4">
+                                            <TextBlock Text="Autonomia Reserva (Dias)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResAutonomyDaysTextBox" Text="2,0" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="6">
+                                            <TextBlock Text="Reserva Incêndio RTI (L)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResRtiLitersTextBox" Text="6000" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Parcela Res. Superior (%)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResUpperSplitTextBox" Text="40" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Funcionamento Bomba (h/dia)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResPumpHoursTextBox" Text="3,0" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="4">
+                                            <TextBlock Text="Desnível Recalque H_r (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResDischargeHeightTextBox" Text="18,5" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="6">
+                                            <TextBlock Text="Sucção (+Afogada / -Asp., m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResSuctionHeightTextBox" Text="0,8" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="0">
+                                            <TextBlock Text="Comp. Real Recalque (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResDischargeLengthTextBox" Text="28,0" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="2">
+                                            <TextBlock Text="Comp. Real Sucção (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResSuctionLengthTextBox" Text="3,5" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="4">
+                                            <TextBlock Text="Material da Tubulação" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="ResPipeMaterialComboBox" SelectedIndex="0" Padding="6,4">
+                                                <ComboBoxItem Content="PVC Soldável (C = 140)"/>
+                                                <ComboBoxItem Content="PPR Termofusão (C = 150)"/>
+                                                <ComboBoxItem Content="Ferro Galvanizado (C = 120)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="6">
+                                            <TextBlock Text="Rendimento Motobomba (%)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ResPumpEfficiencyTextBox" Text="60" Padding="6,4"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <WrapPanel Margin="0,4,0,10">
+                                        <Button Content="Dimensionar Reservatórios, Recalque &amp; Bombas (NBR 5626)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="CalcularReservatoriosBombas_Click"/>
+                                        <Button Content="Exportar Memorial Reservatórios &amp; Bombas (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialReservatorios_Click"/>
+                                    </WrapPanel>
+
+                                    <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="6" Padding="12">
+                                        <TextBlock x:Name="ResSizingResultText" Text="Informe os dados acima e clique em 'Dimensionar Reservatórios, Recalque &amp; Bombas' para calcular volumes inferior/superior, bitolas, AMT, NPSH e potência comercial (CV)." FontFamily="Consolas" FontSize="11.5" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
                             <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
                                 <StackPanel>
                                     <TextBlock Text="DIMENSIONAMENTO TÉRMICO: BOILER, AQUECEDOR A GÁS E SOLAR (NBR 7198 / NBR 15569)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>

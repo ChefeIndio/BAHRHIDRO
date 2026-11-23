@@ -3310,5 +3310,94 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Memorial Térmico exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
+
+        private string _lastReservoirMemorialText = "";
+
+        private static double ParseResDouble(string? raw, double fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            string cleaned = raw.Trim().Replace(',', '.');
+            return double.TryParse(cleaned, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v)
+                ? v
+                : fallback;
+        }
+
+        private static int ParseResInt(string? raw, int fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            return int.TryParse(raw.Trim(), out int v) ? v : fallback;
+        }
+
+        private void CalcularReservatoriosBombas_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var typology = (ResTypologyComboBox?.SelectedIndex ?? 1) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.Pumping.ReservoirBuildingTypology.ResidencialUnifamiliar,
+                    1 => BahrHidro.Core.Hydraulic.Pumping.ReservoirBuildingTypology.ResidencialMultifamiliar,
+                    2 => BahrHidro.Core.Hydraulic.Pumping.ReservoirBuildingTypology.ComercialEscritorio,
+                    3 => BahrHidro.Core.Hydraulic.Pumping.ReservoirBuildingTypology.HotelPousada,
+                    4 => BahrHidro.Core.Hydraulic.Pumping.ReservoirBuildingTypology.EscolaHospital,
+                    _ => BahrHidro.Core.Hydraulic.Pumping.ReservoirBuildingTypology.ResidencialMultifamiliar
+                };
+
+                var material = (ResPipeMaterialComboBox?.SelectedIndex ?? 0) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.Pumping.PumpingPipeMaterial.PvcSoldavel,
+                    1 => BahrHidro.Core.Hydraulic.Pumping.PumpingPipeMaterial.PprTermofusao,
+                    2 => BahrHidro.Core.Hydraulic.Pumping.PumpingPipeMaterial.FerroGalvanizado,
+                    _ => BahrHidro.Core.Hydraulic.Pumping.PumpingPipeMaterial.PvcSoldavel
+                };
+
+                var input = new BahrHidro.Core.Hydraulic.Pumping.ReservoirPumpingInput(
+                    Typology: typology,
+                    OccupantsCount: ParseResInt(ResOccupantsTextBox?.Text, 40),
+                    AutonomyDays: ParseResDouble(ResAutonomyDaysTextBox?.Text, 2.0),
+                    FireReserveLiters: ParseResDouble(ResRtiLitersTextBox?.Text, 6000.0),
+                    UpperReservoirSharePercent: ParseResDouble(ResUpperSplitTextBox?.Text, 40.0),
+                    PumpOperatingHoursPerDay: ParseResDouble(ResPumpHoursTextBox?.Text, 3.0),
+                    DischargeGeometricHeightMeters: ParseResDouble(ResDischargeHeightTextBox?.Text, 18.5),
+                    SuctionHeightMeters: ParseResDouble(ResSuctionHeightTextBox?.Text, 0.8),
+                    DischargePipeLengthMeters: ParseResDouble(ResDischargeLengthTextBox?.Text, 28.0),
+                    SuctionPipeLengthMeters: ParseResDouble(ResSuctionLengthTextBox?.Text, 3.5),
+                    PipeMaterial: material,
+                    PumpEfficiencyPercent: ParseResDouble(ResPumpEfficiencyTextBox?.Text, 60.0));
+
+                var res = BahrHidro.Core.Hydraulic.Pumping.ReservoirAndPumpingCalculator.Calculate(input);
+                _lastReservoirMemorialText = res.TechnicalMemorialText;
+
+                if (ResSizingResultText != null)
+                {
+                    ResSizingResultText.Text = res.TechnicalMemorialText;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao dimensionar reservatórios e bombas:\n{ex.Message}", "Bahr Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExportarMemorialReservatorios_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_lastReservoirMemorialText))
+                CalcularReservatoriosBombas_Click(sender, e);
+
+            if (string.IsNullOrWhiteSpace(_lastReservoirMemorialText))
+                return;
+
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Salvar Memorial de Reservatórios, Recalque e Bombas (NBR 5626)",
+                Filter = "Arquivo de Texto (*.txt)|*.txt",
+                FileName = "Memorial_Reservatorios_Recalque_Bombas_NBR5626.txt"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                System.IO.File.WriteAllText(dlg.FileName, _lastReservoirMemorialText, System.Text.Encoding.UTF8);
+                MessageBox.Show($"Memorial de Reservatórios e Bombas exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
 }
 }
