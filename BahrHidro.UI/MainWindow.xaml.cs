@@ -3159,6 +3159,7 @@ VerificarPressaoEstaticaMaximaVrp();
 
         private async void ExtrairContextoEspacial3D_Click(object sender, RoutedEventArgs e)
         {
+            EnsureClaudeSettingsLoaded();
             if (_revitBridge == null) return;
             try
             {
@@ -3630,6 +3631,117 @@ VerificarPressaoEstaticaMaximaVrp();
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro ao gerar Memorial Descritivo Único (.docx):\n{ex.Message}", "Bahr Hidro — Memorial (.docx)", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private bool _claudeSettingsInitialized;
+
+        private void EnsureClaudeSettingsLoaded()
+        {
+            if (_claudeSettingsInitialized) return;
+            _claudeSettingsInitialized = true;
+
+            var saved = BahrHidro.Core.Routing.HidroApiSettingsHelper.LoadSafe();
+            if (ClaudeApiKeyBox != null && !string.IsNullOrWhiteSpace(saved.AnthropicApiKey))
+                ClaudeApiKeyBox.Password = saved.AnthropicApiKey;
+
+            if (ClaudeModelComboBox != null && !string.IsNullOrWhiteSpace(saved.PreferredModel))
+            {
+                for (int i = 0; i < ClaudeModelComboBox.Items.Count; i++)
+                {
+                    if (ClaudeModelComboBox.Items[i] is System.Windows.Controls.ComboBoxItem item &&
+                        string.Equals(item.Content?.ToString(), saved.PreferredModel, StringComparison.OrdinalIgnoreCase))
+                    {
+                        ClaudeModelComboBox.SelectedIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
+
+        private async void GerarTracadoClaudeApi_Click(object sender, RoutedEventArgs e)
+        {
+            EnsureClaudeSettingsLoaded();
+            try
+            {
+                string apiKey = ClaudeApiKeyBox?.Password?.Trim() ?? "";
+                if (string.IsNullOrWhiteSpace(apiKey))
+                    apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "";
+
+                if (string.IsNullOrWhiteSpace(apiKey))
+                {
+                    MessageBox.Show(
+                        "Informe sua API Key da Anthropic (sk-ant-...) no campo correspondente antes de solicitar o traçado automático.",
+                        "Bahr Hidro — API Claude",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                string model = (ClaudeModelComboBox?.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Content?.ToString()
+                               ?? "claude-sonnet-4-20250514";
+
+                BahrHidro.Core.Routing.BahrHidroApiSettingsStore.Save(apiKey, model);
+
+                string spatialJson = SpatialContextJsonTextBox?.Text ?? "";
+                if ((string.IsNullOrWhiteSpace(spatialJson) || !spatialJson.Contains("\"fixtures\"")) && _revitBridge != null)
+                {
+                    if (SpatialBridgeStatusText != null)
+                        SpatialBridgeStatusText.Text = "Extraindo geometria e conectores dos aparelhos no Revit 2026...";
+                    spatialJson = await _revitBridge.ExtractSpatialWetAreaJson();
+                    _lastSpatialContextJson = spatialJson;
+                }
+
+                if (string.IsNullOrWhiteSpace(spatialJson))
+                {
+                    MessageBox.Show("Extraia primeiro o contexto espacial 3D do projeto.", "Bahr Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (SpatialBridgeStatusText != null)
+                    SpatialBridgeStatusText.Text = $"Consultando {model} para calcular rotas ortogonais ABNT (Água Fria, Quente, Esgoto e Ventilação)...";
+
+                string notes = ClaudeRoutingNotesTextBox?.Text ?? "";
+                var genResult = await BahrHidro.Core.Routing.ClaudeAutoRoutingClient.GenerateRoutingPlanAsync(
+                    apiKey,
+                    model,
+                    spatialJson,
+                    notes);
+
+                if (SpatialContextJsonTextBox != null)
+                    SpatialContextJsonTextBox.Text = genResult.FormattedPlanJson;
+
+                if (ChkAutoExecutarNoRevit?.IsChecked == true && _revitBridge != null)
+                {
+                    int createdCount = await _revitBridge.ExecuteAutoRoutingPlanJson(genResult.FormattedPlanJson);
+                    if (SpatialBridgeStatusText != null)
+                    {
+                        SpatialBridgeStatusText.Text =
+                            $"Traçado concluído via {genResult.ModelUsed}: {genResult.Plan.Segments.Count} ramais planejados e {createdCount} trechos criados no Revit 3D (Tokens: {genResult.InputTokens} in / {genResult.OutputTokens} out).";
+                    }
+                    MessageBox.Show(
+                        $"Traçado automático gerado pelo Claude e modelado no Revit 2026!\n\n" +
+                        $"• Ramais planejados: {genResult.Plan.Segments.Count}\n" +
+                        $"• Trechos criados no 3D: {createdCount}\n" +
+                        $"• Consumo API: {genResult.InputTokens} tokens entrada / {genResult.OutputTokens} tokens saída",
+                        "Bahr Hidro — Traçado Automático Claude 3D",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+                else
+                {
+                    if (SpatialBridgeStatusText != null)
+                    {
+                        SpatialBridgeStatusText.Text =
+                            $"Plano JSON gerado via {genResult.ModelUsed} ({genResult.Plan.Segments.Count} ramais). Clique em 'Executar Plano JSON no Revit 3D' para modelar.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (SpatialBridgeStatusText != null)
+                    SpatialBridgeStatusText.Text = "Falha ao gerar traçado automático via API Claude.";
+                MessageBox.Show($"Erro na integração com a API do Claude:\n{ex.Message}", "Bahr Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 }
