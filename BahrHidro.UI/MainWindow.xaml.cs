@@ -41,6 +41,32 @@ namespace BahrHidro.UI
         {
             try { try { InitializeComponent();
             this.WindowState = System.Windows.WindowState.Maximized;
+            this.Loaded += (s, e) =>
+            {
+                if (this.FindName("MainContentScrollViewer") is System.Windows.Controls.ScrollViewer msv &&
+                    msv.Content is System.Windows.Controls.Panel hostPanel)
+                {
+                    foreach (System.Windows.UIElement ch in hostPanel.Children)
+                    {
+                        if (ch is System.Windows.FrameworkElement fe)
+                            fe.IsVisibleChanged += (_, __) => { if (fe.Visibility == System.Windows.Visibility.Visible) msv.ScrollToTop(); };
+                    }
+                }
+            };
+            this.PreviewMouseWheel += (s, e) =>
+            {
+                if (e.Handled) return;
+                if (this.FindName("MainContentScrollViewer") is System.Windows.Controls.ScrollViewer msv && msv.ScrollableHeight > 0)
+                {
+                    var pos = e.GetPosition(msv);
+                    if (pos.X >= 0 && pos.Y >= 0 && pos.X <= msv.ActualWidth && pos.Y <= msv.ActualHeight)
+                    {
+                        msv.ScrollToVerticalOffset(msv.VerticalOffset - (e.Delta / 2.5));
+                        e.Handled = true;
+                    }
+                }
+            };
+            this.WindowState = System.Windows.WindowState.Maximized;
             this.PreviewMouseWheel += BahrMouseWheelScroll;
             this.Loaded += BahrHidro_SyncScrollHosts;
             this.SizeChanged += (s, e) => BahrHidro_UpdateScrollHeights();

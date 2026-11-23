@@ -240,7 +240,7 @@
         <Border Margin="12" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" VerticalAlignment="Stretch">
             <Grid VerticalAlignment="Stretch">
                 
-                <StackPanel VerticalAlignment="Stretch"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelInicio}" VerticalAlignment="Stretch"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
+                <StackPanel VerticalAlignment="Stretch"><ScrollViewer x:Name="MainContentScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Padding="0,0,8,20"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelInicio}" VerticalAlignment="Top"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
                     <StackPanel MaxWidth="1060" HorizontalAlignment="Left">
                         <Border Background="#0F172A" CornerRadius="10" Padding="22" Margin="0,0,0,18">
                             <Grid>
@@ -392,7 +392,7 @@
                 </ScrollViewer>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer></ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Pranchas Executivas ABNT &amp; Isométricos 3D Cotados" FontSize="17" FontWeight="Bold" Foreground="#0F172A" />
