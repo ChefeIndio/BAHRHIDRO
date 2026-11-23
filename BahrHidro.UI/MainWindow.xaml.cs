@@ -531,8 +531,8 @@ namespace BahrHidro.UI
 
             try
             {
-                double pressaoMin = TryParsePtBrDouble(BombaPressaoMinimaTextBox.Text, out double pMin) && pMin > 0 ? pMin : 1.0;
-                double rendimento = TryParsePtBrDouble(BombaRendimentoTextBox.Text, out double rend) && rend > 0 && rend <= 100 ? rend / 100.0 : 0.60;
+                double pressaoMin = TryParsePtBrDouble("1,00", out double pMin) && pMin > 0 ? pMin : 1.0;
+                double rendimento = TryParsePtBrDouble("60", out double rend) && rend > 0 && rend <= 100 ? rend / 100.0 : 0.60;
 
                 var resultadoBomba = PumpCalculator.Calculate(_ultimoResultadoDaRede, pressaoMin, rendimento);
 

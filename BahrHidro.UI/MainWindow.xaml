@@ -854,68 +854,53 @@
                                 <ColumnDefinition Width="1.15*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Parâmetros &amp; Resultado Direto -->
-                            <StackPanel Grid.Column="0">
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
-                                    <StackPanel>
-                                        <TextBlock Text="Parâmetros de Verificação" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+                                                        <!-- Diagnóstico e Dimensionamento Direto (NBR 5626) -->
+                            <Border Grid.Column="0" x:Name="BombaStatusCard" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <Button DockPanel.Dock="Right" Content="Recalcular" Style="{StaticResource SecondaryButton}" Height="28" Padding="10,0" Click="RecalcularBomba_Click"/>
+                                        <TextBlock Text="Diagnóstico e Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </DockPanel>
 
-                                        <Grid Margin="0,0,0,14">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="14"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="Pressão Mínima Exigida (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                                <TextBox x:Name="BombaPressaoMinimaTextBox" Text="1,00"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Rendimento do Conjunto (%)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                                <TextBox x:Name="BombaRendimentoTextBox" Text="60"/>
-                                            </StackPanel>
-                                        </Grid>
+                                    <TextBlock x:Name="BombaDiagnosticoText" Text="Calcule a rede de Água Fria para verificar automaticamente a necessidade de pressurização." FontWeight="Bold" FontSize="13" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,14"/>
 
-                                        <Button Content="Verificar Pressurização da Rede" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="RecalcularBomba_Click"/>
-                                    </StackPanel>
-                                </Border>
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="210"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                        </Grid.RowDefinitions>
 
-                                <Border x:Name="BombaStatusCard" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
-                                    <StackPanel>
-                                        <TextBlock Text="Diagnóstico e Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10"/>
-                                        <TextBlock x:Name="BombaDiagnosticoText" Text="Calcule a rede de Água Fria para verificar automaticamente a necessidade de pressurização." FontWeight="Bold" FontSize="13" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,14"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Ponto Crítico (Mais Desfavorável):" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BombaNoCriticoText" Text="--"/>
 
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="210"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Grid.RowDefinitions>
-                                                <RowDefinition Height="28"/>
-                                                <RowDefinition Height="28"/>
-                                                <RowDefinition Height="28"/>
-                                                <RowDefinition Height="28"/>
-                                                <RowDefinition Height="28"/>
-                                            </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pressão Atual no Ponto Crítico:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BombaPressaoAtualText" Text="--"/>
 
-                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Ponto Crítico Identificado:" FontWeight="SemiBold"/>
-                                            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BombaNoCriticoText" Text="--"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Vazão de Projeto (Q):" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BombaVazaoText" Text="--"/>
 
-                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Pressão Atual no Ponto:" FontWeight="SemiBold"/>
-                                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BombaPressaoAtualText" Text="--"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Altura Manométrica (AMT):" FontWeight="Bold"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
 
-                                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Vazão de Projeto (Q):" FontWeight="SemiBold"/>
-                                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BombaVazaoText" Text="--"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Potência Comercial Estimada:" FontWeight="Bold"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                    </Grid>
 
-                                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Altura Manométrica (AMT):" FontWeight="Bold"/>
-                                            <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10">
+                                        <TextBlock FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="17"
+                                                   Text="Critério Normativo Automático (ABNT NBR 5626): Pressão dinâmica mínima de 1,00 m.c.a. (10 kPa) e rendimento padrão do conjunto de 60%. Ao atender o ponto crítico (aparelho mais alto/distante com menor pressão), todo o restante do sistema é atendido automaticamente."/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
 
-                                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Potência Comercial Estimada:" FontWeight="Bold"/>
-                                            <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-                            </StackPanel>
+
 
                             <!-- Sugestões Comerciais e Peças Obrigatórias -->
                             <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
