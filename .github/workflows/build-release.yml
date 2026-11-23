@@ -1,0 +1,56 @@
+name: Build e Release Bahr Hidro (Revit 2026)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Compilar BahrHidro.Revit (Release)
+        run: dotnet build BahrHidro.Revit/BahrHidro.Revit.csproj -c Release --no-incremental
+
+      - name: Empacotar instalador autônomo de 1 clique
+        shell: pwsh
+        run: |
+          $stage = "$env:RUNNER_TEMP\BahrHidro_Release"
+          New-Item -ItemType Directory -Path "$stage\Bin" -Force | Out-Null
+          $outDir = (Get-ChildItem "BahrHidro.Revit\bin\Release" -Directory | Select-Object -First 1).FullName
+          Copy-Item "$outDir\*" "$stage\Bin" -Recurse -Force
+          Copy-Item "installer\Instalar_BahrHidro_Revit2026.bat" "$stage\" -Force
+          Copy-Item "installer\Instalar_BahrHidro.ps1" "$stage\" -Force
+          Compress-Archive -Path "$stage\*" -DestinationPath "BahrHidro-Revit2026-Win64.zip" -Force
+
+      - name: Upload Artifact do Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: BahrHidro-Revit2026-Win64
+          path: BahrHidro-Revit2026-Win64.zip
+
+      - name: Publicar Release Oficial (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Bahr Hidro BIM — Revit 2026 (Última Versão)"
+          body: |
+            Pacote compilado automaticamente para **Autodesk Revit 2026 (Windows x64)**.
+            
+            ### Como instalar ou atualizar em qualquer máquina:
+            1. Extraia o arquivo **BahrHidro-Revit2026-Win64.zip**.
+            2. Dê duplo clique em **Instalar_BahrHidro_Revit2026.bat**.
+            3. Abra o Revit 2026 e acesse a aba **Bahr Hidro**.
+          files: BahrHidro-Revit2026-Win64.zip
