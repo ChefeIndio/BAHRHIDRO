@@ -157,6 +157,25 @@ namespace BahrHidro.UI
 
             if (BtnVoltarAba != null)
                 BtnVoltarAba.IsEnabled = _tabHistory.Count > 0;
+
+            if (ActiveStepBadgeText != null)
+            {
+                ActiveStepBadgeText.Text = tag switch
+                {
+                    "Inicio" => "Visão Geral do Fluxo",
+                    "Reservatorios" => "Etapa 1 de 6 • Reservatórios (NBR 5626)",
+                    "AguaFria" => "Etapa 2 de 6 • Água Fria (NBR 5626)",
+                    "Bomba" => "Etapa 2B • Pressurização & Bomba",
+                    "AguaQuente" => "Etapa 3 de 6 • Água Quente & Boiler (NBR 7198)",
+                    "Esgoto" => "Etapa 4 de 6 • Esgoto Sanitário (NBR 8160)",
+                    "Pluvial" => "Etapa 5 de 6 • Calhas & Pluvial (NBR 10844)",
+                    "CaixaGordura" => "Etapa 6 de 6 • Caixa de Gordura (NBR 8160)",
+                    "Memorial" => "Entrega Final • Todos os Memoriais",
+                    "Configuracoes" => "Parâmetros Técnicos do Escritório",
+                    _ => "Bahr Hidro BIM"
+                };
+            }
+
         }
 
         private void BtnVoltarAba_Click(object sender, RoutedEventArgs e)

@@ -9,136 +9,141 @@
         FontFamily="Segoe UI">
 
     <Window.Resources>
-    <SolidColorBrush x:Key="BhBgCanvas" Color="#F1F5F9"/>
-    <SolidColorBrush x:Key="BhSidebarBg" Color="#0F172A"/>
-    <SolidColorBrush x:Key="BhSidebarHover" Color="#1E293B"/>
-    <SolidColorBrush x:Key="BhAccent" Color="#0284C7"/>
-    <SolidColorBrush x:Key="BhAccentHover" Color="#0369A1"/>
-    <SolidColorBrush x:Key="BhBorderSubtle" Color="#CBD5E1"/>
-    <Style x:Key="PrimaryButton" TargetType="Button">
-        <Setter Property="Background" Value="#0284C7"/>
-        <Setter Property="Foreground" Value="#FFFFFF"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="FontSize" Value="12.5"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#0369A1"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#075985"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-    <Style x:Key="SecondaryButton" TargetType="Button">
-        <Setter Property="Background" Value="#FFFFFF"/>
-        <Setter Property="Foreground" Value="#1E293B"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="BorderBrush" Value="#CBD5E1"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#F8FAFC"/>
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#0284C7"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#E2E8F0"/>
-                        </Trigger>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-    <Style x:Key="QuickChipButton" TargetType="Button">
-        <Setter Property="Background" Value="#F8FAFC"/>
-        <Setter Property="Foreground" Value="#0F172A"/>
-        <Setter Property="FontSize" Value="11.5"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="BorderBrush" Value="#CBD5E1"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="9,4"/>
-        <Setter Property="Margin" Value="0,0,6,0"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="Button">
-                    <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#E0F2FE"/>
-                            <Setter TargetName="bd" Property="BorderBrush" Value="#0284C7"/>
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="bd" Property="Background" Value="#BAE6FD"/>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-    <Style TargetType="Button" x:Key="RevitActionButton">
-        <Setter Property="Background" Value="#0284C7"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Height" Value="34"/>
-        <Setter Property="Padding" Value="14,0"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-    <Style TargetType="Button" x:Key="RevitApplyButton">
-        <Setter Property="Background" Value="#15803D"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Height" Value="34"/>
-        <Setter Property="Padding" Value="14,0"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-    <Style TargetType="TextBox">
-        <Setter Property="Padding" Value="6,5"/>
-        <Setter Property="BorderBrush" Value="#CBD5E1"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="VerticalContentAlignment" Value="Center"/>
-    </Style>
-    <Style TargetType="TreeViewItem">
-        <Setter Property="Padding" Value="6,6"/>
-        <Setter Property="Margin" Value="0,1"/>
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Cursor" Value="Hand"/>
-    </Style>
-</Window.Resources>
+        <SolidColorBrush x:Key="BhBgCanvas" Color="#F1F5F9"/>
+        <SolidColorBrush x:Key="BhAccent" Color="#0284C7"/>
+        <SolidColorBrush x:Key="BhBorderSubtle" Color="#CBD5E1"/>
+
+        <Style x:Key="PrimaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#0284C7"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#0369A1"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#075985"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#1E293B"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#F8FAFC"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#0284C7"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#E2E8F0"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="QuickChipButton" TargetType="Button">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="11,5"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#E0F2FE"/>
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#0284C7"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#BAE6FD"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" x:Key="RevitActionButton" BasedOn="{StaticResource PrimaryButton}"/>
+
+        <Style TargetType="Button" x:Key="RevitApplyButton" BasedOn="{StaticResource PrimaryButton}">
+            <Setter Property="Background" Value="#15803D"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12.5"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="BorderBrush" Value="#CBD5E1"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12.5"/>
+        </Style>
+
+        <Style TargetType="TreeViewItem">
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </Window.Resources>
 
     <DockPanel LastChildFill="True" Background="#F1F5F9">
-        <!-- Barra Superior de Acesso Rápido & Atalhos de Teclado -->
-        <Border x:Name="TopQuickShortcutBar" DockPanel.Dock="Top" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="14,8">
+        <!-- Barra Superior Limpa e Objetiva -->
+        <Border x:Name="TopQuickShortcutBar" DockPanel.Dock="Top" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="16,9">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -147,7 +152,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border CornerRadius="8" Width="40" Height="38" Margin="0,0,10,0" VerticalAlignment="Center">
+                    <Border CornerRadius="8" Width="38" Height="36" Margin="0,0,11,0" VerticalAlignment="Center">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                 <GradientStop Color="#0284C7" Offset="0"/>
@@ -155,99 +160,73 @@
                             </LinearGradientBrush>
                         </Border.Background>
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="BH" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12.5" HorizontalAlignment="Center" Margin="0,0,0,1"/>
-                            <Canvas Width="24" Height="11" HorizontalAlignment="Center">
-                                <Line X1="1" Y1="6" X2="6.5" Y2="6" Stroke="#BAE6FD" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Line X1="1" Y1="4" X2="1" Y2="8" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Line X1="17.5" Y1="6" X2="23" Y2="6" Stroke="#BAE6FD" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Line X1="23" Y1="4" X2="23" Y2="8" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
-                                <Path Data="M 12,0.5 C 12,0.5 15.5,4.6 15.5,6.8 A 3.5,3.5 0 1 1 8.5,6.8 C 8.5,4.6 12,0.5 12,0.5 Z" Fill="#E0F2FE"/>
+                            <TextBlock Text="BH" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center"/>
+                            <Canvas Width="22" Height="10" HorizontalAlignment="Center">
+                                <Line X1="1" Y1="5" X2="6" Y2="5" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Line X1="16" Y1="5" X2="21" Y2="5" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                <Path Data="M 11,0.5 C 11,0.5 14.2,4.2 14.2,6.2 A 3.2,3.2 0 1 1 7.8,6.2 C 7.8,4.2 11,0.5 11,0.5 Z" Fill="#E0F2FE"/>
                             </Canvas>
                         </StackPanel>
                     </Border>
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="BAHR HIDRO BIM (Atualizado)" FontWeight="Bold" FontSize="13" Foreground="#0F172A"/>
-                        <TextBlock Text="Hidráulica &amp; Steel Frame • NBR 5626 / 8160" FontSize="10.5" Foreground="#64748B"/>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="BAHR HIDRO" FontWeight="Bold" FontSize="14" Foreground="#0F172A"/>
+                            <Border Background="#E0F2FE" CornerRadius="4" Padding="7,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="ActiveStepBadgeText" Text="Visão Geral do Fluxo" FontSize="11" FontWeight="SemiBold" Foreground="#0369A1"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Copiloto de Engenharia Hidrossanitária • ABNT NBR 5626 / 7198 / 8160 / 10844" FontSize="11" Foreground="#64748B"/>
                     </StackPanel>
                 </StackPanel>
 
-                <WrapPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
-                    <Button x:Name="BtnVoltarAba" Style="{StaticResource QuickChipButton}" ToolTip="Voltar para a aba ou tela anterior (Alt + Seta Esquerda)" Click="BtnVoltarAba_Click">
-                        <TextBlock Text="← Voltar" Foreground="#0F172A" FontWeight="Bold"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="BtnVoltarAba" Style="{StaticResource QuickChipButton}" ToolTip="Voltar para a etapa anterior (Alt + ←)" Click="BtnVoltarAba_Click">
+                        <TextBlock Text="← Voltar" Foreground="#0F172A"/>
                     </Button>
-                    <Button Style="{StaticResource QuickChipButton}" ToolTip="Atualizar Cache Espacial 2D de Montantes LSF (Tecla F5)" Click="QuickRibbonCache_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="⚡ Cache LSF " Foreground="#0F172A"/>
-                            <TextBlock Text="[F5]" Foreground="#0284C7" FontWeight="Bold"/>
-                        </StackPanel>
+                    <Button Style="{StaticResource QuickChipButton}" Click="BtnIrInicio_Click">
+                        <TextBlock Text="🏠 Início" Foreground="#0F172A"/>
                     </Button>
-                    <Button Style="{StaticResource QuickChipButton}" ToolTip="Auditoria Visual 3D de Velocidade e Pressão NBR 5626 (Ctrl+Shift+A)" Click="QuickRibbonAudit_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🎨 Auditoria 3D " Foreground="#0F172A"/>
-                            <TextBlock Text="[Ctrl+Shift+A]" Foreground="#059669" FontWeight="Bold"/>
-                        </StackPanel>
+                    <Button Style="{StaticResource QuickChipButton}" Click="AbrirCatalogo_Click">
+                        <TextBlock Text="📏 Catálogo de Tubos" Foreground="#0284C7"/>
                     </Button>
-                    <Button Style="{StaticResource QuickChipButton}" ToolTip="Validar Furação nos Montantes Steel Frame (Ctrl+Shift+L)" Click="QuickRibbonLsf_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🔩 Furos LSF " Foreground="#0F172A"/>
-                            <TextBlock Text="[Ctrl+Shift+L]" Foreground="#D97706" FontWeight="Bold"/>
-                        </StackPanel>
+                    <Button Style="{StaticResource QuickChipButton}" Click="NavConfiguracoes_Click">
+                        <TextBlock Text="⚙ Parâmetros" Foreground="#334155"/>
                     </Button>
-                    <Button Style="{StaticResource QuickChipButton}" ToolTip="Gerar Elevações 1:20, Isométricos e Pranchas Executivas (Ctrl+Shift+P)" Click="QuickRibbonSheets_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="📐 Pranchas " Foreground="#0F172A"/>
-                            <TextBlock Text="[Ctrl+Shift+P]" Foreground="#4F46E5" FontWeight="Bold"/>
-                        </StackPanel>
+                    <Button Style="{StaticResource QuickChipButton}" Margin="0" ToolTip="Ver atalhos de teclado (F1)" Click="MostrarGuiaAtalhos_Click">
+                        <TextBlock Text="⌨ Atalhos [F1]" Foreground="#475569"/>
                     </Button>
-                    <Button Style="{StaticResource QuickChipButton}" Margin="0" ToolTip="Ver todos os atalhos de teclado (Tecla F1)" Click="MostrarGuiaAtalhos_Click">
-                        <TextBlock Text="⌨ Atalhos [F1]" Foreground="#334155" FontWeight="Bold"/>
-                    </Button>
-                </WrapPanel>
+                </StackPanel>
             </Grid>
         </Border>
 
         <DockPanel>
-        <!-- CABEÇALHO GLOBAL SUPERIOR -->
-        <Border DockPanel.Dock="Top" Background="#0F172A" Padding="20,12" Visibility="Collapsed">
-            <Grid>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="BAHR HIDRO" Foreground="White" FontSize="20" FontWeight="Bold"/>
-                    <TextBlock Text=" | Plataforma de Engenharia Hidráulica &amp; BIM" Foreground="#94A3B8" FontSize="14" VerticalAlignment="Center" Margin="6,0,0,0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Início" Background="#1E293B" Foreground="White" FontWeight="SemiBold" Padding="14,8" BorderThickness="0" Cursor="Hand" Margin="0,0,8,0" Click="BtnIrInicio_Click"/>
-                    <Button Content="Catálogo de Tubos" Style="{StaticResource PrimaryButton}" Click="AbrirCatalogo_Click"/>
-                </StackPanel>
-            </Grid>
-        </Border>
-
-        <!-- NAVEGADOR LATERAL EM ÁRVORE -->
-        <Border DockPanel.Dock="Left" Width="260" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="0,0,1,0">
+        <!-- NAVEGADOR LATERAL LIMPO -->
+        <Border DockPanel.Dock="Left" Width="244" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,1,0">
             <DockPanel>
-                <Border DockPanel.Dock="Top" Background="#E2E8F0" Padding="14,10" BorderBrush="#CBD5E1" BorderThickness="0,0,0,1">
-                    <TextBlock Text="NAVEGADOR DE PROJETO" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                <Border DockPanel.Dock="Top" Padding="14,12,14,8">
+                    <TextBlock Text="ETAPAS DO PROJETO" FontSize="10.5" FontWeight="Bold" Foreground="#64748B"/>
                 </Border>
 
-                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="8,10" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
-                    <TreeViewItem x:Name="NavInicio" Header="Início / Fluxo do Projeto" Tag="Inicio" IsSelected="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="8,2" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
+                    <TreeViewItem x:Name="NavInicio" Header="🏠  Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,6"/>
 
-                    <TreeViewItem Header="FLUXO HIDROSSANITÁRIO (ABNT)" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A">
-                        <TreeViewItem x:Name="NavReservatorios" Header="1. Reservatórios (NBR 5626)" Tag="Reservatorios" FontWeight="SemiBold" Foreground="#1E3A8A"/>
-                        <TreeViewItem x:Name="NavAguaFria" Header="2. Água Fria &amp; Bomba" Tag="AguaFria" FontWeight="SemiBold" Foreground="#0284C7"/>
-                        <TreeViewItem x:Name="NavBomba" Header="   ↳ Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#475569"/>
-                        <TreeViewItem x:Name="NavAguaQuente" Header="3. Água Quente &amp; Boiler" Tag="AguaQuente" FontWeight="SemiBold" Foreground="#DC2626"/>
-                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto Sanitário (NBR 8160)" Tag="Esgoto" FontWeight="SemiBold" Foreground="#92400E"/>
-                        <TreeViewItem x:Name="NavPluvial" Header="5. Calhas &amp; Pluvial (NBR 10844)" Tag="Pluvial" FontWeight="SemiBold" Foreground="#0F766E"/>
-                        <TreeViewItem x:Name="NavCaixaGordura" Header="6. Caixa de Gordura (NBR 8160)" Tag="CaixaGordura" FontWeight="SemiBold" Foreground="#B45309"/>
+                    <TreeViewItem Header="DIMENSIONAMENTO ABNT" IsExpanded="True" FontSize="11" FontWeight="Bold" Foreground="#64748B">
+                        <TreeViewItem x:Name="NavReservatorios" Header="1. Reservatórios" Tag="Reservatorios" FontWeight="SemiBold" Foreground="#1E3A8A"/>
+                        <TreeViewItem x:Name="NavAguaFria" Header="2. Água Fria" Tag="AguaFria" FontWeight="SemiBold" Foreground="#0284C7"/>
+                        <TreeViewItem x:Name="NavBomba" Header="    ↳ Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#475569"/>
+                        <TreeViewItem x:Name="NavAguaQuente" Header="3. Água Quente (Boiler)" Tag="AguaQuente" FontWeight="SemiBold" Foreground="#DC2626"/>
+                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto Sanitário" Tag="Esgoto" FontWeight="SemiBold" Foreground="#92400E"/>
+                        <TreeViewItem x:Name="NavPluvial" Header="5. Calhas &amp; Pluvial" Tag="Pluvial" FontWeight="SemiBold" Foreground="#0F766E"/>
+                        <TreeViewItem x:Name="NavCaixaGordura" Header="6. Caixa de Gordura" Tag="CaixaGordura" FontWeight="SemiBold" Foreground="#B45309"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="MEMORIAIS &amp; ENTREGÁVEIS" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A" Margin="0,8,0,0">
-                        <TreeViewItem x:Name="NavMemorial" Header="Todos os Memoriais (Excel/Word/PDF)" Tag="Memorial" FontWeight="SemiBold" Foreground="#166534"/>
+                    <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="0,8,0,0">
+                        <TreeViewItem x:Name="NavMemorial" Header="📄  Gerar Memoriais" Tag="Memorial" FontWeight="SemiBold" Foreground="#166534"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="AUTOMAÇÃO 3D (FASE FUTURA)" IsExpanded="False" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
-                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático 3D (Beta)" Tag="Tracado3D" FontWeight="Normal" Foreground="#475569"/>
-                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D ao Vivo &amp; Seção" Tag="Vistas3DVivas" FontWeight="Normal" Foreground="#475569"/>
+                    <TreeViewItem Header="FERRAMENTAS 3D (FUTURO)" IsExpanded="False" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" Margin="0,8,0,0">
+                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático (Beta)" Tag="Tracado3D" FontWeight="Normal" Foreground="#64748B"/>
+                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D &amp; Cortes" Tag="Vistas3DVivas" FontWeight="Normal" Foreground="#64748B"/>
                     </TreeViewItem>
                 </TreeView>
             </DockPanel>
@@ -258,16 +237,25 @@
             <Grid>
                 <!-- 0. TELA INICIAL / VISÃO GERAL -->
                 <ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24">
-                    <StackPanel MaxWidth="1040" HorizontalAlignment="Left">
-                        <Border Background="#0F172A" CornerRadius="8" Padding="22" Margin="0,0,0,18">
-                            <StackPanel>
-                                <TextBlock Text="COPILOTO DE DIMENSIONAMENTO HIDROSSANITÁRIO (ABNT)" Foreground="#38BDF8" FontSize="11.5" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock Text="Bahr Hidro — Engenharia Hidráulica, Sanitária &amp; Pluvial" Foreground="White" FontSize="21" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <TextBlock x:Name="InicioProjetoStatusText" Text="Lance o traçado básico no Revit e siga as 6 etapas abaixo: o Bahr Hidro dimensiona, audita normas, aponta ajustes e gera todos os memoriais." Foreground="#CBD5E1" FontSize="13" TextWrapping="Wrap"/>
-                            </StackPanel>
+                    <StackPanel MaxWidth="1060" HorizontalAlignment="Left">
+                        <Border Background="#0F172A" CornerRadius="10" Padding="22" Margin="0,0,0,18">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="FLUXO GUIADO DE PROJETO COMPLEMENTAR" Foreground="#38BDF8" FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Dimensionamento, Auditoria Normativa e Memoriais" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="InicioProjetoStatusText" Text="Modele o traçado básico no Revit e avance pelas 6 etapas abaixo. Os dados calculados em uma etapa alimentam automaticamente as seguintes." Foreground="#CBD5E1" FontSize="12.5" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
+                                    <Button Content="Iniciar pela Etapa 1 →" Style="{StaticResource PrimaryButton}" Height="38" Padding="18,0" Click="BtnIrReservatorios_Click"/>
+                                </StackPanel>
+                            </Grid>
                         </Border>
 
-                        <!-- Linha 1: 1. Reservatórios, 2. Água Fria, 3. Água Quente (Boiler) -->
+                        <!-- Linha 1: Etapas 1, 2 e 3 -->
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -277,33 +265,54 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="1. RESERVATÓRIOS (NBR 5626)" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
-                                    <TextBlock Text="População, consumo diário, reserva de incêndio e volumes comerciais (Superior e Cisterna). Alimenta automaticamente Boiler e Cx. Gordura." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                    <Button MinHeight="34" Content="1. Dimensionar Reservatórios" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrReservatorios_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Border Background="#DBEAFE" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="ETAPA 1" FontSize="10.5" FontWeight="Bold" Foreground="#1E40AF"/>
+                                        </Border>
+                                        <TextBlock Text="Reservatórios" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="População, consumo diário, reserva de incêndio e volumes comerciais (Superior e Cisterna)." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Button Content="Abrir Reservatórios" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrReservatorios_Click"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="2. ÁGUA FRIA &amp; BOMBA (NBR 5626)" FontSize="12" FontWeight="Bold" Foreground="#0284C7" Margin="0,0,0,6"/>
-                                    <TextBlock x:Name="InicioRedeStatusText" Text="Audita seu traçado básico, dimensiona bitolas por ΣP, verifica pressões/velocidades e dimensiona pressurizador." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                    <Button MinHeight="34" Content="2. Dimensionar Água Fria" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrAguaFria_Click"/>
-                                    <Button x:Name="BtnImportarInicioRevit" MinHeight="32" Content="Importar Rede do Revit (3D)" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" HorizontalAlignment="Stretch" Click="DetectarRedeAutoRevit_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Border Background="#E0F2FE" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="ETAPA 2" FontSize="10.5" FontWeight="Bold" Foreground="#0369A1"/>
+                                        </Border>
+                                        <TextBlock Text="Água Fria &amp; Bomba" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock x:Name="InicioRedeStatusText" Text="Audita o traçado do Revit, dimensiona bitolas por ΣP, verifica pressões/velocidades e pressurizador." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="Abrir Água Fria" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
+                                        <Button x:Name="BtnImportarInicioRevit" Grid.Column="1" Content="Ler 3D" Style="{StaticResource PrimaryButton}" Visibility="Collapsed" Margin="8,0,0,0" Click="DetectarRedeAutoRevit_Click"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="3. ÁGUA QUENTE &amp; BOILER (NBR 7198)" FontSize="12" FontWeight="Bold" Foreground="#DC2626" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Recebe a população e a pressão de Água Fria para dimensionar o Boiler comercial, classe de pressão (Alta/Baixa) e potência." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                    <Button MinHeight="34" Content="3. Dimensionar Boiler &amp; AQ" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaQuente_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Border Background="#FEE2E2" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="ETAPA 3" FontSize="10.5" FontWeight="Bold" Foreground="#B91C1C"/>
+                                        </Border>
+                                        <TextBlock Text="Água Quente &amp; Boiler" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Dimensiona o volume do Boiler, regime de trabalho (Alta/Baixa Pressão) e potência térmica." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Button Content="Abrir Água Quente" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaQuente_Click"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
 
-                        <!-- Linha 2: 4. Esgoto, 5. Calhas & Pluvial, 6. Caixa de Gordura -->
+                        <!-- Linha 2: Etapas 4, 5 e 6 -->
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -313,48 +322,81 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="4. ESGOTO SANITÁRIO (NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Contribuição por UHC, ramais de descarga/esgoto, tubos de queda, subcoletores, declividades mínimas e ventilação." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                    <Button MinHeight="34" Content="4. Dimensionar Esgoto" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Border Background="#FEF3C7" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="ETAPA 4" FontSize="10.5" FontWeight="Bold" Foreground="#92400E"/>
+                                        </Border>
+                                        <TextBlock Text="Esgoto Sanitário" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Soma UHC dos aparelhos, define bitolas mínimas NBR 8160, declividades e ventilação." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Button Content="Abrir Esgoto" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="5. CALHAS &amp; PLUVIAL (NBR 10844)" FontSize="12" FontWeight="Bold" Foreground="#0F766E" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Leitura de telhados no Revit, índice pluviométrico regional, cálculo de calhas (Manning-Strickler) e condutores verticais." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                    <Button MinHeight="34" Content="5. Dimensionar Calhas &amp; Pluvial" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrPluvial_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Border Background="#CCFBF1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="ETAPA 5" FontSize="10.5" FontWeight="Bold" Foreground="#0F766E"/>
+                                        </Border>
+                                        <TextBlock Text="Calhas &amp; Pluvial" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Lê coberturas do Revit, aplica chuva regional e dimensiona calhas e condutores verticais." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Button Content="Abrir Calhas &amp; Pluvial" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrPluvial_Click"/>
                                 </StackPanel>
                             </Border>
 
-                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock Text="6. CAIXA DE GORDURA (NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#B45309" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Cruza cozinhas e população para especificar CGP (18 L), CGS (31 L), CGD (120 L) ou Especial (V = 2N + 20)." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
-                                    <Button MinHeight="34" Content="6. Dimensionar Caixa de Gordura" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrCaixaGordura_Click"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                        <Border Background="#FFEDD5" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
+                                            <TextBlock Text="ETAPA 6" FontSize="10.5" FontWeight="Bold" Foreground="#C2410C"/>
+                                        </Border>
+                                        <TextBlock Text="Caixa de Gordura" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="Cruza cozinhas e população para especificar CGP (18 L), CGS (31 L), CGD (120 L) ou Especial." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Button Content="Abrir Caixa de Gordura" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrCaixaGordura_Click"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
 
-                        <!-- Barra de Memoriais Completos & Configurações -->
-                        <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="8" Padding="16">
+                        <!-- Entrega de Memoriais + Ferramentas Rápidas 3D -->
+                        <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,12">
                             <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Button MinHeight="34" Content="📄 Gerar Todos os Memoriais (Excel, Word &amp; PDF)" Style="{StaticResource PrimaryButton}" Padding="14,0" Margin="0,0,8,0" Click="BtnIrMemorial_Click"/>
-                                    <Button x:Name="NavConfiguracoesBtn" MinHeight="34" Content="⚙ Parâmetros" Style="{StaticResource SecondaryButton}" Padding="12,0" Click="NavConfiguracoes_Click"/>
-                                </StackPanel>
+                                <Button DockPanel.Dock="Right" Content="📄 Gerar Todos os Memoriais →" Style="{StaticResource RevitApplyButton}" Padding="16,0" Click="BtnIrMemorial_Click"/>
                                 <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="ENTREGA TÉCNICA COMPLETA &amp; CATÁLOGO" FontSize="12" FontWeight="Bold" Foreground="#166534"/>
-                                    <TextBlock x:Name="InicioCatalogoStatusText" Text="Verificando bitolas cadastradas..." FontSize="12" Foreground="#14532D"/>
+                                    <TextBlock Text="ENTREGA TÉCNICA FINAL (EXCEL + WORD + PDF)" FontSize="11.5" FontWeight="Bold" Foreground="#166534"/>
+                                    <TextBlock x:Name="InicioCatalogoStatusText" Text="Verificando catálogo de bitolas..." FontSize="12" Foreground="#14532D"/>
                                 </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,10">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Left" Text="Ferramentas BIM 3D:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                <WrapPanel VerticalAlignment="Center">
+                                    <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonCache_Click">
+                                        <TextBlock Text="⚡ Atualizar Cache LSF [F5]"/>
+                                    </Button>
+                                    <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonAudit_Click">
+                                        <TextBlock Text="🎨 Auditoria Visual 3D [Ctrl+Shift+A]"/>
+                                    </Button>
+                                    <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonLsf_Click">
+                                        <TextBlock Text="🔩 Validar Furos LSF [Ctrl+Shift+L]"/>
+                                    </Button>
+                                    <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
+                                        <TextBlock Text="📐 Gerar Pranchas [Ctrl+Shift+P]"/>
+                                    </Button>
+                                    <Button x:Name="NavConfiguracoesBtn" Visibility="Collapsed" Click="NavConfiguracoes_Click"/>
+                                </WrapPanel>
                             </DockPanel>
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
 
-                <!-- 0C. VISTAS 3D AO VIVO, SEÇÃO GERAL & ORDEM AF -> AQ -> ESGOTO -->
+                <!-- 0C. VISTAS 3D AO VIVO, SEÇÃO GERAL &amp; ORDEM AF -> AQ -> ESGOTO -->
                 <ScrollViewer x:Name="PanelVistas3DVivas" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="28">
                     <StackPanel MaxWidth="980" HorizontalAlignment="Left">
                         <Border Background="#0F172A" CornerRadius="8" Padding="22" Margin="0,0,0,18">
@@ -608,6 +650,13 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 1: Reservatórios" Style="{StaticResource SecondaryButton}" Click="BtnIrReservatorios_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 3 — Água Quente (Boiler) →" Style="{StaticResource PrimaryButton}" Click="BtnIrAguaQuente_Click"/>
+                            <TextBlock Text="Etapa 2 de 6 • Rede de Água Fria (ABNT NBR 5626)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
                         <StackPanel>
@@ -777,6 +826,13 @@
                             <TextBlock Text="Verificação automática de pressão dinâmica mínima nos pontos de consumo e dimensionamento do conjunto motobomba." FontSize="12" Foreground="#64748B"/>
                         </StackPanel>
                     </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Voltar para Água Fria" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 3 — Água Quente (Boiler) →" Style="{StaticResource PrimaryButton}" Click="BtnIrAguaQuente_Click"/>
+                            <TextBlock Text="Sub-etapa 2B • Pressurização / Motobomba" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
                         <Grid MaxWidth="1040" HorizontalAlignment="Left">
@@ -786,7 +842,7 @@
                                 <ColumnDefinition Width="1.15*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Parâmetros & Resultado Direto -->
+                            <!-- Parâmetros &amp; Resultado Direto -->
                             <StackPanel Grid.Column="0">
                                 <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
                                     <StackPanel>
@@ -872,6 +928,13 @@
                                 <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                                 <TextBlock Text="Cálculo de acumulação de água quente (NBR 7198 / NBR 5626), classificação de pressão e especificação de componentes." FontSize="12" Foreground="#64748B"/>
                             </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 2: Água Fria" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 4 — Esgoto Sanitário →" Style="{StaticResource PrimaryButton}" Click="BtnIrEsgoto_Click"/>
+                            <TextBlock Text="Etapa 3 de 6 • Água Quente &amp; Boiler (ABNT NBR 7198)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>
                     </Border>
 
@@ -960,6 +1023,13 @@
                                 <TextBlock Text="Dimensionamento de Reservatórios (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                                 <TextBlock Text="Reservação superior e inferior (cisterna), capacidades comerciais recomendadas e acessórios obrigatórios de barrilete." FontSize="12" Foreground="#64748B"/>
                             </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Início" Style="{StaticResource SecondaryButton}" Click="BtnIrInicio_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 2 — Água Fria →" Style="{StaticResource PrimaryButton}" Click="BtnIrAguaFria_Click"/>
+                            <TextBlock Text="Etapa 1 de 6 • Reservatórios (ABNT NBR 5626)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>
                     </Border>
 
@@ -1053,111 +1123,123 @@
                     </ScrollViewer>
                 </DockPanel>
 
-                <!-- 4. ESGOTO SANITÁRIO -->
+                <!-- 4. ESGOTO SANITÁRIO &amp; 6. CAIXA DE GORDURA -->
                 <DockPanel x:Name="PanelEsgoto" Visibility="Collapsed">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsEsgoto" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button Content="Ler Todos do Projeto" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarEsgotoAutoRevit_Click"/>
+                                <Button Content="Ler Aparelhos do Revit" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarEsgotoAutoRevit_Click"/>
                                 <Button Content="Selecionar no 3D" Style="{StaticResource RevitApplyButton}" Click="ImportarEsgotoRevit_Click"/>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Esgoto Sanitário — Dimensionamento por UHC (NBR 8160)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
-                                <TextBlock Text="Contagem automática ou por seleção 3D dos aparelhos sanitários, diâmetro mínimo e peças obrigatórias." FontSize="12" Foreground="#64748B"/>
-                            
-                            <!-- 6. DIMENSIONAMENTO DE CAIXA DE GORDURA (ABNT NBR 8160 - ITEM 5.1.5) -->
-                            <Border Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,14,0,14">
+                                <TextBlock Text="4. Esgoto Sanitário &amp; 6. Caixa de Gordura (NBR 8160)" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Somatório de UHC, diâmetros mínimos, declividades normativas e dimensionamento da caixa de gordura." FontSize="12" Foreground="#64748B"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Barra Inferior de Navegação Sequencial -->
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 3: Água Quente (Boiler)" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaQuente_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 5 — Calhas &amp; Pluvial →" Style="{StaticResource PrimaryButton}" Click="BtnIrPluvial_Click"/>
+                            <TextBlock Text="Etapa 4 &amp; 6 de 6 • ABNT NBR 8160" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <StackPanel MaxWidth="1080" HorizontalAlignment="Left">
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1.15*"/>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Lista de Aparelhos Sanitários -->
+                                <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Top" Text="Aparelhos Sanitários Conectados (UHC)" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,10"/>
+                                        <Button DockPanel.Dock="Bottom" Content="Calcular Esgoto Sanitário" Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" Click="CalcularEsgoto_Click"/>
+                                        <ItemsControl x:Name="SewerItemsControl" MaxHeight="290">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10,5" Margin="0,0,0,5">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="80"/>
+                                                                <ColumnDefinition Width="65"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" FontSize="12.5" FontWeight="SemiBold"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding UhcDisplay}" VerticalAlignment="Center" FontSize="12" Foreground="#64748B"/>
+                                                            <TextBox Grid.Column="2" Height="28" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Center"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </DockPanel>
+                                </Border>
+
+                                <!-- Resultado Esgoto + Diretrizes -->
+                                <StackPanel Grid.Column="2">
+                                    <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,14">
+                                        <StackPanel>
+                                            <TextBlock Text="DIMENSIONAMENTO DO COLETOR / RAMAL" FontSize="11.5" FontWeight="Bold" Foreground="#64748B" Margin="0,0,0,10"/>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Background="#EFF6FF" CornerRadius="6" Padding="12" Margin="0,0,6,10">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Diâmetro Nominal" FontSize="11" Foreground="#1E40AF"/>
+                                                        <TextBlock x:Name="EsgotoDiametroText" Text="--" FontSize="20" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border Grid.Column="1" Background="#F8FAFC" CornerRadius="6" Padding="12" Margin="6,0,0,10">
+                                                    <StackPanel>
+                                                        <TextBlock Text="Declividade Mínima" FontSize="11" Foreground="#475569"/>
+                                                        <TextBlock x:Name="EsgotoInclinacaoText" Text="--" FontSize="20" FontWeight="Bold" Foreground="#0F172A"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,4">
+                                                <TextBlock Text="Somatório UHC: " FontWeight="SemiBold" Foreground="#334155"/>
+                                                <TextBlock x:Name="EsgotoUhcText" Text="--" FontWeight="Bold" Foreground="#0F172A"/>
+                                                <TextBlock Text="  •  Tipo: " FontWeight="SemiBold" Foreground="#334155"/>
+                                                <TextBlock x:Name="EsgotoTipoText" Text="--" Foreground="#0F172A"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="8" Padding="16">
+                                        <StackPanel>
+                                            <TextBlock Text="COMPONENTES OBRIGATÓRIOS (NBR 8160)" FontSize="11.5" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,6"/>
+                                            <TextBlock x:Name="EsgotoSugestoesText" TextWrapping="Wrap" FontSize="12" Foreground="#14532D" LineHeight="18"
+                                                       Text="• PVC Esgoto Série Normal (ramais) e Série Reforçada (prumadas/subcoletores).&#x0a;• Caixa Sifonada com grelha (fecho hídrico mín. 50 mm), ventilação DN 50/75 e Caixas de Inspeção (60×60 cm)."/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- ETAPA 6: CAIXA DE GORDURA (CARD DEDICADO E LIMPO) -->
+                            <Border Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="18">
                                 <StackPanel>
-                                    <TextBlock Text="6. DIMENSIONAMENTO DE CAIXA DE GORDURA (ABNT NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,8"/>
+                                    <TextBlock Text="ETAPA 6 — DIMENSIONAMENTO DE CAIXA DE GORDURA (ABNT NBR 8160 - ITEM 5.1.5)" FontSize="12" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,10"/>
                                     <WrapPanel VerticalAlignment="Center" Margin="0,0,0,10">
                                         <TextBlock Text="Nº de Cozinhas:" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" Foreground="#334155"/>
                                         <TextBox x:Name="GorduraCozinhasTextBox" Text="1" Width="65" Margin="0,0,16,0"/>
                                         <TextBlock Text="Nº de Pessoas (Edificação):" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" Foreground="#334155"/>
                                         <TextBox x:Name="GorduraPessoasTextBox" Text="5" Width="75" Margin="0,0,16,0"/>
-                                        <Button Content="Dimensionar Caixa de Gordura" Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Click="CalcularCaixaGordura_Click"/>
+                                        <Button Content="Dimensionar Caixa de Gordura" Style="{StaticResource PrimaryButton}" Click="CalcularCaixaGordura_Click"/>
                                     </WrapPanel>
                                     <TextBlock x:Name="GorduraResultadoText" Text="Resultado NBR 8160: Caixa de Gordura Simples (CGS) — Volume útil mín. 31 L | Ø interno 40 cm | Submersão septo 20 cm | Saída DN 75." FontSize="12.5" FontWeight="SemiBold" Foreground="#78350F" TextWrapping="Wrap"/>
                                 </StackPanel>
                             </Border>
-</StackPanel>
-                        </DockPanel>
-                    </Border>
-
-                    <Grid Margin="24,18">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.15*"/>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="1*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="16">
-                            <DockPanel>
-                                <TextBlock DockPanel.Dock="Top" Text="Aparelhos Sanitários (UHC — NBR 8160)" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
-                                <Button DockPanel.Dock="Bottom" Content="Dimensionar Ramal de Esgoto" Style="{StaticResource PrimaryButton}" Margin="0,12,0,0" Click="CalcularEsgoto_Click"/>
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <ItemsControl x:Name="SewerItemsControl">
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,6" Margin="0,0,0,6">
-                                                    <Grid>
-                                                        <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="*"/>
-                                                            <ColumnDefinition Width="80"/>
-                                                            <ColumnDefinition Width="70"/>
-                                                        </Grid.ColumnDefinitions>
-                                                        <TextBlock Grid.Column="0" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                                        <TextBlock Grid.Column="1" Text="{Binding UhcDisplay}" VerticalAlignment="Center" Foreground="#64748B"/>
-                                                        <TextBox Grid.Column="2" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Center"/>
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </ScrollViewer>
-                            </DockPanel>
-                        </Border>
-
-                        <StackPanel Grid.Column="2">
-                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,14">
-                                <StackPanel>
-                                    <TextBlock Text="Resultado do Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,14"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="180"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="32"/>
-                                            <RowDefinition Height="28"/>
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Somatório de UHC:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="EsgotoUhcText" Text="--" FontWeight="Bold"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Tipo de Tubulação:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="EsgotoTipoText" Text="--"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Diâmetro Nominal:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="EsgotoDiametroText" Text="--" FontSize="16" FontWeight="Bold" Foreground="#1D4ED8"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Declividade Mínima:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EsgotoInclinacaoText" Text="--"/>
-                                    </Grid>
-                                </StackPanel>
-                            </Border>
-
-                            <!-- Sugestões Comerciais e Peças Obrigatórias (Esgoto) -->
-                            <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="16">
-                                <StackPanel>
-                                    <TextBlock Text="SUGESTÕES TÉCNICAS &amp; PEÇAS OBRIGATÓRIAS (NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,8"/>
-                                    <TextBlock x:Name="EsgotoSugestoesText" TextWrapping="Wrap" FontSize="12" Foreground="#14532D" LineHeight="19"
-                                               Text="• Linha Recomendada: Tubos e conexões PVC Esgoto Série Normal (ramais internos) e Série Reforçada (tubos de queda e subcoletores enterrados — Tigre / Amanco).&#x0a;• Peças Obrigatórias:&#x0a;  1. Caixa Sifonada (DN 100×100×50 ou DN 150×150×50) com grelha para lavatórios, chuveiros e ralos;&#x0a;  2. Caixa de Gordura individual/coletiva antes da rede principal (obrigatória para pia de cozinha);&#x0a;  3. Ramal e Coluna de Ventilação (DN 50 / DN 75) com terminal 30 cm acima da cobertura;&#x0a;  4. Caixas de Inspeção (CI 60×60 cm) nas mudanças de direção e a cada 15 m."/>
-                                </StackPanel>
-                            </Border>
                         </StackPanel>
-                    </Grid>
+                    </ScrollViewer>
                 </DockPanel>
 
                 <!-- 5. ÁGUAS PLUVIAIS -->
@@ -1174,17 +1256,31 @@
                             </StackPanel>
                         </DockPanel>
                     </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 4 &amp; 6: Esgoto / Cx. Gordura" Style="{StaticResource SecondaryButton}" Click="BtnIrEsgoto_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Finalizar: Gerar Todos os Memoriais →" Style="{StaticResource PrimaryButton}" Click="BtnIrMemorial_Click"/>
+                            <TextBlock Text="Etapa 5 de 6 • Calhas &amp; Águas Pluviais (ABNT NBR 10844)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
 
                     <local:RainwaterView x:Name="RainwaterViewControl"/>
                 </DockPanel>
 
-                <!-- 6. MEMORIAL DE CÁLCULO & PROJETO (DASHBOARD EXECUTIVO) -->
+                <!-- 6. MEMORIAL DE CÁLCULO &amp; PROJETO (DASHBOARD EXECUTIVO) -->
                 <DockPanel x:Name="PanelMemorial" Visibility="Collapsed">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Memorial de Cálculo &amp; Dados do Projeto BIM" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                             <TextBlock Text="Cadastro técnico do empreendimento, consolidação dos resultados normativos e exportação do memorial (.xlsx)." FontSize="12" Foreground="#64748B"/>
                         </StackPanel>
+                    </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Voltar para Etapa 5 (Pluvial)" Style="{StaticResource SecondaryButton}" Click="BtnIrPluvial_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Concluir e Voltar ao Início" Style="{StaticResource PrimaryButton}" Click="BtnIrInicio_Click"/>
+                            <TextBlock Text="Entrega Técnica Final • Planilhas, Memoriais Descritivos e de Cálculo" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
                     </Border>
 
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
