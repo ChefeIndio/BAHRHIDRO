@@ -449,6 +449,55 @@
                                                Text="1. Vistas Isométricas 3D por Ambiente: Detecta banheiros, cozinhas e áreas de serviço, aplica Section Box ajustado, bloqueia a orientação 3D e insere etiquetas de diâmetro.&#x0a;2. Esquema Vertical de Prumadas: Diagrama esquemático pavimento a pavimento com bitolas de AF, AQ, TQ e CV (Escala 1:50).&#x0a;3. Prancha Executiva (HID-01): Agrupa planta baixa, isométricos 3D e esquema vertical prontos para plotagem."/>
                                 </StackPanel>
                             </Border>
+                        
+                            <Border Grid.Column="0" Grid.ColumnSpan="3" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,18,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <WrapPanel Margin="0,0,0,12">
+                                        <Button Content="Auditar Clash 3D (Estrutura &amp; LSF)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExecutarClash3D_Click"/>
+                                        <Button Content="Exportar Relatório de Furos (.csv)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="ExportarRelatorioFurosCsv_Click"/>
+                                        <Button Content="Gerar Mapa Visual 3D (Pressão &amp; Velocidade)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="GerarMapaDiagnostico3D_Click"/>
+                                    </WrapPanel>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                        <TextBlock x:Name="ClashAndDiagStatusText" Text="Execute a auditoria 3D para detectar conflitos estruturais/LSF ou gerar a vista 3D colorida de diagnóstico hidráulico." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                    </Border>
+
+                                    <DataGrid x:Name="ClashResultsDataGrid"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              IsReadOnly="True"
+                                              HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal"
+                                              HorizontalGridLinesBrush="#E2E8F0"
+                                              Background="White"
+                                              BorderBrush="#CBD5E1"
+                                              BorderThickness="1"
+                                              RowHeight="28"
+                                              MaxHeight="210"
+                                              FontSize="11.5">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="34"/>
+                                            <DataGridTextColumn Header="Sistema" Binding="{Binding PipeSystem}" Width="110"/>
+                                            <DataGridTextColumn Header="DN (mm)" Binding="{Binding DiameterMm}" Width="66"/>
+                                            <DataGridTextColumn Header="Elemento Estrutural / LSF" Binding="{Binding StructuralCategory}" Width="145"/>
+                                            <DataGridTextColumn Header="Modelo" Binding="{Binding SourceModel}" Width="110"/>
+                                            <DataGridTextColumn Header="Cota Z (m)" Binding="{Binding ElevationMeters, StringFormat=N2}" Width="74"/>
+                                            <DataGridTextColumn Header="Furo Sugerido" Binding="{Binding RecommendedSleeve}" Width="*"/>
+                                            <DataGridTemplateColumn Header="Ação 3D" Width="92">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="Ver no 3D" Padding="6,2" FontSize="11" Tag="{Binding PipeElementId}" Click="ZoomClashElemento3D_Click"/>
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </Border>
                         </Grid>
                     </ScrollViewer>
                 </DockPanel>
@@ -618,6 +667,19 @@
 
                                         <TextBlock x:Name="TracadoResumoGeracaoText" Text="Resultado: Aguardando geração do traçado." FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
                                         <TextBox x:Name="TracadoLogTextBox" Height="95" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Background="#F8FAFC" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,14,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="PONTE ESPACIAL 3D — INFRAESTRUTURA PARA FUTURO TRAÇADO AUTOMÁTICO VIA API" FontSize="11.5" FontWeight="Bold" Foreground="#1E40AF" Margin="0,0,0,6"/>
+                                        <TextBlock Text="Extrai coordenadas reais dos conectores dos aparelhos sanitários e prumadas em JSON e executa planos de traçado 3D no Revit 2026." FontSize="11.5" Foreground="#1D4ED8" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                        <WrapPanel Margin="0,0,0,8">
+                                            <Button Content="Extrair Contexto Espacial 3D (JSON)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExtrairContextoEspacial3D_Click"/>
+                                            <Button Content="Gerar Plano de Teste Derivado" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="GerarPlanoRoteamentoTeste_Click"/>
+                                            <Button Content="Executar Plano JSON no Revit 3D" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExecutarPlanoRoteamento3D_Click"/>
+                                        </WrapPanel>
+                                        <TextBlock x:Name="SpatialBridgeStatusText" Text="Pronto para mapear os aparelhos sanitários e prumadas do modelo aberto." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,8"/>
+                                        <TextBox x:Name="SpatialContextJsonTextBox" Height="170" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11" Background="White" BorderBrush="#BFDBFE" Padding="8"/>
                                     </StackPanel>
                                 </Border>
 

@@ -812,5 +812,67 @@ namespace BahrHidro.Revit
                 return res;
             });
         }
+
+        public Task<ClashAudit3DResult> RunStructuralAndLsfClashAudit()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var (res, viewId) = RevitAdvanced3DAuditProcessor.RunStructuralAndLsfClashAudit(_doc);
+                if (viewId != ElementId.InvalidElementId && _doc.GetElement(viewId) is View targetView)
+                    _uidoc.ActiveView = targetView;
+                return res;
+            });
+        }
+
+        public Task FocusElementIn3DView(long elementId)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var id = new ElementId(elementId);
+                if (_doc.GetElement(id) != null)
+                {
+                    _uidoc.Selection.SetElementIds(new List<ElementId> { id });
+                    _uidoc.ShowElements(id);
+                }
+                return true;
+            });
+        }
+
+        public Task<HydraulicDiagnostic3DResult> ApplyHydraulicDiagnosticColorMap(BahrHidro.Core.Hydraulic.Network.NetworkCalculationResult? coldWaterResult)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var (res, viewId) = RevitAdvanced3DAuditProcessor.ApplyHydraulicDiagnosticColorMap(_doc, coldWaterResult);
+                if (viewId != ElementId.InvalidElementId && _doc.GetElement(viewId) is View targetView)
+                    _uidoc.ActiveView = targetView;
+                return res;
+            });
+        }
+
+        public Task<string> ExtractSpatialWetAreaJson()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                return RevitAdvanced3DAuditProcessor.ExtractSpatialWetAreaJson(_doc);
+            });
+        }
+
+        public Task<int> ExecuteAutoRoutingPlanJson(string planJson)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                return RevitAdvanced3DAuditProcessor.ExecuteAutoRoutingPlanJson(_doc, planJson);
+            });
+        }
 }
 }

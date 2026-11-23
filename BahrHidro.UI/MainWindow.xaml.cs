@@ -3065,5 +3065,157 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Erro ao exportar planilha SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-    }
+    
+        private List<ClashItem3DInfo> _lastClashItems = new();
+
+        private void BtnIrVistas3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavVistas3DVivas != null) NavVistas3DVivas.IsSelected = true;
+        }
+
+        private async void ExecutarClash3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = await _revitBridge.RunStructuralAndLsfClashAudit();
+                _lastClashItems = res.Clashes;
+                if (ClashResultsDataGrid != null)
+                    ClashResultsDataGrid.ItemsSource = _lastClashItems;
+                if (ClashAndDiagStatusText != null)
+                    ClashAndDiagStatusText.Text = res.Summary;
+
+                MessageBox.Show(res.Summary, "Bahr Hidro — Compatibilização 3D (Estrutura & LSF)", MessageBoxButton.OK,
+                    res.ClashesFound == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro na auditoria de Clash 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ZoomClashElemento3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            if (sender is System.Windows.Controls.Button btn && btn.Tag is long elemId)
+            {
+                try
+                {
+                    await _revitBridge.FocusElementIn3DView(elemId);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Não foi possível focar o elemento no 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+        }
+
+        private void ExportarRelatorioFurosCsv_Click(object sender, RoutedEventArgs e)
+        {
+            if (_lastClashItems.Count == 0)
+            {
+                MessageBox.Show("Execute primeiro a auditoria 'Auditar Clash 3D (Estrutura & LSF)' para listar as passagens.", "Bahr Hidro — Furos & Passagens", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Exportar Relatório de Furos e Passagens (Estrutura & LSF)",
+                Filter = "Arquivo CSV (*.csv)|*.csv",
+                FileName = "Relatorio_Furos_Passagens_LSF_Estrutura.csv"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.AppendLine("Item;ID_Tubo_Revit;Sistema;DN_mm;Categoria_Estrutural;Elemento_Estrutural;Modelo_Origem;Nivel;Cota_Z_m;Furo_Recomendado");
+                foreach (var c in _lastClashItems)
+                {
+                    sb.AppendLine($"{c.Index};{c.PipeElementId};{c.PipeSystem};{c.DiameterMm};{c.StructuralCategory};{c.StructuralElementName};{c.SourceModel};{c.LevelName};{c.ElevationMeters:F2};{c.RecommendedSleeve}");
+                }
+                System.IO.File.WriteAllText(dlg.FileName, sb.ToString(), System.Text.Encoding.UTF8);
+                MessageBox.Show($"Relatório de furos exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Furos & Passagens", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private async void GerarMapaDiagnostico3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = await _revitBridge.ApplyHydraulicDiagnosticColorMap(_snapshot.ColdWaterNetwork);
+                if (ClashAndDiagStatusText != null)
+                    ClashAndDiagStatusText.Text = res.Summary;
+                MessageBox.Show(res.Summary, "Bahr Hidro — Mapa Visual 3D Hidráulico", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar Mapa Visual 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private string _lastSpatialContextJson = "";
+
+        private async void ExtrairContextoEspacial3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                _lastSpatialContextJson = await _revitBridge.ExtractSpatialWetAreaJson();
+                if (SpatialContextJsonTextBox != null)
+                    SpatialContextJsonTextBox.Text = _lastSpatialContextJson;
+                if (SpatialBridgeStatusText != null)
+                    SpatialBridgeStatusText.Text = "Contexto espacial 3D extraído em JSON (pronto para envio à API externa de traçado).";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao extrair contexto espacial 3D:\n{ex.Message}", "Bahr Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void GerarPlanoRoteamentoTeste_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string src = !string.IsNullOrWhiteSpace(_lastSpatialContextJson) ? _lastSpatialContextJson : (SpatialContextJsonTextBox?.Text ?? "");
+                if (string.IsNullOrWhiteSpace(src))
+                {
+                    MessageBox.Show("Clique primeiro em 'Extrair Contexto Espacial 3D (JSON)'.", "Bahr Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                    return;
+                }
+
+                var ctx = System.Text.Json.JsonSerializer.Deserialize<BahrHidro.Core.Routing.SpatialWetAreaContext>(
+                    src,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (ctx == null) return;
+                string planJson = BahrHidro.Core.Routing.AutoRoutingSerializer.BuildSamplePlanFromContext(ctx);
+                if (SpatialContextJsonTextBox != null)
+                    SpatialContextJsonTextBox.Text = planJson;
+                if (SpatialBridgeStatusText != null)
+                    SpatialBridgeStatusText.Text = "Plano de traçado JSON gerado a partir das coordenadas reais dos aparelhos e prumadas.";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar plano de traçado JSON:\n{ex.Message}", "Bahr Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void ExecutarPlanoRoteamento3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string planJson = SpatialContextJsonTextBox?.Text ?? "";
+                int count = await _revitBridge.ExecuteAutoRoutingPlanJson(planJson);
+                if (SpatialBridgeStatusText != null)
+                    SpatialBridgeStatusText.Text = $"Execução concluída: {count} trecho(s) de tubulação criados fisicamente no Revit 3D.";
+                MessageBox.Show($"{count} trecho(s) de tubulação foram criados no modelo 3D a partir do plano JSON!", "Bahr Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao executar plano JSON no Revit 3D:\n{ex.Message}", "Bahr Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+}
 }
