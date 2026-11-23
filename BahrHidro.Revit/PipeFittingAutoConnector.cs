@@ -10,14 +10,25 @@ namespace BahrHidro.Revit
     {
         public static bool EnsureElbowRoutingPreference(Document doc, ElementId pipeTypeId)
         {
-            if (doc == null || pipeTypeId == ElementId.InvalidElementId) return false;
-            return EnsureRoutingPreferences(doc, doc.GetElement(pipeTypeId) as PipeType);
+            if (doc == null) return false;
+            FamilyLoader.EnsureEssentialFittings(doc);
+
+            bool anyOk = false;
+            if (pipeTypeId != ElementId.InvalidElementId && doc.GetElement(pipeTypeId) is PipeType targetPt)
+                anyOk = EnsureRoutingPreferences(doc, targetPt);
+
+            // Garante regras de conexão em todos os PipeTypes do projeto
+            foreach (var pt in new FilteredElementCollector(doc).OfClass(typeof(PipeType)).Cast<PipeType>())
+            {
+                if (EnsureRoutingPreferences(doc, pt))
+                    anyOk = true;
+            }
+            return anyOk;
         }
 
         public static bool EnsureRoutingPreferences(Document doc, PipeType? pipeType)
         {
             if (doc == null || pipeType == null) return false;
-            FamilyLoader.EnsureEssentialFittings(doc);
 
             var rpm = pipeType.RoutingPreferenceManager;
             if (rpm == null) return false;
@@ -48,7 +59,17 @@ namespace BahrHidro.Revit
             {
                 var existing = rpm.GetRule(groupType, 0);
                 if (existing != null && existing.MEPPartId != ElementId.InvalidElementId)
-                    return true;
+                {
+                    if (doc.GetElement(existing.MEPPartId) is FamilySymbol existingSym)
+                    {
+                        if (!existingSym.IsActive)
+                        {
+                            existingSym.Activate();
+                            doc.Regenerate();
+                        }
+                        return true;
+                    }
+                }
             }
 
             FamilySymbol? symbol = symbols.FirstOrDefault(s =>
@@ -85,9 +106,9 @@ namespace BahrHidro.Revit
             doc.Regenerate();
 
             int connectedCount = 0;
-            const double tolFeet = 0.04; // ~12 mm
+            const double tolFeet = 0.05; // ~15 mm
 
-            // 1. Conecta pontas coincidentes (Joelho para ângulos ou Luva de Redução para trechos colineares)
+            // 1. Conecta pontas coincidentes (Joelho para ângulos, Luva/Redução ou ConnectTo para colineares)
             for (int i = 0; i < pipes.Count; i++)
             {
                 foreach (var cA in GetOpenEndConnectors(pipes[i]))
@@ -103,11 +124,31 @@ namespace BahrHidro.Revit
                                 double angle = cA.CoordinateSystem.BasisZ.AngleTo(cB.CoordinateSystem.BasisZ);
                                 if (angle > 0.03 && angle < Math.PI - 0.03)
                                 {
-                                    try { doc.Create.NewElbowFitting(cA, cB); connectedCount++; } catch { }
+                                    try
+                                    {
+                                        doc.Create.NewElbowFitting(cA, cB);
+                                        connectedCount++;
+                                    }
+                                    catch
+                                    {
+                                        try { cA.ConnectTo(cB); connectedCount++; } catch { }
+                                    }
                                 }
                                 else if (Math.Abs(cA.Radius - cB.Radius) > 0.001)
                                 {
-                                    try { doc.Create.NewTransitionFitting(cA, cB); connectedCount++; } catch { }
+                                    try
+                                    {
+                                        doc.Create.NewTransitionFitting(cA, cB);
+                                        connectedCount++;
+                                    }
+                                    catch
+                                    {
+                                        try { cA.ConnectTo(cB); connectedCount++; } catch { }
+                                    }
+                                }
+                                else
+                                {
+                                    try { cA.ConnectTo(cB); connectedCount++; } catch { }
                                 }
                             }
                         }
@@ -148,8 +189,15 @@ namespace BahrHidro.Revit
                                     var cHost2 = GetClosestOpenEnd(splitPipe, proj.XYZPoint, tolFeet);
                                     if (cHost1 != null && cHost2 != null)
                                     {
-                                        doc.Create.NewTeeFitting(cHost1, cHost2, cBranch);
-                                        connectedCount++;
+                                        try
+                                        {
+                                            doc.Create.NewTeeFitting(cHost1, cHost2, cBranch);
+                                            connectedCount++;
+                                        }
+                                        catch
+                                        {
+                                            try { cHost1.ConnectTo(cHost2); cHost1.ConnectTo(cBranch); connectedCount++; } catch { }
+                                        }
                                         break;
                                     }
                                 }

@@ -92,6 +92,12 @@ namespace BahrHidro.Revit
         {
             try
             {
+                string cmt = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? "";
+                if (cmt.Contains("AQ |") || cmt.Contains("HotWater") || cmt.Contains("ESG") || cmt.Contains("Sanitary") || cmt.Contains("VENT") || cmt.Contains("AP |"))
+                    return false;
+                if (cmt.Contains("AF |") || cmt.Contains("ColdWater") || cmt.Contains("AF-PEX"))
+                    return true;
+
                 if (pipe.MEPSystem is PipingSystem ps)
                 {
                     if (ps.SystemType == PipeSystemType.DomesticColdWater)

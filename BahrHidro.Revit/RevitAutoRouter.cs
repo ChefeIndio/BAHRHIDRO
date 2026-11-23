@@ -1704,7 +1704,7 @@ namespace BahrHidro.Revit
                 PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                 Pipe trunkPipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, a, b);
                 SetPipeDiameter(trunkPipe, diameterFeet);
-                SetPipeComment(trunkPipe, $"BahrHidroAuto|Disc={GetSystemTagFromPipe(trunkPipe)}");
+                SetPipeComment(trunkPipe, FormatBahrHidroComment(trunkPipe));
                 trunkSegments.Add(trunkPipe);
                 pipesCreated++;
                 totalLengthFeet += GetPipeLengthFeet(trunkPipe);
@@ -1928,7 +1928,7 @@ namespace BahrHidro.Revit
                 PipeFittingAutoConnector.EnsureElbowRoutingPreference(doc, pipeTypeId);
                 Pipe pipe = Pipe.Create(doc, systemTypeId, pipeTypeId, levelId, points[i], points[i + 1]);
                 SetPipeDiameter(pipe, diameterFeet);
-                SetPipeComment(pipe, $"BahrHidroAuto|Disc={GetSystemTagFromPipe(pipe)}");
+                SetPipeComment(pipe, FormatBahrHidroComment(pipe));
 
                 if (createdPipes.Count > 0)
                 {
@@ -2099,5 +2099,15 @@ namespace BahrHidro.Revit
             return "ColdWater";
         }
 
+
+        private static string FormatBahrHidroComment(Pipe pipe)
+        {
+            string sys = RemoverAcentos(pipe.get_Parameter(BuiltInParameter.RBS_PIPING_SYSTEM_TYPE_PARAM)?.AsValueString() ?? "").ToLowerInvariant();
+            if (sys.Contains("quente") || sys.Contains("hot")) return "BahrHidro | AQ | Disc=HotWater";
+            if (sys.Contains("vent")) return "BahrHidro | VENT | Disc=Ventilation";
+            if (sys.Contains("pluv") || sys.Contains("storm")) return "BahrHidro | AP | Disc=StormDrainage";
+            if (sys.Contains("esgoto") || sys.Contains("sanit")) return "BahrHidro | ESG | Disc=SanitarySewer";
+            return "BahrHidro | AF | Disc=ColdWater";
+        }
 }
 }

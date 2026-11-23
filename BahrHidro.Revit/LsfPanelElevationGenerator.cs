@@ -206,9 +206,9 @@ namespace BahrHidro.Revit
             }
 
             string cmt = el.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? string.Empty;
-            if (cmt.Contains("AQ |")) return BahrHidroDiscipline.HotWater;
-            if (cmt.Contains("AF |") || cmt.Contains("AF-PEX")) return BahrHidroDiscipline.ColdWater;
-            if (cmt.Contains("ESG") || cmt.Contains("VENT") || cmt.Contains("AP |")) return BahrHidroDiscipline.SanitaryAndVent;
+            if (cmt.Contains("AQ |") || cmt.Contains("Disc=HotWater")) return BahrHidroDiscipline.HotWater;
+            if (cmt.Contains("AF |") || cmt.Contains("AF-PEX") || cmt.Contains("Disc=ColdWater")) return BahrHidroDiscipline.ColdWater;
+            if (cmt.Contains("ESG") || cmt.Contains("VENT") || cmt.Contains("AP |") || cmt.Contains("Disc=SanitarySewer") || cmt.Contains("Disc=Ventilation") || cmt.Contains("Disc=StormDrainage")) return BahrHidroDiscipline.SanitaryAndVent;
 
             ConnectorSet? connectors = null;
             if (el is Pipe p) connectors = p.ConnectorManager?.Connectors;
@@ -310,11 +310,11 @@ namespace BahrHidro.Revit
                 string cmt = pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS)?.AsString() ?? string.Empty;
                 Color targetColor = blue;
                 if (cmt.Contains("ALERTA LSF")) targetColor = orange;
-                else if (cmt.Contains("AQ |")) targetColor = red;
-                else if (cmt.Contains("VENT |")) targetColor = green;
+                else if (cmt.Contains("AQ |") || cmt.Contains("Disc=HotWater")) targetColor = red;
+                else if (cmt.Contains("VENT |") || cmt.Contains("Disc=Ventilation")) targetColor = green;
                 else if (cmt.Contains("ESG-SEC") || cmt.Contains("ESG-GORD")) targetColor = ochre;
-                else if (cmt.Contains("ESG")) targetColor = brown;
-                else if (cmt.Contains("AP |")) targetColor = cyan;
+                else if (cmt.Contains("ESG") || cmt.Contains("Disc=SanitarySewer")) targetColor = brown;
+                else if (cmt.Contains("AP |") || cmt.Contains("Disc=StormDrainage")) targetColor = cyan;
 
                 var ogs = new OverrideGraphicSettings();
                 ogs.SetProjectionLineColor(targetColor);
