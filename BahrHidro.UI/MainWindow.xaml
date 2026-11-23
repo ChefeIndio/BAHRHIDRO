@@ -205,7 +205,7 @@
                     <TextBlock Text="ETAPAS DO PROJETO" FontSize="10.5" FontWeight="Bold" Foreground="#64748B" />
                 </Border>
 
-                                                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="10,4" SelectedItemChanged="NavegadorTree_SelectedItemChanged" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                                                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="6,6,6,12" SelectedItemChanged="NavegadorTree_SelectedItemChanged" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                     <TreeView.Resources>
                         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#E2E8F0" />
                         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#0F172A" />
@@ -240,7 +240,7 @@
         <Border Margin="12" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" VerticalAlignment="Stretch">
             <Grid VerticalAlignment="Stretch">
                 
-                <StackPanel VerticalAlignment="Stretch"><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelInicio}"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24">
+                <StackPanel VerticalAlignment="Stretch"><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelInicio}"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24">
                     <StackPanel MaxWidth="1060" HorizontalAlignment="Left">
                         <Border Background="#0F172A" CornerRadius="10" Padding="22" Margin="0,0,0,18">
                             <Grid>
@@ -392,7 +392,7 @@
                 </ScrollViewer>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Pranchas Executivas ABNT &amp; Isométricos 3D Cotados" FontSize="17" FontWeight="Bold" Foreground="#0F172A" />
@@ -450,7 +450,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelTracado3D}"><DockPanel x:Name="PanelTracado3D" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelTracado3D}"><DockPanel x:Name="PanelTracado3D" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsTracado3D" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -684,7 +684,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelAguaFria}"><DockPanel x:Name="PanelAguaFria" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelAguaFria}"><DockPanel x:Name="PanelAguaFria" Visibility="Collapsed" Margin="0,0,0,24">
                     
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,12">
                         <StackPanel>
@@ -981,7 +981,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelBomba}"><DockPanel x:Name="PanelBomba" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelBomba}"><DockPanel x:Name="PanelBomba" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Pressurização &amp; Dimensionamento de Bomba (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
@@ -1063,7 +1063,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelAguaQuente}"><DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelAguaQuente}"><DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsAguaQuente" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1263,7 +1263,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelReservatorios}"><DockPanel x:Name="PanelReservatorios" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelReservatorios}"><DockPanel x:Name="PanelReservatorios" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsReservatorios" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1399,7 +1399,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelEsgoto}"><DockPanel x:Name="PanelEsgoto" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelEsgoto}"><DockPanel x:Name="PanelEsgoto" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsEsgoto" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1612,7 +1612,7 @@
 
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelPluvial}"><DockPanel x:Name="PanelPluvial" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelPluvial}"><DockPanel x:Name="PanelPluvial" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsPluvial" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1637,7 +1637,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PanelMemorial}"><DockPanel x:Name="PanelMemorial" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelMemorial}"><DockPanel x:Name="PanelMemorial" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Memorial de Cálculo &amp; Dados do Projeto BIM" FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
@@ -1893,7 +1893,7 @@
                 </DockPanel>
 
             
-            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=ConfiguracoesPanel}"><ScrollViewer x:Name="ConfiguracoesPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="14" Margin="0,0,0,24">
+            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=ConfiguracoesPanel}"><ScrollViewer x:Name="ConfiguracoesPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="14" Margin="0,0,0,24">
                 <StackPanel>
                     <TextBlock Text="Padrões Técnicos do Escritório (LSF &amp; ABNT NBR 5626 / 8160)" FontSize="15" FontWeight="Bold" Margin="0,0,0,4" />
                     <TextBlock Text="Configure as cotas padrão de pontos, critérios de furação em montantes Steel Frame e limites hidráulicos. Salve ou exporte em .json para padronizar toda a equipe." TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,12" />
@@ -2032,7 +2032,7 @@
                     <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </ScrollViewer>
-            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,24" Visibility="{Binding Visibility, ElementName=PageClash3D}"><Grid x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,24"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><StackPanel Grid.Row="0" Margin="0,0,0,14"><TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" /><TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" /></StackPanel><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16"><Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
+            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PageClash3D}"><Grid x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,24"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><StackPanel Grid.Row="0" Margin="0,0,0,14"><TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" /><TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" /></StackPanel><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16"><Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
                                 <StackPanel>
                                     <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
                                     <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
