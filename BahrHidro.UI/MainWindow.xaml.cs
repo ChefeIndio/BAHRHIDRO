@@ -125,6 +125,7 @@ namespace BahrHidro.UI
             }
         }
 
+        private readonly ProjectEngineeringSnapshot _snapshot = new();
         private readonly Stack<string> _tabHistory = new();
         private string _activePanelTag = "Inicio";
         private bool _isGoingBackTab = false;
@@ -147,7 +148,8 @@ namespace BahrHidro.UI
             PanelBomba.Visibility = tag == "Bomba" ? Visibility.Visible : Visibility.Collapsed;
             PanelAguaQuente.Visibility = tag == "AguaQuente" ? Visibility.Visible : Visibility.Collapsed;
             PanelReservatorios.Visibility = tag == "Reservatorios" ? Visibility.Visible : Visibility.Collapsed;
-            PanelEsgoto.Visibility = tag == "Esgoto" ? Visibility.Visible : Visibility.Collapsed;
+            PanelEsgoto.Visibility = (tag == "Esgoto" || tag == "CaixaGordura") ? Visibility.Visible : Visibility.Collapsed;
+            if (tag == "CaixaGordura") PanelEsgoto.Children.OfType<ScrollViewer>().FirstOrDefault()?.ScrollToEnd();
             PanelPluvial.Visibility = tag == "Pluvial" ? Visibility.Visible : Visibility.Collapsed;
             PanelMemorial.Visibility = tag == "Memorial" ? Visibility.Visible : Visibility.Collapsed;
             if (ConfiguracoesPanel != null)
@@ -578,6 +580,19 @@ namespace BahrHidro.UI
 
                 if (MemStatusBoilerText != null)
                     MemStatusBoilerText.Text = $"Boiler Comercial {comercial} L ({ocupantes} ocupantes) — {resultado.RecommendedPressureType}.";
+
+                double potenciaKw = (comercial * 45.0) / (860.0 * 4.0);
+                _snapshot.Boiler = new BoilerSnapshotData
+                {
+                    BuildingProfile = perfil.ToString(),
+                    Occupants = ocupantes,
+                    ColdWaterPressureMca = pressao,
+                    DailyConsumptionLiters = resultado.DailyConsumptionLiters,
+                    RequiredVolumeLiters = resultado.RequiredAccumulationVolumeLiters,
+                    CommercialBoilerLiters = comercial,
+                    HeatingPowerKw = potenciaKw,
+                    PressureClassification = resultado.RecommendedPressureType
+                };
             }
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
@@ -635,6 +650,24 @@ namespace BahrHidro.UI
 
                 if (MemStatusCaixaText != null)
                     MemStatusCaixaText.Text = $"Total: {resultado.TotalRequiredVolumeLiters:F0} L | Superior: {comSup} L | Cisterna: {comInf} L.";
+
+                _snapshot.Reservoir = new ReservoirSnapshotData
+                {
+                    BuildingCategory = perfil.ToString(),
+                    Population = populacao,
+                    ReserveDays = dias,
+                    FireReserveLiters = incendio,
+                    DailyConsumptionLiters = resultado.TotalDailyConsumptionLiters,
+                    TotalRequiredLiters = resultado.TotalRequiredVolumeLiters,
+                    UpperVolumeLiters = resultado.UpperReservoirVolumeLiters,
+                    CommercialUpperLiters = comSup,
+                    LowerVolumeLiters = resultado.LowerReservoirVolumeLiters,
+                    CommercialLowerLiters = comInf
+                };
+
+                // Encadeamento automático para Boiler (Etapa 3) e Caixa de Gordura (Etapa 6)
+                if (BoilerOcupantesTextBox != null) BoilerOcupantesTextBox.Text = populacao.ToString();
+                if (GorduraPessoasTextBox != null) GorduraPessoasTextBox.Text = populacao.ToString();
             }
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
@@ -681,6 +714,26 @@ namespace BahrHidro.UI
 
                 if (MemStatusEsgotoText != null)
                     MemStatusEsgotoText.Text = $"Total: {resultado.TotalUhc} UHC | Tubulação: DN {resultado.RequiredDiameterMm} mm | Declividade: {resultado.MinimumSlopePercentage:F1}%.";
+
+                int cozinhasDetectadas = _sewerFixtures
+                    .Where(f => f.Quantity > 0 && f.Name.Contains("Cozinha", StringComparison.OrdinalIgnoreCase))
+                    .Sum(f => f.Quantity);
+
+                _snapshot.Sewer = new SewerSnapshotData
+                {
+                    TotalUhc = resultado.TotalUhc,
+                    RequiredDiameterMm = resultado.RequiredDiameterMm,
+                    MinimumSlopePercent = resultado.MinimumSlopePercentage,
+                    ComponentType = resultado.ComponentType,
+                    FixturesSummary = _sewerFixtures.Where(f => f.Quantity > 0).Select(f => $"{f.Quantity}x {f.Name} ({f.Uhc} UHC)").ToList(),
+                    MandatoryRecommendations = itensObrigatorios
+                };
+
+                if (cozinhasDetectadas > 0 && GorduraCozinhasTextBox != null)
+                {
+                    GorduraCozinhasTextBox.Text = cozinhasDetectadas.ToString();
+                    CalcularCaixaGordura_Click(sender, e);
+                }
             }
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
@@ -690,6 +743,7 @@ namespace BahrHidro.UI
             if (RainwaterView.UltimoResultado != null && MemStatusPluvialText != null)
             {
                 var r = RainwaterView.UltimoResultado;
+                _snapshot.Rainwater = r;
                 MemStatusPluvialText.Text = $"Área: {r.ContributionAreaM2:F2} m² | Q = {r.DesignFlowLitersPerMinute:F1} L/min | Calha: {r.SelectedGutterDescription} | Descidas: {r.DownspoutCount}× DN {r.RequiredDownspoutDiameterMm} mm.";
             }
         }
@@ -2160,6 +2214,251 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show($"Erro ao abrir pasta de memoriais:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        private void BtnIrCaixaGordura_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavCaixaGordura != null) NavCaixaGordura.IsSelected = true;
+            SelecionarPainel("CaixaGordura");
+        }
+
+        private void AtualizarParecerTecnicoEEncadearAguaFria()
+        {
+            if (_ultimoResultadoDaRede == null) return;
+            _snapshot.ColdWaterNetwork = _ultimoResultadoDaRede;
+
+            var alerts = new List<string>();
+            int trechosAlterados = 0;
+
+            foreach (var seg in _ultimoResultadoDaRede.Segments)
+            {
+                if (_diametrosOriginaisRevit.TryGetValue(seg.SegmentId, out double origMm) && origMm > 0 && Math.Abs(origMm - seg.SelectedDiameterMm) > 0.5)
+                    trechosAlterados++;
+
+                if (seg.VelocityMetersPerSecond > 3.0)
+                    alerts.Add($"[ALERTA NBR 5626] Trecho {seg.SegmentName}: velocidade de {seg.VelocityMetersPerSecond:F2} m/s excede o limite de 3,0 m/s. Recomenda-se aumentar o diâmetro comercial.");
+            }
+
+            if (trechosAlterados > 0)
+                alerts.Insert(0, $"[AJUSTE DE BITOLA] {trechosAlterados} trecho(s) do traçado básico precisam de atualização de diâmetro comercial (clique em 'Aplicar no Revit' após revisar).");
+
+            var nosConsumo = _ultimoResultadoDaRede.Nodes.Where(n => n.NodeType != HydraulicNodeType.Reservoir).ToList();
+            var nosBaixaPressao = nosConsumo.Where(n => n.AvailablePressureMca < 1.0).ToList();
+            if (nosBaixaPressao.Count > 0)
+            {
+                var pior = nosBaixaPressao.OrderBy(n => n.AvailablePressureMca).First();
+                alerts.Add($"[CRÍTICO NBR 5626] {nosBaixaPressao.Count} ponto(s) com pressão dinâmica abaixo de 1,0 m.c.a (pior ponto: {pior.NodeName} com {pior.AvailablePressureMca:F2} m.c.a). Recomenda-se elevar o reservatório ou instalar pressurizador.");
+            }
+
+            try
+            {
+                var pump = PumpCalculator.Calculate(_ultimoResultadoDaRede, 1.0);
+                _snapshot.Pump = new PumpSnapshotData
+                {
+                    RequiresPump = pump.RequiresPump,
+                    RequiredAmtMca = pump.RequiredAmtMca,
+                    TotalFlowLps = pump.TotalFlowLitersPerSecond,
+                    EstimatedPowerCv = pump.EstimatedPowerCv,
+                    CriticalNodeName = pump.CriticalNodeName,
+                    CriticalNodePressureMca = pump.CriticalNodeCurrentPressure
+                };
+            }
+            catch { }
+
+            if (nosConsumo.Count > 0 && BoilerPressaoTextBox != null)
+            {
+                double pressaoRefBoiler = nosConsumo.Average(n => Math.Max(0.5, n.AvailablePressureMca));
+                BoilerPressaoTextBox.Text = pressaoRefBoiler.ToString("F2");
+            }
+
+            if (alerts.Count == 0)
+                alerts.Add("[APROVADO NBR 5626] Todos os trechos e pontos de consumo atendem aos limites normativos de velocidade (≤ 3,0 m/s) e pressão dinâmica (≥ 1,0 m.c.a).");
+
+            _snapshot.ColdWaterDiagnosticAlerts = alerts;
+            if (ParecerTecnicoAguaFriaText != null)
+                ParecerTecnicoAguaFriaText.Text = string.Join("\n", alerts);
+        }
+
+        private ProjectEngineeringSnapshot BuildCurrentEngineeringSnapshot()
+        {
+            _snapshot.ProjectName = string.IsNullOrWhiteSpace(MemObraTextBox?.Text) ? "Projeto Hidrossanitário BIM" : MemObraTextBox.Text.Trim();
+            _snapshot.ClientName = MemClienteTextBox?.Text?.Trim() ?? "";
+            _snapshot.Address = MemEnderecoTextBox?.Text?.Trim() ?? "";
+            _snapshot.EngineerName = MemEngenheiroTextBox?.Text?.Trim() ?? "";
+            _snapshot.CreaNumber = MemCreaTextBox?.Text?.Trim() ?? "";
+            _snapshot.ArtNumber = MemArtTextBox?.Text?.Trim() ?? "";
+            _snapshot.Revision = string.IsNullOrWhiteSpace(MemRevisaoTextBox?.Text) ? "R00" : MemRevisaoTextBox.Text.Trim();
+            _snapshot.ColdWaterNetwork = _ultimoResultadoDaRede;
+            if (RainwaterView.UltimoResultado != null)
+                _snapshot.Rainwater = RainwaterView.UltimoResultado;
+            return _snapshot;
+        }
+
+        private async void ExportarPacoteCompletoMemoriais_Click(object sender, RoutedEventArgs e) => await ExecutarExportacaoMemoriaisAsync("ALL", false);
+        private async void ExportarMemorialDescritivo_Click(object sender, RoutedEventArgs e) => await ExecutarExportacaoMemoriaisAsync("DESCRITIVO", false);
+        private async void ExportarMemorialCalculoAnalitico_Click(object sender, RoutedEventArgs e) => await ExecutarExportacaoMemoriaisAsync("CALCULO", false);
+        private async void AbrirMemorialUnificadoPdf_Click(object sender, RoutedEventArgs e) => await ExecutarExportacaoMemoriaisAsync("UNIFICADO", true);
+
+        private async Task ExecutarExportacaoMemoriaisAsync(string mode, bool openAfterGenerate)
+        {
+            if (_revitBridge != null)
+            {
+                try
+                {
+                    double margem = TryParsePtBrDouble(MemMargemPerdaTextBox?.Text ?? "10", out double m) && m >= 0 ? m : 10.0;
+                    _ultimoBomExtraido = await _revitBridge.ExtractBomFromRevit(MemObraTextBox?.Text?.Trim() ?? "", margem);
+                }
+                catch { }
+            }
+
+            var snap = BuildCurrentEngineeringSnapshot();
+            string safeName = string.IsNullOrWhiteSpace(snap.ProjectName) ? "BahrHidro" : snap.ProjectName.Replace(" ", "_");
+
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = safeName,
+                Title = "Escolha a pasta e o nome base para salvar os memoriais"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    string snapJson = System.Text.Json.JsonSerializer.Serialize(snap);
+                    string? bomJson = _ultimoBomExtraido != null ? System.Text.Json.JsonSerializer.Serialize(_ultimoBomExtraido) : null;
+
+                    List<string> files;
+                    if (_revitBridge != null)
+                    {
+                        files = GerarTodosMemoriaisIsoladoNoRevit(snapJson, bomJson, dialog.FileName, mode);
+                    }
+                    else
+                    {
+                        files = ComprehensiveMemorialGenerator.GenerateAllFromJson(snapJson, bomJson, dialog.FileName, mode);
+                    }
+
+                    if (openAfterGenerate && files.Count > 0)
+                    {
+                        string htmlFile = files.FirstOrDefault(f => f.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) ?? files[0];
+                        Process.Start(new ProcessStartInfo { FileName = htmlFile, UseShellExecute = true });
+                    }
+
+                    string lista = string.Join("\n• ", files.Select(Path.GetFileName));
+                    MessageBox.Show($"Memoriais gerados com sucesso!\n\nArquivos salvos:\n• {lista}", "Bahr Hidro — Entrega Técnica Completa", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    var detalhe = ex.InnerException?.Message ?? ex.Message;
+                    MessageBox.Show($"Erro ao gerar memoriais:\n{detalhe}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        private static List<string> GerarTodosMemoriaisIsoladoNoRevit(string snapJson, string? bomJson, string basePath, string mode)
+        {
+            string coreDllPath = typeof(ComprehensiveMemorialGenerator).Assembly.Location;
+            string pluginDir = Path.GetDirectoryName(coreDllPath)!;
+
+            var alc = new IsolatedExcelLoadContext(pluginDir);
+            try
+            {
+                var coreAsm = alc.LoadFromAssemblyPath(coreDllPath);
+                var genType = coreAsm.GetType(typeof(ComprehensiveMemorialGenerator).FullName!)!;
+                var method = genType.GetMethod(nameof(ComprehensiveMemorialGenerator.GenerateAllFromJson))!;
+                return (List<string>)method.Invoke(null, new object?[] { snapJson, bomJson, basePath, mode })!;
+            }
+            finally
+            {
+                alc.Unload();
+            }
+        }
+
+        private void BtnIrReservatorios_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavReservatorios != null) NavReservatorios.IsSelected = true;
+            SelecionarPainel("Reservatorios");
+        }
+
+        private void BtnIrAguaQuente_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavAguaQuente != null) NavAguaQuente.IsSelected = true;
+            SelecionarPainel("AguaQuente");
+        }
+
+        private void BtnIrBomba_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavBomba != null) NavBomba.IsSelected = true;
+            SelecionarPainel("Bomba");
+        }
+
+        private void BtnIrPluvial_Click(object sender, RoutedEventArgs e)
+        {
+            if (NavPluvial != null) NavPluvial.IsSelected = true;
+            SelecionarPainel("Pluvial");
+        }
+
+        private void CalcularCaixaGordura_Click(object sender, RoutedEventArgs e)
+        {
+            int cozinhas = int.TryParse(GorduraCozinhasTextBox?.Text?.Trim(), out int c) && c > 0 ? c : 1;
+            int pessoas = int.TryParse(GorduraPessoasTextBox?.Text?.Trim(), out int p) && p > 0 ? p : cozinhas * 5;
+
+            string spec;
+            string modeloCg;
+            double volCg;
+            string dimCg;
+            int septoCg;
+            int saidaCg;
+
+            if (cozinhas == 1 && pessoas <= 2)
+            {
+                modeloCg = "Caixa de Gordura Pequena (CGP)";
+                volCg = 18;
+                dimCg = "Ø interno 30 cm";
+                septoCg = 20;
+                saidaCg = 75;
+                spec = $"{modeloCg} — Volume útil mín.: 18 L | {dimCg} | Parte submersa septo: 20 cm | Tubo saída: DN 75 (ABNT NBR 8160).";
+            }
+            else if (cozinhas <= 2 && pessoas <= 12)
+            {
+                modeloCg = "Caixa de Gordura Simples (CGS)";
+                volCg = 31;
+                dimCg = "Ø interno 40 cm";
+                septoCg = 20;
+                saidaCg = 75;
+                spec = $"{modeloCg} — Volume útil mín.: 31 L | {dimCg} | Parte submersa septo: 20 cm | Tubo saída: DN 75 (ABNT NBR 8160).";
+            }
+            else if (cozinhas <= 12 && pessoas <= 60)
+            {
+                modeloCg = "Caixa de Gordura Dupla (CGD)";
+                volCg = 120;
+                dimCg = "Ø interno 60 cm";
+                septoCg = 35;
+                saidaCg = 100;
+                spec = $"{modeloCg} — Volume útil mín.: 120 L | {dimCg} | Parte submersa septo: 35 cm | Tubo saída: DN 100 (ABNT NBR 8160).";
+            }
+            else
+            {
+                modeloCg = "Caixa de Gordura Especial (CGE - Prismática)";
+                volCg = (2.0 * pessoas) + 20.0;
+                dimCg = "Prismática conforme volume";
+                septoCg = 40;
+                saidaCg = 100;
+                spec = $"{modeloCg} — Volume útil mín. V = 2N + 20 = {volCg:F0} L | Parte submersa septo: 40 cm | Tubo saída: DN 100 (ABNT NBR 8160).";
+            }
+
+            if (GorduraResultadoText != null)
+                GorduraResultadoText.Text = $"Resultado NBR 8160 ({cozinhas} cozinha(s), {pessoas} pessoa(s)): {spec}";
+
+            _snapshot.GreaseTrap = new GreaseTrapSnapshotData
+            {
+                KitchenCount = cozinhas,
+                Population = pessoas,
+                ModelName = modeloCg,
+                MinimumVolumeLiters = volCg,
+                DimensionsOrDiameter = dimCg,
+                SeptumSubmersionCm = septoCg,
+                OutletDiameterMm = saidaCg
+            };
         }
 }
 }

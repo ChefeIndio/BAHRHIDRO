@@ -229,24 +229,25 @@
                 </Border>
 
                 <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="8,10" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
-                    <TreeViewItem x:Name="NavInicio" Header="Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
+                    <TreeViewItem x:Name="NavInicio" Header="Início / Fluxo do Projeto" Tag="Inicio" IsSelected="True" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,8"/>
 
-                    <TreeViewItem Header="HIDRÁULICA (NBR 5626)" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A">
-                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado 3D (1º AF → 2º AQ → 3º Esgoto)" Tag="Tracado3D" FontWeight="SemiBold" Foreground="#0284C7"/>
-                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D ao Vivo &amp; Seção" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#0F766E"/>
-                        <TreeViewItem x:Name="NavAguaFria" Header="Água Fria (Rede BIM 3D)" Tag="AguaFria" FontWeight="Normal" Foreground="#1E293B"/>
-                        <TreeViewItem x:Name="NavBomba" Header="Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#334155"/>
-                        <TreeViewItem x:Name="NavAguaQuente" Header="Água Quente (Boiler)" Tag="AguaQuente" FontWeight="Normal" Foreground="#334155"/>
-                        <TreeViewItem x:Name="NavReservatorios" Header="Reservatórios" Tag="Reservatorios" FontWeight="Normal" Foreground="#334155"/>
+                    <TreeViewItem Header="FLUXO HIDROSSANITÁRIO (ABNT)" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A">
+                        <TreeViewItem x:Name="NavReservatorios" Header="1. Reservatórios (NBR 5626)" Tag="Reservatorios" FontWeight="SemiBold" Foreground="#1E3A8A"/>
+                        <TreeViewItem x:Name="NavAguaFria" Header="2. Água Fria &amp; Bomba" Tag="AguaFria" FontWeight="SemiBold" Foreground="#0284C7"/>
+                        <TreeViewItem x:Name="NavBomba" Header="   ↳ Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#475569"/>
+                        <TreeViewItem x:Name="NavAguaQuente" Header="3. Água Quente &amp; Boiler" Tag="AguaQuente" FontWeight="SemiBold" Foreground="#DC2626"/>
+                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto Sanitário (NBR 8160)" Tag="Esgoto" FontWeight="SemiBold" Foreground="#92400E"/>
+                        <TreeViewItem x:Name="NavPluvial" Header="5. Calhas &amp; Pluvial (NBR 10844)" Tag="Pluvial" FontWeight="SemiBold" Foreground="#0F766E"/>
+                        <TreeViewItem x:Name="NavCaixaGordura" Header="6. Caixa de Gordura (NBR 8160)" Tag="CaixaGordura" FontWeight="SemiBold" Foreground="#B45309"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="SANITÁRIO &amp; DRENAGEM" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A" Margin="0,8,0,0">
-                        <TreeViewItem x:Name="NavEsgoto" Header="Esgoto (NBR 8160)" Tag="Esgoto" FontWeight="Normal" Foreground="#334155"/>
-                        <TreeViewItem x:Name="NavPluvial" Header="Águas Pluviais (NBR 10844)" Tag="Pluvial" FontWeight="Normal" Foreground="#334155"/>
+                    <TreeViewItem Header="MEMORIAIS &amp; ENTREGÁVEIS" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A" Margin="0,8,0,0">
+                        <TreeViewItem x:Name="NavMemorial" Header="Todos os Memoriais (Excel/Word/PDF)" Tag="Memorial" FontWeight="SemiBold" Foreground="#166534"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="ENTREGÁVEIS" IsExpanded="True" FontWeight="Bold" Foreground="#0F172A" Margin="0,8,0,0">
-                        <TreeViewItem x:Name="NavMemorial" Header="Memorial de Cálculo (.xlsx)" Tag="Memorial" FontWeight="Normal" Foreground="#334155"/>
+                    <TreeViewItem Header="AUTOMAÇÃO 3D (FASE FUTURA)" IsExpanded="False" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
+                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático 3D (Beta)" Tag="Tracado3D" FontWeight="Normal" Foreground="#475569"/>
+                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D ao Vivo &amp; Seção" Tag="Vistas3DVivas" FontWeight="Normal" Foreground="#475569"/>
                     </TreeViewItem>
                 </TreeView>
             </DockPanel>
@@ -256,63 +257,103 @@
         <Border Margin="12" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6">
             <Grid>
                 <!-- 0. TELA INICIAL / VISÃO GERAL -->
-                <ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="28">
-                    <StackPanel MaxWidth="960" HorizontalAlignment="Left">
-                        <Border Background="#0F172A" CornerRadius="8" Padding="24" Margin="0,0,0,20">
-                            <Grid>
-                                <StackPanel>
-                                    <TextBlock Text="BEM-VINDO AO BAHR HIDRO" Foreground="#38BDF8" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Automação Hidrossanitária &amp; BIM para Revit 2026" Foreground="White" FontSize="22" FontWeight="Bold" Margin="0,0,0,6"/>
-                                    <TextBlock x:Name="InicioProjetoStatusText" Text="Prepare o catálogo de tubulações, importe elementos do modelo 3D e execute os dimensionamentos normativos." Foreground="#CBD5E1" FontSize="13"/>
-                                </StackPanel>
-                            </Grid>
+                <ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24">
+                    <StackPanel MaxWidth="1040" HorizontalAlignment="Left">
+                        <Border Background="#0F172A" CornerRadius="8" Padding="22" Margin="0,0,0,18">
+                            <StackPanel>
+                                <TextBlock Text="COPILOTO DE DIMENSIONAMENTO HIDROSSANITÁRIO (ABNT)" Foreground="#38BDF8" FontSize="11.5" FontWeight="Bold" Margin="0,0,0,4"/>
+                                <TextBlock Text="Bahr Hidro — Engenharia Hidráulica, Sanitária &amp; Pluvial" Foreground="White" FontSize="21" FontWeight="Bold" Margin="0,0,0,6"/>
+                                <TextBlock x:Name="InicioProjetoStatusText" Text="Lance o traçado básico no Revit e siga as 6 etapas abaixo: o Bahr Hidro dimensiona, audita normas, aponta ajustes e gera todos os memoriais." Foreground="#CBD5E1" FontSize="13" TextWrapping="Wrap"/>
+                            </StackPanel>
                         </Border>
 
-                        <Grid Margin="0,0,0,20">
+                        <!-- Linha 1: 1. Reservatórios, 2. Água Fria, 3. Água Quente (Boiler) -->
+                        <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="14"/>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="14"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <!-- Card 1: Catálogo -->
-                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18,16" VerticalAlignment="Stretch" Margin="0,0,6,0">
+                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock TextWrapping="Wrap" Text="1. CATÁLOGO DE TUBULAÇÕES" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
-                                    <TextBlock x:Name="InicioCatalogoStatusText" Text="Verificando bitolas cadastradas..." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" Content="Abrir Catálogo de Tubos" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch"  Click="AbrirCatalogo_Click"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" Content="Carregar Padrão NBR 5648 (DN 20-110)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnCarregarPadraoInicio_Click"/>
+                                    <TextBlock Text="1. RESERVATÓRIOS (NBR 5626)" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                    <TextBlock Text="População, consumo diário, reserva de incêndio e volumes comerciais (Superior e Cisterna). Alimenta automaticamente Boiler e Cx. Gordura." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button MinHeight="34" Content="1. Dimensionar Reservatórios" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrReservatorios_Click"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- Card 2: Rede BIM 3D -->
-                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18,16" VerticalAlignment="Stretch" Margin="6,0,6,0">
-                                <StackPanel Background="#FFFFFF">
-                                    <TextBlock TextWrapping="Wrap" Text="2. REDE HIDRÁULICA BIM 3D" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
-                                    <TextBlock x:Name="InicioRedeStatusText" Text="Nenhuma rede carregada. Importe do modelo 3D do Revit para dimensionar." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" x:Name="BtnImportarInicioRevit" Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}"  Visibility="Collapsed" HorizontalAlignment="Stretch"  Click="DetectarRedeAutoRevit_Click"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" Content="Traçado Automático de Tubos 3D" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch"  Click="BtnIrTracado3D_Click"/>
-                <Button Margin="0,0,0,10" MinHeight="32" x:Name="NavConfiguracoesBtn" Content="⚙ Configurações" Style="{StaticResource SecondaryButton}"   Click="NavConfiguracoes_Click"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" Content="Ir para Água Fria (Rede BIM 3D)" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click"/>
+                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="2. ÁGUA FRIA &amp; BOMBA (NBR 5626)" FontSize="12" FontWeight="Bold" Foreground="#0284C7" Margin="0,0,0,6"/>
+                                    <TextBlock x:Name="InicioRedeStatusText" Text="Audita seu traçado básico, dimensiona bitolas por ΣP, verifica pressões/velocidades e dimensiona pressurizador." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button MinHeight="34" Content="2. Dimensionar Água Fria" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Margin="0,0,0,8" Click="BtnIrAguaFria_Click"/>
+                                    <Button x:Name="BtnImportarInicioRevit" MinHeight="32" Content="Importar Rede do Revit (3D)" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" HorizontalAlignment="Stretch" Click="DetectarRedeAutoRevit_Click"/>
                                 </StackPanel>
                             </Border>
 
-                            <!-- Card 3: Leitura Automática & Steel Frame -->
-                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18,16" VerticalAlignment="Stretch" Margin="6,0,0,0">
+                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
-                                    <TextBlock TextWrapping="Wrap" Text="3. LEITURA AUTOMÁTICA &amp; LSF" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
-                                    <TextBlock Text="Leitura automática de aparelhos sanitários, coberturas e ambientes já integrada. Próxima etapa: traçado automático para Light Steel Framing." FontSize="13" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,14"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch"  Click="BtnIrEsgoto_Click"/>
-                                    <Button Margin="0,0,0,10" MinHeight="32" Content="Abrir Memorial Executivo" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrMemorial_Click"/>
+                                    <TextBlock Text="3. ÁGUA QUENTE &amp; BOILER (NBR 7198)" FontSize="12" FontWeight="Bold" Foreground="#DC2626" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Recebe a população e a pressão de Água Fria para dimensionar o Boiler comercial, classe de pressão (Alta/Baixa) e potência." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button MinHeight="34" Content="3. Dimensionar Boiler &amp; AQ" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaQuente_Click"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
+
+                        <!-- Linha 2: 4. Esgoto, 5. Calhas & Pluvial, 6. Caixa de Gordura -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="4. ESGOTO SANITÁRIO (NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Contribuição por UHC, ramais de descarga/esgoto, tubos de queda, subcoletores, declividades mínimas e ventilação." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button MinHeight="34" Content="4. Dimensionar Esgoto" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="5. CALHAS &amp; PLUVIAL (NBR 10844)" FontSize="12" FontWeight="Bold" Foreground="#0F766E" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Leitura de telhados no Revit, índice pluviométrico regional, cálculo de calhas (Manning-Strickler) e condutores verticais." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button MinHeight="34" Content="5. Dimensionar Calhas &amp; Pluvial" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrPluvial_Click"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="6. CAIXA DE GORDURA (NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#B45309" Margin="0,0,0,6"/>
+                                    <TextBlock Text="Cruza cozinhas e população para especificar CGP (18 L), CGS (31 L), CGD (120 L) ou Especial (V = 2N + 20)." FontSize="12.5" Foreground="#334155" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                                    <Button MinHeight="34" Content="6. Dimensionar Caixa de Gordura" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Stretch" Click="BtnIrCaixaGordura_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Barra de Memoriais Completos & Configurações -->
+                        <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="8" Padding="16">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button MinHeight="34" Content="📄 Gerar Todos os Memoriais (Excel, Word &amp; PDF)" Style="{StaticResource PrimaryButton}" Padding="14,0" Margin="0,0,8,0" Click="BtnIrMemorial_Click"/>
+                                    <Button x:Name="NavConfiguracoesBtn" MinHeight="34" Content="⚙ Parâmetros" Style="{StaticResource SecondaryButton}" Padding="12,0" Click="NavConfiguracoes_Click"/>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="ENTREGA TÉCNICA COMPLETA &amp; CATÁLOGO" FontSize="12" FontWeight="Bold" Foreground="#166534"/>
+                                    <TextBlock x:Name="InicioCatalogoStatusText" Text="Verificando bitolas cadastradas..." FontSize="12" Foreground="#14532D"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 
-                
                 <!-- 0C. VISTAS 3D AO VIVO, SEÇÃO GERAL & ORDEM AF -> AQ -> ESGOTO -->
                 <ScrollViewer x:Name="PanelVistas3DVivas" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="28">
                     <StackPanel MaxWidth="980" HorizontalAlignment="Left">
@@ -639,7 +680,13 @@
                                               Checked="ChkSomenteTrocados_Changed" Unchecked="ChkSomenteTrocados_Changed"/>
                                     <StackPanel>
                                         <TextBlock Text="RELATÓRIO DE SUBSTITUIÇÃO E DIMENSIONAMENTO DOS TUBOS" FontSize="11" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,2"/>
-                                        <TextBlock x:Name="ResumoTrocasTubosText" Text="Calcule a rede para visualizar quais tubos foram alterados, o motivo técnico e o impacto hidráulico." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
+                                        <Border Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="PARECER TÉCNICO &amp; AUDITORIA NORMATIVA (NBR 5626 + COMPATIBILIZAÇÃO LSF)" FontSize="11.5" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,4"/>
+                                    <TextBlock x:Name="ParecerTecnicoAguaFriaText" Text="Importe o traçado básico do Revit e clique em 'Calcular Rede Hidráulica' para receber o diagnóstico de pressões, velocidades, bitolas e compatibilização LSF." FontSize="12" Foreground="#78350F" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                            <TextBlock x:Name="ResumoTrocasTubosText" Text="Calcule a rede para visualizar quais tubos foram alterados, o motivo técnico e o impacto hidráulico." FontSize="13" FontWeight="SemiBold" Foreground="#0F172A"/>
                                     </StackPanel>
                                 </DockPanel>
                             </Border>
@@ -1017,7 +1064,22 @@
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Esgoto Sanitário — Dimensionamento por UHC (NBR 8160)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                                 <TextBlock Text="Contagem automática ou por seleção 3D dos aparelhos sanitários, diâmetro mínimo e peças obrigatórias." FontSize="12" Foreground="#64748B"/>
-                            </StackPanel>
+                            
+                            <!-- 6. DIMENSIONAMENTO DE CAIXA DE GORDURA (ABNT NBR 8160 - ITEM 5.1.5) -->
+                            <Border Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,14,0,14">
+                                <StackPanel>
+                                    <TextBlock Text="6. DIMENSIONAMENTO DE CAIXA DE GORDURA (ABNT NBR 8160)" FontSize="12" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,8"/>
+                                    <WrapPanel VerticalAlignment="Center" Margin="0,0,0,10">
+                                        <TextBlock Text="Nº de Cozinhas:" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" Foreground="#334155"/>
+                                        <TextBox x:Name="GorduraCozinhasTextBox" Text="1" Width="65" Margin="0,0,16,0"/>
+                                        <TextBlock Text="Nº de Pessoas (Edificação):" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" Foreground="#334155"/>
+                                        <TextBox x:Name="GorduraPessoasTextBox" Text="5" Width="75" Margin="0,0,16,0"/>
+                                        <Button Content="Dimensionar Caixa de Gordura" Style="{StaticResource PrimaryButton}" Height="32" Padding="14,0" Click="CalcularCaixaGordura_Click"/>
+                                    </WrapPanel>
+                                    <TextBlock x:Name="GorduraResultadoText" Text="Resultado NBR 8160: Caixa de Gordura Simples (CGS) — Volume útil mín. 31 L | Ø interno 40 cm | Submersão septo 20 cm | Saída DN 75." FontSize="12.5" FontWeight="SemiBold" Foreground="#78350F" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+</StackPanel>
                         </DockPanel>
                     </Border>
 
@@ -1216,9 +1278,17 @@
                                         </StackPanel>
                                     </Border>
 
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Projeto Revit" Style="{StaticResource SecondaryButton}" Visibility="Collapsed" Margin="0,0,10,0" Click="SalvarDadosRevit_Click"/>
-                                        <Button x:Name="ExportarMemorialAbaButton" Content="Exportar Memorial + Lista de Materiais (.xlsx)" Style="{StaticResource PrimaryButton}" Click="ExportarMemorialAba_Click"/>
+                                    <StackPanel>
+                                        <Button Content="📦 GERAR PACOTE COMPLETO DE MEMORIAIS (Excel + Descritivo + Cálculo + Unificado PDF)"
+                                                Style="{StaticResource PrimaryButton}" Height="38" Padding="14,0" Margin="0,0,0,10"
+                                                Click="ExportarPacoteCompletoMemoriais_Click"/>
+                                        <WrapPanel>
+                                            <Button x:Name="ExportarMemorialAbaButton" Content="📊 Planilha Cálculo + BOM (.xlsx)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,8,8" Click="ExportarMemorialAba_Click"/>
+                                            <Button Content="📝 Memorial Descritivo (.doc / Word)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,8,8" Click="ExportarMemorialDescritivo_Click"/>
+                                            <Button Content="📐 Memorial de Cálculo Analítico (.doc / Word)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,8,8" Click="ExportarMemorialCalculoAnalitico_Click"/>
+                                            <Button Content="🌐 Abrir Memorial Unificado (Imprimir PDF)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,8,8" Click="AbrirMemorialUnificadoPdf_Click"/>
+                                            <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Revit" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Visibility="Collapsed" Margin="0,0,8,8" Click="SalvarDadosRevit_Click"/>
+                                        </WrapPanel>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
