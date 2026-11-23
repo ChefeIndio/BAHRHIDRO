@@ -538,6 +538,16 @@ namespace BahrHidro.Core.Reporting
                 foreach (var p in takeoff.Pipes)
                     bomHtml.Append($"<tr><td>{p.SystemName}</td><td>{p.PipeTypeName}</td><td>{p.DiameterMm}</td><td>{p.NetLengthMeters:F2}</td><td>{p.TotalLengthWithWasteMeters:F2}</td><td>{p.CommercialBars6m}</td></tr>");
                 bomHtml.Append("</table>");
+                var budget = SinapiCommercialMapper.BuildBudgetLines(takeoff);
+                if (budget.Count > 0)
+                {
+                    decimal totalBrl = budget.Sum(b => b.TotalPriceBrl);
+                    bomHtml.Append("<h2>PARTE IV — ORÇAMENTO ESTIMATIVO (CATÁLOGO TIGRE/AMANCO &amp; SINAPI)</h2>");
+                    bomHtml.Append("<table><tr><th>Item</th><th>Descrição</th><th>Ref. Comercial</th><th>SINAPI</th><th>Qtd.</th><th>Unit. (R$)</th><th>Total (R$)</th></tr>");
+                    foreach (var b in budget)
+                        bomHtml.Append($"<tr><td>{b.ItemNumber}</td><td>{b.Description} ({b.DiameterDisplay})</td><td>{b.CommercialRef}</td><td>{b.SinapiCode}</td><td>{b.Quantity:F2} {b.Unit}</td><td>R$ {b.UnitPriceBrl:N2}</td><td>R$ {b.TotalPriceBrl:N2}</td></tr>");
+                    bomHtml.Append($"<tr><th colspan='6' style='text-align:right'>TOTAL ESTIMADO DE MATERIAIS</th><th>R$ {totalBrl:N2}</th></tr></table>");
+                }
             }
 
             int descSig = desc.IndexOf("<div class='sig-box'>", StringComparison.OrdinalIgnoreCase);

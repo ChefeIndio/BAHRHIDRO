@@ -334,6 +334,51 @@ namespace BahrHidro.Core.Reporting
 
                     wsFuros.Columns().AdjustToContents();
 
+                if (takeoff != null)
+                {
+                    var budgetLines = SinapiCommercialMapper.BuildBudgetLines(takeoff);
+                    if (budgetLines.Count > 0)
+                    {
+                        var wsSinapi = workbook.Worksheets.Add("Orçamento SINAPI & Fabricante");
+                        wsSinapi.Cell(1, 1).Value = "ORÇAMENTO ESTIMATIVO DE MATERIAIS — CATÁLOGO TIGRE/AMANCO & SINAPI";
+                        wsSinapi.Range("A1:J1").Merge().Style.Font.SetBold().Font.SetFontSize(13)
+                            .Font.SetFontColor(XLColor.White).Fill.SetBackgroundColor(XLColor.FromHtml("#0F172A"));
+
+                        string[] hdrs = { "Item", "Sistema", "Descrição Técnica", "Bitola", "Ref. Comercial (Tigre/Amanco)", "Cód. SINAPI", "Unid.", "Qtd. c/ Perda", "Unit. Est. (R$)", "Subtotal (R$)" };
+                        for (int c = 0; c < hdrs.Length; c++)
+                        {
+                            wsSinapi.Cell(3, c + 1).Value = hdrs[c];
+                            wsSinapi.Cell(3, c + 1).Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#E2E8F0"));
+                        }
+
+                        int row = 4;
+                        decimal grandTotal = 0m;
+                        foreach (var b in budgetLines)
+                        {
+                            wsSinapi.Cell(row, 1).Value = b.ItemNumber;
+                            wsSinapi.Cell(row, 2).Value = b.SystemName;
+                            wsSinapi.Cell(row, 3).Value = b.Description;
+                            wsSinapi.Cell(row, 4).Value = b.DiameterDisplay;
+                            wsSinapi.Cell(row, 5).Value = b.CommercialRef;
+                            wsSinapi.Cell(row, 6).Value = b.SinapiCode;
+                            wsSinapi.Cell(row, 7).Value = b.Unit;
+                            wsSinapi.Cell(row, 8).Value = b.Quantity;
+                            wsSinapi.Cell(row, 9).Value = (double)b.UnitPriceBrl;
+                            wsSinapi.Cell(row, 10).Value = (double)b.TotalPriceBrl;
+                            wsSinapi.Cell(row, 9).Style.NumberFormat.Format = "R$ #,##0.00";
+                            wsSinapi.Cell(row, 10).Style.NumberFormat.Format = "R$ #,##0.00";
+                            grandTotal += b.TotalPriceBrl;
+                            row++;
+                        }
+
+                        wsSinapi.Cell(row, 1).Value = "TOTAL ESTIMADO DE MATERIAIS HIDROSSANITÁRIOS (REFERÊNCIA SINAPI)";
+                        wsSinapi.Range(row, 1, row, 9).Merge().Style.Font.SetBold().Fill.SetBackgroundColor(XLColor.FromHtml("#F1F5F9"));
+                        wsSinapi.Cell(row, 10).Value = (double)grandTotal;
+                        wsSinapi.Cell(row, 10).Style.Font.SetBold().NumberFormat.Format = "R$ #,##0.00";
+                        wsSinapi.Cell(row, 10).Style.Fill.SetBackgroundColor(XLColor.FromHtml("#DCFCE7"));
+                        wsSinapi.Columns().AdjustToContents();
+                    }
+                }
                 workbook.SaveAs(filePath);
             }
         }

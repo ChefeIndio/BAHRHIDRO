@@ -2160,9 +2160,9 @@ namespace BahrHidro.UI
             if (_revitBridge == null) return;
             try
             {
-                Vistas3DVivasStatusText.Text = "Executando sequência: 1º Água Fria → 2º Água Quente → 3º Esgoto e gerando as 4 vistas 3D...";
+                Doc3DStatusText.Text = "Executando sequência: 1º Água Fria → 2º Água Quente → 3º Esgoto e gerando as 4 vistas 3D...";
                 string msg = await _revitBridge.RunOrderedFullAutomationAsync();
-                Vistas3DVivasStatusText.Text = msg;
+                Doc3DStatusText.Text = msg;
                 MessageBox.Show(msg, "Bahr Hidro — Sequência Completa & 4 Vistas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -2177,7 +2177,7 @@ namespace BahrHidro.UI
             try
             {
                 string msg = await _revitBridge.RunColdWaterOnlyAsync();
-                Vistas3DVivasStatusText.Text = msg;
+                Doc3DStatusText.Text = msg;
                 MessageBox.Show(msg, "Bahr Hidro — 1º Água Fria", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -2192,7 +2192,7 @@ namespace BahrHidro.UI
             try
             {
                 string msg = await _revitBridge.RunHotWaterOnlyAsync();
-                Vistas3DVivasStatusText.Text = msg;
+                Doc3DStatusText.Text = msg;
                 MessageBox.Show(msg, "Bahr Hidro — 2º Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -2207,7 +2207,7 @@ namespace BahrHidro.UI
             try
             {
                 string msg = await _revitBridge.RunSanitaryOnlyAsync();
-                Vistas3DVivasStatusText.Text = msg;
+                Doc3DStatusText.Text = msg;
                 MessageBox.Show(msg, "Bahr Hidro — 3º Esgoto & Ventilação", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
@@ -2228,7 +2228,7 @@ namespace BahrHidro.UI
             try
             {
                 string msg = await _revitBridge.OpenLiveViewByNameAsync(viewName);
-                Vistas3DVivasStatusText.Text = msg;
+                Doc3DStatusText.Text = msg;
             }
             catch (Exception ex)
             {
@@ -2368,7 +2368,8 @@ namespace BahrHidro.UI
                     }
                     else
                     {
-                        files = ComprehensiveMemorialGenerator.GenerateAllFromJson(snapJson, bomJson, dialog.FileName, mode);
+VerificarPressaoEstaticaMaximaVrp();
+                                        files = ComprehensiveMemorialGenerator.GenerateAllFromJson(snapJson, bomJson, dialog.FileName, mode);
                     }
 
                     if (openAfterGenerate && files.Count > 0)
@@ -2640,6 +2641,59 @@ namespace BahrHidro.UI
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro ao dimensionar rede de esgoto 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        
+        private void VerificarPressaoEstaticaMaximaVrp()
+        {
+            if (_snapshot.ColdWaterNetwork == null) return;
+            try
+            {
+                double maxStatic = 0;
+                string criticalNode = "";
+                var nodesProp = _snapshot.ColdWaterNetwork.GetType().GetProperty("Nodes");
+                if (nodesProp?.GetValue(_snapshot.ColdWaterNetwork) is System.Collections.IEnumerable nodes)
+                {
+                    foreach (var n in nodes)
+                    {
+                        if (n == null) continue;
+                        var t = n.GetType();
+                        double st = 0;
+                        var pStat = t.GetProperty("StaticPressureMca") ?? t.GetProperty("AvailablePressureMca") ?? t.GetProperty("ResidualPressureMca");
+                        if (pStat != null && pStat.GetValue(n) is double d) st = d;
+                        if (st > maxStatic)
+                        {
+                            maxStatic = st;
+                            criticalNode = (t.GetProperty("NodeId")?.GetValue(n) ?? t.GetProperty("Name")?.GetValue(n) ?? "Ponto Inferior")?.ToString() ?? "";
+                        }
+                    }
+                }
+
+                if (maxStatic > 40.0)
+                {
+                    string vrpAlert = $"ALERTA VRP (ABNT NBR 5626): Pressão estática máxima de {maxStatic:F2} m.c.a. detectada em '{criticalNode}' (excede limite normativo de 40,0 m.c.a.). Obrigatória instalação de Válvula Redutora de Pressão (VRP) nos pavimentos inferiores.";
+                    if (!_snapshot.ColdWaterDiagnosticAlerts.Contains(vrpAlert))
+                        _snapshot.ColdWaterDiagnosticAlerts.Add(vrpAlert);
+                }
+            }
+            catch { }
+        }
+
+        private async void GerarDocumentacao3DAbnt_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                bool isos = ChkGerarIsometricos3D?.IsChecked == true;
+                bool sheet = ChkMontarPranchaAbnt?.IsChecked == true;
+                var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos, sheet);
+                if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
+                MessageBox.Show(res.Summary, "Bahr Hidro — Documentação 3D ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar documentação 3D ABNT:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

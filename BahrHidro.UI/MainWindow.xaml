@@ -233,12 +233,12 @@
                     </TreeViewItem>
 
                     <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="10.5" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
-                        <TreeViewItem x:Name="NavMemorial" Header="Gerar Memoriais" Tag="Memorial" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Vistas 3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavMemorial" Header="Gerar Memoriais &amp; SINAPI" Tag="Memorial" FontWeight="SemiBold" Foreground="#1E293B"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="FERRAMENTAS 3D (FUTURO)" IsExpanded="False" FontSize="10.5" FontWeight="Bold" Foreground="#94A3B8" Margin="0,10,0,0">
-                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático (Beta)" Tag="Tracado3D" FontWeight="Normal" Foreground="#64748B"/>
-                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D &amp; Cortes" Tag="Vistas3DVivas" FontWeight="Normal" Foreground="#64748B"/>
+                    <TreeViewItem Header="FERRAMENTAS FUTURAS (API)" IsExpanded="False" FontSize="10.5" FontWeight="Bold" Foreground="#94A3B8" Margin="0,10,0,0">
+                        <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático (Futuro API)" Tag="Tracado3D" FontWeight="Normal" Foreground="#64748B"/>
                     </TreeViewItem>
                 </TreeView>
             </DockPanel>
@@ -400,49 +400,58 @@
                 </ScrollViewer>
 
                 <!-- 0C. VISTAS 3D AO VIVO, SEÇÃO GERAL &amp; ORDEM AF -> AQ -> ESGOTO -->
-                <ScrollViewer x:Name="PanelVistas3DVivas" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="28">
-                    <StackPanel MaxWidth="980" HorizontalAlignment="Left">
-                        <Border Background="#0F172A" CornerRadius="8" Padding="22" Margin="0,0,0,18">
-                            <StackPanel>
-                                <TextBlock Text="AUTOMAÇÃO SEQUENCIAL &amp; VISTAS 3D AO VIVO" Foreground="#38BDF8" FontSize="11.5" FontWeight="Bold" Margin="0,0,0,4"/>
-                                <TextBlock Text="Ordem Estrita: 1º Água Fria → 2º Água Quente → 3º Esgoto + 4 Vistas 3D" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,6"/>
-                                <TextBlock Text="Execute o ciclo completo em sequência normativa ou gere/abra cada rede e vista 3D isolada ao vivo no Revit." Foreground="#CBD5E1" FontSize="12.5" TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
+                <DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Pranchas Executivas ABNT &amp; Isométricos 3D Cotados" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Geração automática de vistas isométricas 3D bloqueadas por ambiente molhado, etiquetas e prancha executiva (HID-01)." FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </Border>
 
-                        <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="1. EXECUÇÃO EM ORDEM NORMATIVA (AF → AQ → ESGOTO)" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,10"/>
-                                <Button Content="▶ EXECUTAR TUDO NA ORDEM (1º Água Fria → 2º Água Quente → 3º Esgoto + 4 Vistas 3D + Seção)"
-                                        Style="{StaticResource PrimaryButton}" Height="40" Padding="16,0" Margin="0,0,0,12"
-                                        Click="ExecutarSequenciaCompletaAfAqEsgoto_Click"/>
-                                <WrapPanel>
-                                    <Button Content="1º Gerar Água Fria (NBR 5626)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,8" Click="ExecutarSomenteAguaFria_Click"/>
-                                    <Button Content="2º Gerar Água Quente Isolada (NBR 7198)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,8" Click="ExecutarSomenteAguaQuente_Click"/>
-                                    <Button Content="3º Gerar Esgoto &amp; Ventilação (NBR 8160)" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,8" Click="ExecutarSomenteEsgoto_Click"/>
-                                </WrapPanel>
-                            </StackPanel>
-                        </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 5: Calhas &amp; Pluvial" Style="{StaticResource SecondaryButton}" Click="BtnIrPluvial_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Avançar para Memoriais &amp; Orçamento SINAPI →" Style="{StaticResource PrimaryButton}" Click="BtnIrMemorial_Click"/>
+                            <TextBlock Text="Documentação Executiva BIM 3D • ABNT NBR 5626 / 8160" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
 
-                        <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="2. ABRIR PLANTAS 3D AO VIVO &amp; SEÇÃO NO REVIT" FontSize="12" FontWeight="Bold" Foreground="#0F766E" Margin="0,0,0,10"/>
-                                <WrapPanel>
-                                    <Button Content="🔵 3D Água Fria" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DAguaFria_Click"/>
-                                    <Button Content="🔴 3D Água Quente" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DAguaQuente_Click"/>
-                                    <Button Content="🟤 3D Esgoto &amp; Ventilação" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DEsgoto_Click"/>
-                                    <Button Content="🟢 3D Completo (AF + AQ + Esgoto Juntas)" Style="{StaticResource PrimaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirVista3DCompleta_Click"/>
-                                    <Button Content="📐 Abrir Seção Geral da Rede" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirSecaoGeral_Click"/>
-                                    <Button Content="📂 Memoriais &amp; Planilha Furação LSF (.csv)" Style="{StaticResource SecondaryButton}" Height="36" Padding="14,0" Margin="0,0,8,8" Click="AbrirMemoriaisCsv_Click"/>
-                                </WrapPanel>
-                            </StackPanel>
-                        </Border>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1080" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
 
-                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
-                            <TextBlock x:Name="Vistas3DVivasStatusText" Text="Pronto. Clique em 'EXECUTAR TUDO NA ORDEM' para traçar AF → AQ → Esgoto e abrir as 4 vistas 3D ao vivo." Foreground="#334155" FontSize="12.5" TextWrapping="Wrap"/>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            <Border Grid.Column="0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18">
+                                <StackPanel>
+                                    <TextBlock Text="GERADOR AUTOMÁTICO DE VISTAS E PRANCHAS" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
+
+                                    <CheckBox x:Name="ChkGerarIsometricos3D" Content="Gerar Vistas Isométricas 3D recortadas e bloqueadas por ambiente molhado (Escala 1:25)" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <CheckBox x:Name="ChkMontarPranchaAbnt" Content="Montar Prancha Executiva ABNT (HID-01) com Planta, Isométricos 3D e Esquema Vertical" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,16"/>
+
+                                    <WrapPanel Margin="0,0,0,14">
+                                        <Button Content="Gerar Isométricos 3D &amp; Prancha ABNT" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Click="GerarDocumentacao3DAbnt_Click"/>
+                                        <Button Content="Gerar Esquema Vertical de Prumadas" Style="{StaticResource SecondaryButton}" Click="GerarEsquemaVertical_Click"/>
+                                    </WrapPanel>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12">
+                                        <TextBlock x:Name="Doc3DStatusText" Text="Pronto para gerar vistas isométricas 3D com etiquetas e montar a prancha executiva no Navegador de Projetos do Revit." FontSize="12" Foreground="#334155" TextWrapping="Wrap"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="O QUE É CRIADO AUTOMATICAMENTE NO REVIT" FontSize="11.5" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,8"/>
+                                    <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#334155" LineHeight="19"
+                                               Text="1. Vistas Isométricas 3D por Ambiente: Detecta banheiros, cozinhas e áreas de serviço, aplica Section Box ajustado, bloqueia a orientação 3D e insere etiquetas de diâmetro.&#x0a;2. Esquema Vertical de Prumadas: Diagrama esquemático pavimento a pavimento com bitolas de AF, AQ, TQ e CV (Escala 1:50).&#x0a;3. Prancha Executiva (HID-01): Agrupa planta baixa, isométricos 3D e esquema vertical prontos para plotagem."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
 
                 <!-- 0B. TRAÇADO AUTOMÁTICO 3D (ROTEAMENTO BIM IFC/DWG) -->
                 <DockPanel x:Name="PanelTracado3D" Visibility="Collapsed">

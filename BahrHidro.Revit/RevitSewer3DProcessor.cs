@@ -247,6 +247,19 @@ namespace BahrHidro.Revit
                             if (diaParam != null && !diaParam.IsReadOnly)
                             {
                                 diaParam.Set(dnFeet);
+                                // Aplica inclinação física real nos trechos horizontais (NBR 8160: 2% <= DN 75 | 1% >= DN 100)
+                                if (info.Role != SewerSegmentRole.VerticalStack && info.RequiredSlopePercent > 0 && info.Pipe.Location is LocationCurve lc && lc.Curve is Line line)
+                                {
+                                    XYZ a = line.GetEndPoint(0);
+                                    XYZ b = line.GetEndPoint(1);
+                                    double dxyFt = Math.Sqrt(Math.Pow(b.X - a.X, 2) + Math.Pow(b.Y - a.Y, 2));
+                                    double dzFt = Math.Abs(b.Z - a.Z);
+                                    if (dxyFt >= 0.5 && dzFt < 0.005)
+                                    {
+                                        double dropFt = dxyFt * (info.RequiredSlopePercent / 100.0);
+                                        try { lc.Curve = Line.CreateBound(a, new XYZ(b.X, b.Y, b.Z - dropFt)); } catch { }
+                                    }
+                                }
                                 Parameter? cmt = info.Pipe.get_Parameter(BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS);
                                 if (cmt != null && !cmt.IsReadOnly)
                                 {
@@ -275,8 +288,23 @@ namespace BahrHidro.Revit
             int mainDn = nodesById.Values.Where(n => n.Role != SewerSegmentRole.Vent).Select(n => n.RequiredDnMm).DefaultIfEmpty(100).Max();
             double mainSlope = mainDn <= 75 ? 2.0 : 1.0;
 
-            string summary = $"Rede Sanitária 3D dimensionada (ABNT NBR 8160): {allPipes.Count} trechos analisados, {pipesUpdated} tubos atualizados no 3D | " +
-                             $"{visitedFixtures.Count} aparelhos conectados ({totalUhc} UHC) | Coletor Principal: DN {mainDn} mm (i = {mainSlope:F1}%).";
+            int ventPipesCount = nodesById.Values.Count(n => n.Role == SewerSegmentRole.Vent);
+            var unventedLongBranches = nodesById.Values
+                .Where(n => n.Role == SewerSegmentRole.Branch && n.DirectUhc > 0)
+                .Where(n =>
+                {
+                    double maxDistM = n.RequiredDnMm <= 40 ? 1.00 : (n.RequiredDnMm <= 50 ? 1.20 : (n.RequiredDnMm <= 75 ? 1.80 : 2.40));
+                    bool hasVentNeighbor = adj[n.Id].Any(nb => nodesById[nb].Role == SewerSegmentRole.Vent || nodesById[nb].Role == SewerSegmentRole.VerticalStack);
+                    return !hasVentNeighbor && n.LengthMeters > maxDistM;
+                })
+                .ToList();
+
+            string ventAuditMsg = unventedLongBranches.Count == 0
+                ? $"Ventilação (NBR 8160 Tabela 5): Conforme ({ventPipesCount} trecho(s) de ventilação detectados)."
+                : $"Alerta Ventilação (NBR 8160 Tabela 5): {unventedLongBranches.Count} ramal(is) excedem a distância máxima sem coluna/ramal de ventilação.";
+
+            string summary = $"Rede Sanitária 3D dimensionada (ABNT NBR 8160): {allPipes.Count} trechos analisados, {pipesUpdated} tubos atualizados no 3D (com caimento físico) | " +
+                             $"{visitedFixtures.Count} aparelhos ({totalUhc} UHC) | Coletor Principal: DN {mainDn} mm (i = {mainSlope:F1}%).\n{ventAuditMsg}";
 
             var result = new Sewer3DCalculationResult(
                 allPipes.Count,
