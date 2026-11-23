@@ -2831,6 +2831,8 @@ VerificarPressaoEstaticaMaximaVrp();
         }
 
         private readonly System.Collections.ObjectModel.ObservableCollection<EditableSinapiBudgetRow> _sinapiBudgetRows = new();
+        private Dictionary<string, decimal> _importedSinapiPrices = new(StringComparer.OrdinalIgnoreCase);
+        private string _importedSinapiSourceLabel = "";
 
         private double ObterBdiPercentual()
         {
@@ -2847,7 +2849,10 @@ VerificarPressaoEstaticaMaximaVrp();
             if (SinapiPreviewText == null) return;
             if (_sinapiBudgetRows.Count == 0)
             {
-                SinapiPreviewText.Text = "Clique em 'Carregar Itens do 3D (SINAPI)' para preencher a tabela editável, ajustar preços unitários e configurar o BDI (%).";
+                string loadedInfo = string.IsNullOrEmpty(_importedSinapiSourceLabel)
+                    ? ""
+                    : $" (Tabela {_importedSinapiSourceLabel} carregada com {_importedSinapiPrices.Count} códigos — clique em 'Carregar Itens do 3D' para aplicar)";
+                SinapiPreviewText.Text = "Clique em 'Carregar Itens do 3D (SINAPI)' para preencher a tabela editável, importar planilha SINAPI por estado ou configurar o BDI (%)." + loadedInfo;
                 return;
             }
 
@@ -2856,17 +2861,89 @@ VerificarPressaoEstaticaMaximaVrp();
             double bdiPct = ObterBdiPercentual();
             decimal bdiVal = Math.Round(directTotal * ((decimal)bdiPct / 100m), 2);
             decimal grandTotal = directTotal + bdiVal;
+            string sourceTag = string.IsNullOrEmpty(_importedSinapiSourceLabel) ? "" : $"  |  Base: {_importedSinapiSourceLabel}";
 
             SinapiPreviewText.Text =
                 $"Itens orçados: {_sinapiBudgetRows.Count}  |  " +
                 $"Custo Direto: {directTotal.ToString("C2", ptBr)}  |  " +
                 $"BDI ({bdiPct:F2}%): {bdiVal.ToString("C2", ptBr)}  |  " +
-                $"TOTAL COM BDI: {grandTotal.ToString("C2", ptBr)}";
+                $"TOTAL COM BDI: {grandTotal.ToString("C2", ptBr)}{sourceTag}";
         }
 
         private void SinapiBdiTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             AtualizarTotaisSinapi();
+        }
+
+        private int AplicarPrecosSinapiNaGradeAtual()
+        {
+            if (_importedSinapiPrices.Count == 0 || _sinapiBudgetRows.Count == 0)
+                return 0;
+
+            var ptBr = new System.Globalization.CultureInfo("pt-BR");
+            int updated = 0;
+
+            foreach (var row in _sinapiBudgetRows)
+            {
+                string normCode = BahrHidro.Core.Reporting.SinapiOfficialPriceImporter.NormalizeSinapiCode(row.SinapiCode);
+                if (!string.IsNullOrEmpty(normCode) && _importedSinapiPrices.TryGetValue(normCode, out decimal officialPrice) && officialPrice > 0m)
+                {
+                    row.UnitPriceText = officialPrice.ToString("N2", ptBr);
+                    updated++;
+                }
+            }
+
+            AtualizarTotaisSinapi();
+            return updated;
+        }
+
+        private async void ImportarTabelaSinapi_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var dlg = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Importar Tabela Oficial SINAPI por Estado (.xlsx ou .csv)",
+                    Filter = "Planilhas SINAPI (*.xlsx;*.csv)|*.xlsx;*.csv|Excel SINAPI (*.xlsx)|*.xlsx|CSV SINAPI (*.csv)|*.csv"
+                };
+
+                if (dlg.ShowDialog() != true)
+                    return;
+
+                var importRes = BahrHidro.Core.Reporting.SinapiOfficialPriceImporter.ImportFromFile(dlg.FileName);
+                _importedSinapiPrices = importRes.PricesByNormalizedCode;
+                _importedSinapiSourceLabel = $"SINAPI-{importRes.StateUf} ({importRes.SourceFileName})";
+
+                if (_sinapiBudgetRows.Count == 0)
+                {
+                    var takeoff = await ObterTakeoffParaSinapiAsync();
+                    if (takeoff != null && (takeoff.Pipes.Count > 0 || takeoff.Fittings.Count > 0 || takeoff.Kits.Count > 0))
+                    {
+                        var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
+                        foreach (var line in lines)
+                            _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(line, AtualizarTotaisSinapi));
+
+                        if (SinapiBudgetDataGrid != null)
+                            SinapiBudgetDataGrid.ItemsSource = _sinapiBudgetRows;
+                    }
+                }
+
+                int updatedCount = AplicarPrecosSinapiNaGradeAtual();
+                AtualizarTotaisSinapi();
+
+                MessageBox.Show(
+                    $"Tabela SINAPI importada com sucesso!\n\n" +
+                    $"Estado (UF) detectado: {importRes.StateUf}\n" +
+                    $"Códigos lidos na planilha: {importRes.TotalCodesLoaded}\n" +
+                    $"Itens atualizados automaticamente na tabela: {updatedCount} de {_sinapiBudgetRows.Count}",
+                    "Bahr Hidro — Importação SINAPI",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao importar planilha SINAPI:\n{ex.Message}", "Bahr Hidro — Importação SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         private async void CalcularOrcamentoSinapi_Click(object sender, RoutedEventArgs e)
@@ -2884,7 +2961,18 @@ VerificarPressaoEstaticaMaximaVrp();
                 _sinapiBudgetRows.Clear();
                 foreach (var line in lines)
                 {
-                    _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(line, AtualizarTotaisSinapi));
+                    var adjustedLine = line;
+                    string normCode = BahrHidro.Core.Reporting.SinapiOfficialPriceImporter.NormalizeSinapiCode(line.SinapiCode);
+                    if (!string.IsNullOrEmpty(normCode) && _importedSinapiPrices.TryGetValue(normCode, out decimal officialPrice) && officialPrice > 0m)
+                    {
+                        adjustedLine = line with
+                        {
+                            UnitPriceBrl = officialPrice,
+                            TotalPriceBrl = Math.Round((decimal)line.Quantity * officialPrice, 2)
+                        };
+                    }
+
+                    _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(adjustedLine, AtualizarTotaisSinapi));
                 }
 
                 if (SinapiBudgetDataGrid != null)
@@ -2916,7 +3004,19 @@ VerificarPressaoEstaticaMaximaVrp();
 
                     var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
                     foreach (var line in lines)
-                        _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(line, AtualizarTotaisSinapi));
+                    {
+                        var adjustedLine = line;
+                        string normCode = BahrHidro.Core.Reporting.SinapiOfficialPriceImporter.NormalizeSinapiCode(line.SinapiCode);
+                        if (!string.IsNullOrEmpty(normCode) && _importedSinapiPrices.TryGetValue(normCode, out decimal officialPrice) && officialPrice > 0m)
+                        {
+                            adjustedLine = line with
+                            {
+                                UnitPriceBrl = officialPrice,
+                                TotalPriceBrl = Math.Round((decimal)line.Quantity * officialPrice, 2)
+                            };
+                        }
+                        _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(adjustedLine, AtualizarTotaisSinapi));
+                    }
 
                     if (SinapiBudgetDataGrid != null)
                         SinapiBudgetDataGrid.ItemsSource = _sinapiBudgetRows;

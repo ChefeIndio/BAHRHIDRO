@@ -1428,6 +1428,7 @@
 
                                             <WrapPanel Margin="0,0,0,10" VerticalAlignment="Center">
                                                 <Button Content="Carregar Itens do 3D (SINAPI)" Style="{StaticResource PrimaryButton}" Margin="0,0,10,4" Click="CalcularOrcamentoSinapi_Click"/>
+                                                <Button Content="Importar Tabela SINAPI (.xlsx/.csv)" Style="{StaticResource SecondaryButton}" Margin="0,0,10,4" Click="ImportarTabelaSinapi_Click"/>
                                                 <Border Background="White" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="0,0,10,4">
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                         <TextBlock Text="BDI (%):" FontSize="11.5" FontWeight="Bold" Foreground="#166534" VerticalAlignment="Center" Margin="0,0,6,0"/>
