@@ -240,7 +240,7 @@
         <Border Margin="12" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" VerticalAlignment="Stretch">
             <Grid VerticalAlignment="Stretch">
                 
-                <StackPanel VerticalAlignment="Stretch"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelInicio}" VerticalAlignment="Stretch"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
+                <ScrollViewer x:Name="MainPagesScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Padding="0,0,10,24"><StackPanel VerticalAlignment="Top"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelInicio}" VerticalAlignment="Top" Margin="0,0,0,28"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
                     <StackPanel MaxWidth="1060" HorizontalAlignment="Left">
                         <Border Background="#0F172A" CornerRadius="10" Padding="22" Margin="0,0,0,18">
                             <Grid>
@@ -392,7 +392,7 @@
                 </ScrollViewer>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Pranchas Executivas ABNT &amp; Isométricos 3D Cotados" FontSize="17" FontWeight="Bold" Foreground="#0F172A" />
@@ -450,7 +450,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelTracado3D}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelTracado3D" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelTracado3D}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelTracado3D" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsTracado3D" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -590,7 +590,7 @@
                                             </StackPanel>
                                         </DockPanel>
 
-                                        <DataGrid x:Name="TracadoPontosDataGrid" Height="220" AutoGenerateColumns="False" CanUserAddRows="False" Background="White" Margin="0,0,0,10" MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                        <DataGrid x:Name="TracadoPontosDataGrid" Height="220" AutoGenerateColumns="False" CanUserAddRows="False" Background="White" Margin="0,0,0,10" MaxHeight="230" VerticalScrollBarVisibility="Auto">
                                             <DataGrid.Columns>
                                                 <DataGridCheckBoxColumn Header="Usar" Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" Width="45" />
                                                 <DataGridTextColumn Header="Ponto / Aparelho" Binding="{Binding Name}" Width="*" />
@@ -684,7 +684,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelAguaFria}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelAguaFria" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelAguaFria}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelAguaFria" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,12">
                         <StackPanel>
@@ -739,7 +739,7 @@
                                             <TextBlock Text="1. Nós e Reservatórios Lidos do Modelo 3D" FontSize="14" FontWeight="Bold" Foreground="#0F172A" />
                                         </DockPanel>
 
-                                        <DataGrid x:Name="NosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White" MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                        <DataGrid x:Name="NosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White" MaxHeight="230" VerticalScrollBarVisibility="Auto">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="Identificação" Binding="{Binding Name}" Width="*" />
                                                 <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="100" />
@@ -759,7 +759,7 @@
                                             <TextBlock Text="2. Trechos de Tubulação Lidos do Modelo 3D" FontSize="14" FontWeight="Bold" Foreground="#0F172A" />
                                         </DockPanel>
 
-                                        <DataGrid x:Name="TrechosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White" MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                        <DataGrid x:Name="TrechosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White" MaxHeight="230" VerticalScrollBarVisibility="Auto">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="85" />
                                                 <DataGridTextColumn Header="Ligação (Montante → Jusante)" Binding="{Binding ConnectionDisplay}" Width="*" />
@@ -804,7 +804,7 @@
                             
                             <StackPanel Margin="0,0,0,14">
                                 <TextBlock Text="Resultados por Trecho — Comparativo (De → Para), Impacto Hidráulico e Motivo Técnico (clique em um trecho para ajustar manualmente)" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
-                                <DataGrid x:Name="ResultadosTrechosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White" SelectionMode="Single" SelectionChanged="ResultadosTrechosDataGrid_SelectionChanged" MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                <DataGrid x:Name="ResultadosTrechosDataGrid" Height="230" AutoGenerateColumns="False" IsReadOnly="True" Background="White" SelectionMode="Single" SelectionChanged="ResultadosTrechosDataGrid_SelectionChanged" MaxHeight="230" VerticalScrollBarVisibility="Auto">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Trecho" Binding="{Binding Name}" Width="68" />
                                         <DataGridTextColumn Header="Ligação" Binding="{Binding ConnectionDisplay}" Width="155" />
@@ -859,7 +859,7 @@
                                 
                                 <StackPanel Grid.Column="2">
                                     <TextBlock Text="Pressões Disponíveis nos Nós" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
-                                    <DataGrid x:Name="ResultadosNosDataGrid" Height="175" AutoGenerateColumns="False" IsReadOnly="True" Background="White" MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                    <DataGrid x:Name="ResultadosNosDataGrid" Height="175" AutoGenerateColumns="False" IsReadOnly="True" Background="White" MaxHeight="230" VerticalScrollBarVisibility="Auto">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Nó" Binding="{Binding Name}" Width="*" />
                                             <DataGridTextColumn Header="Tipo" Binding="{Binding TypeLabel}" Width="85" />
@@ -981,7 +981,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelBomba}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelBomba" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelBomba}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelBomba" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Pressurização &amp; Dimensionamento de Bomba (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
@@ -1063,7 +1063,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelAguaQuente}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelAguaQuente}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsAguaQuente" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1263,7 +1263,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelReservatorios}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelReservatorios" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelReservatorios}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelReservatorios" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsReservatorios" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1399,7 +1399,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelEsgoto}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelEsgoto" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelEsgoto}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelEsgoto" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsEsgoto" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1612,7 +1612,7 @@
 
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelPluvial}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelPluvial" Visibility="Collapsed" Margin="0,0,0,24">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelPluvial}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelPluvial" Visibility="Collapsed" Margin="0,0,0,24">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsPluvial" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
@@ -1637,7 +1637,7 @@
                 </DockPanel>
 
                 
-                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelMemorial}" VerticalAlignment="Stretch"><DockPanel x:Name="PanelMemorial" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelMemorial}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelMemorial" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Memorial de Cálculo &amp; Dados do Projeto BIM" FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
@@ -1784,7 +1784,7 @@
                                         <TextBlock x:Name="TemplateAuditStatusText" Text="Clique em 'Auditar Template &amp; Prontidão do Piloto' para verificar a compatibilidade do modelo/template Revit 2026." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap" />
                                     </Border>
 
-                                    <DataGrid x:Name="TemplateAuditDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="220" FontSize="11.5" VerticalScrollBarVisibility="Auto">
+                                    <DataGrid x:Name="TemplateAuditDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="230" FontSize="11.5" VerticalScrollBarVisibility="Auto">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="78" />
                                             <DataGridTextColumn Header="Categoria" Binding="{Binding Category}" Width="140" />
@@ -1817,7 +1817,7 @@
                                                 <Button Content="Exportar Planilha SINAPI (.xlsx)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarOrcamentoSinapiExcel_Click" />
                                             </WrapPanel>
 
-                                            <DataGrid x:Name="SinapiBudgetDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#BBF7D0" BorderThickness="1" RowHeight="28" MaxHeight="220" FontSize="11.5" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto">
+                                            <DataGrid x:Name="SinapiBudgetDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#BBF7D0" BorderThickness="1" RowHeight="28" MaxHeight="230" FontSize="11.5" Margin="0,0,0,10" VerticalScrollBarVisibility="Auto">
                                                 <DataGrid.Columns>
                                                     <DataGridTextColumn Header="#" Binding="{Binding ItemNumber}" IsReadOnly="True" Width="36" />
                                                     <DataGridTextColumn Header="SINAPI" Binding="{Binding SinapiCode, UpdateSourceTrigger=PropertyChanged}" Width="88" />
@@ -1893,7 +1893,7 @@
                 </DockPanel>
 
             
-            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=ConfiguracoesPanel}" VerticalAlignment="Stretch"><ScrollViewer x:Name="ConfiguracoesPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="14" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
+            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=ConfiguracoesPanel}" VerticalAlignment="Top" Margin="0,0,0,28"><ScrollViewer x:Name="ConfiguracoesPanel" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="14" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
                 <StackPanel>
                     <TextBlock Text="Padrões Técnicos do Escritório (LSF &amp; ABNT NBR 5626 / 8160)" FontSize="15" FontWeight="Bold" Margin="0,0,0,4" />
                     <TextBlock Text="Configure as cotas padrão de pontos, critérios de furação em montantes Steel Frame e limites hidráulicos. Salve ou exporte em .json para padronizar toda a equipe." TextWrapping="Wrap" Opacity="0.8" Margin="0,0,0,12" />
@@ -2032,7 +2032,7 @@
                     <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </ScrollViewer>
-            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PageClash3D}" VerticalAlignment="Stretch"><Grid x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><StackPanel Grid.Row="0" Margin="0,0,0,14"><TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" /><TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" /></StackPanel><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16" VerticalAlignment="Stretch"><Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
+            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PageClash3D}" VerticalAlignment="Top" Margin="0,0,0,28"><Grid x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><StackPanel Grid.Row="0" Margin="0,0,0,14"><TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" /><TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" /></StackPanel><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16" VerticalAlignment="Stretch"><Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
                                 <StackPanel>
                                     <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
                                     <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
@@ -2047,7 +2047,7 @@
                                         <TextBlock x:Name="ClashAndDiagStatusText" Text="Execute a auditoria 3D para detectar conflitos estruturais/LSF ou gerar a vista 3D colorida de diagnóstico hidráulico." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap" />
                                     </Border>
 
-                                    <DataGrid x:Name="ClashResultsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="220" FontSize="11.5" VerticalScrollBarVisibility="Auto">
+                                    <DataGrid x:Name="ClashResultsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="230" FontSize="11.5" VerticalScrollBarVisibility="Auto">
                                         <DataGrid.Columns>
                                             <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="34" />
                                             <DataGridTextColumn Header="Sistema" Binding="{Binding PipeSystem}" Width="110" />
@@ -2067,7 +2067,7 @@
                                     </DataGrid>
                                 </StackPanel>
                             </Border>
-                        </ScrollViewer><Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,10"><TextBlock Text="Compatibilização BIM 3D • Detecção de Furos em Vigas, Lajes e Perfis LSF" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" /></Border></Grid></ScrollViewer></StackPanel></Grid>
+                        </ScrollViewer><Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,10"><TextBlock Text="Compatibilização BIM 3D • Detecção de Furos em Vigas, Lajes e Perfis LSF" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" /></Border></Grid></ScrollViewer></StackPanel></ScrollViewer></Grid>
         </Border>
     </DockPanel>
     </DockPanel>

@@ -15,7 +15,8 @@ namespace BahrHidro.Revit
                 const string tabName = "Bahr Hidro";
                 try { application.CreateRibbonTab(tabName); } catch { }
 
-                RibbonPanel panel = application.CreateRibbonPanel(tabName, "Hidráulica & LSF • Licenciado");
+                try { application.CreateRibbonTab("Bahr Hidro"); } catch { }
+                RibbonPanel panel = application.CreateRibbonPanel("Bahr Hidro", "Hidráulica & LSF • Licenciado");
                 string asmPath = Assembly.GetExecutingAssembly().Location;
 
                 panel.AddItem(new PushButtonData(
