@@ -15,7 +15,8 @@ namespace BahrHidro.Revit
         public static (Executive3DDocResult Result, ElementId TargetViewId) GenerateIsometricsAndAbntSheet(
             Document doc,
             bool createIsometrics,
-            bool createAbntSheet)
+            bool createAbntSheet,
+            bool createNativeSchedules = true)
         {
             var fixtures = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_PlumbingFixtures)
@@ -31,13 +32,13 @@ namespace BahrHidro.Revit
             if (fixtures.Count == 0 && pipes.Count == 0)
                 throw new InvalidOperationException("Nenhum aparelho sanitário ou tubulação encontrado no modelo 3D.");
 
-            // Identifica ambientes molhados (Rooms nativos ou agrupamento espacial de aparelhos no 3D)
             var zones = DetectWetAreaZones(doc, fixtures, pipes);
             var createdIsoViews = new List<View3D>();
+            var createdSchedules = new List<ViewSchedule>();
             int tagsPlaced = 0;
             ElementId activeTargetId = ElementId.InvalidElementId;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 3D e Prancha ABNT"))
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 3D, Tabelas Nativas e Prancha ABNT"))
             {
                 tx.Start();
 
@@ -64,7 +65,6 @@ namespace BahrHidro.Revit
                             if (iso.CanSaveOrientation())
                                 iso.SaveOrientationAndLock();
 
-                            // Insere tags nos principais trechos visíveis no isométrico
                             foreach (var p in zonePipes.Take(14))
                             {
                                 if (p.Location is LocationCurve lc && lc.Curve != null)
@@ -93,6 +93,21 @@ namespace BahrHidro.Revit
                     }
                 }
 
+                if (createNativeSchedules)
+                {
+                    var pipeSched = CreatePipeSchedule(doc);
+                    if (pipeSched != null) createdSchedules.Add(pipeSched);
+
+                    var fittingSched = CreateFittingSchedule(doc);
+                    if (fittingSched != null) createdSchedules.Add(fittingSched);
+
+                    var fixtureSched = CreateFixtureSchedule(doc);
+                    if (fixtureSched != null) createdSchedules.Add(fixtureSched);
+
+                    if (activeTargetId == ElementId.InvalidElementId && createdSchedules.Count > 0)
+                        activeTargetId = createdSchedules[0].Id;
+                }
+
                 string sheetCode = "";
                 if (createAbntSheet)
                 {
@@ -107,12 +122,12 @@ namespace BahrHidro.Revit
                     ViewSheet sheet = ViewSheet.Create(doc, tbId);
                     sheetCode = MakeUniqueSheetNumber(doc, "HID-01");
                     sheet.SheetNumber = sheetCode;
-                    sheet.Name = "INSTALAÇÕES HIDROSSANITÁRIAS — ISOMÉTRICOS 3D E PRUMADAS (ABNT)";
+                    sheet.Name = "INSTALAÇÕES HIDROSSANITÁRIAS — ISOMÉTRICOS 3D, PRUMADAS E QUANTITATIVOS (ABNT)";
 
-                    double cursorX = UnitUtils.ConvertToInternalUnits(0.18, UnitTypeId.Meters);
+                    double cursorX = UnitUtils.ConvertToInternalUnits(0.16, UnitTypeId.Meters);
                     double topY = UnitUtils.ConvertToInternalUnits(0.45, UnitTypeId.Meters);
                     double botY = UnitUtils.ConvertToInternalUnits(0.20, UnitTypeId.Meters);
-                    double stepX = UnitUtils.ConvertToInternalUnits(0.24, UnitTypeId.Meters);
+                    double stepX = UnitUtils.ConvertToInternalUnits(0.21, UnitTypeId.Meters);
 
                     // 1. Insere até 3 vistas isométricas 3D na prancha
                     for (int i = 0; i < Math.Min(3, createdIsoViews.Count); i++)
@@ -124,7 +139,7 @@ namespace BahrHidro.Revit
                         }
                     }
 
-                    // 2. Insere o Esquema Vertical de Prumadas caso já tenha sido gerado
+                    // 2. Insere o Esquema Vertical de Prumadas caso exista
                     ViewDrafting? riserView = new FilteredElementCollector(doc)
                         .OfClass(typeof(ViewDrafting))
                         .Cast<ViewDrafting>()
@@ -132,10 +147,10 @@ namespace BahrHidro.Revit
 
                     if (riserView != null && Viewport.CanAddViewToSheet(doc, sheet.Id, riserView.Id))
                     {
-                        Viewport.Create(doc, sheet.Id, riserView.Id, new XYZ(cursorX + 2.2 * stepX, botY, 0));
+                        Viewport.Create(doc, sheet.Id, riserView.Id, new XYZ(cursorX + 1.9 * stepX, botY, 0));
                     }
 
-                    // 3. Insere a primeira planta baixa hidráulica disponível (não alocada em outra prancha)
+                    // 3. Insere a primeira planta baixa hidráulica disponível
                     ViewPlan? floorPlan = new FilteredElementCollector(doc)
                         .OfClass(typeof(ViewPlan))
                         .Cast<ViewPlan>()
@@ -146,17 +161,170 @@ namespace BahrHidro.Revit
                         Viewport.Create(doc, sheet.Id, floorPlan.Id, new XYZ(cursorX, botY, 0));
                     }
 
+                    // 4. Insere as 3 Tabelas Nativas (Tubulações, Conexões e Aparelhos Sanitários) em coluna à direita
+                    if (createdSchedules.Count > 0)
+                    {
+                        double schedX = UnitUtils.ConvertToInternalUnits(0.68, UnitTypeId.Meters);
+                        double schedTopY = UnitUtils.ConvertToInternalUnits(0.54, UnitTypeId.Meters);
+                        double schedStepY = UnitUtils.ConvertToInternalUnits(0.16, UnitTypeId.Meters);
+
+                        BoundingBoxUV outline = sheet.Outline;
+                        if (outline != null && (outline.Max.U - outline.Min.U) > UnitUtils.ConvertToInternalUnits(0.50, UnitTypeId.Meters))
+                        {
+                            schedX = outline.Max.U - UnitUtils.ConvertToInternalUnits(0.24, UnitTypeId.Meters);
+                            schedTopY = outline.Max.V - UnitUtils.ConvertToInternalUnits(0.05, UnitTypeId.Meters);
+                        }
+
+                        for (int i = 0; i < createdSchedules.Count; i++)
+                        {
+                            try
+                            {
+                                ScheduleSheetInstance.Create(
+                                    doc,
+                                    sheet.Id,
+                                    createdSchedules[i].Id,
+                                    new XYZ(schedX, schedTopY - i * schedStepY, 0));
+                            }
+                            catch { }
+                        }
+                    }
+
                     activeTargetId = sheet.Id;
                 }
 
                 tx.Commit();
 
-                string summary = $"Documentação 3D ABNT concluída: {createdIsoViews.Count} vista(s) isométrica(s) 3D bloqueada(s), " +
-                                 $"{tagsPlaced} etiqueta(s) inserida(s)" +
+                string summary = $"Documentação 3D ABNT concluída: {createdIsoViews.Count} vista(s) isométrica(s) 3D, " +
+                                 $"{tagsPlaced} etiqueta(s), {createdSchedules.Count} tabela(s) nativa(s) do Revit (Tubulações, Conexões e Aparelhos)" +
                                  (createAbntSheet ? $" e Prancha '{sheetCode}' montada automaticamente." : ".");
 
-                return (new Executive3DDocResult(createdIsoViews.Count, tagsPlaced, sheetCode, summary), activeTargetId);
+                return (new Executive3DDocResult(createdIsoViews.Count, tagsPlaced, sheetCode, summary, createdSchedules.Count), activeTargetId);
             }
+        }
+
+        private static ViewSchedule? CreatePipeSchedule(Document doc)
+        {
+            try
+            {
+                ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PipeCurves));
+                sched.Name = MakeUniqueViewName(doc, "Bahr Hidro - Tabela de Tubulações");
+                ScheduleDefinition def = sched.Definition;
+                def.IsItemized = false;
+                def.ShowGrandTotal = true;
+                def.ShowGrandTotalTitle = true;
+
+                IList<SchedulableField> avail = def.GetSchedulableFields();
+                var fSys = TryAddParamField(def, avail, BuiltInParameter.RBS_SYSTEM_NAME_PARAM, "Sistema");
+                var fType = TryAddParamField(def, avail, BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM, "Tubulação / Material");
+                var fDia = TryAddParamField(def, avail, BuiltInParameter.RBS_PIPE_DIAMETER_PARAM, "Diâmetro");
+                TryAddParamField(def, avail, BuiltInParameter.CURVE_ELEM_LENGTH, "Comprimento Total", showTotals: true);
+
+                TryAddSortGroup(def, fSys);
+                TryAddSortGroup(def, fType);
+                TryAddSortGroup(def, fDia);
+                return sched;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static ViewSchedule? CreateFittingSchedule(Document doc)
+        {
+            try
+            {
+                ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PipeFitting));
+                sched.Name = MakeUniqueViewName(doc, "Bahr Hidro - Tabela de Conexões");
+                ScheduleDefinition def = sched.Definition;
+                def.IsItemized = false;
+                def.ShowGrandTotal = true;
+                def.ShowGrandTotalTitle = true;
+
+                IList<SchedulableField> avail = def.GetSchedulableFields();
+                var fSys = TryAddParamField(def, avail, BuiltInParameter.RBS_SYSTEM_NAME_PARAM, "Sistema");
+                var fType = TryAddParamField(def, avail, BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM, "Conexão / Peça");
+                var fSize = TryAddParamField(def, avail, BuiltInParameter.RBS_CALCULATED_SIZE, "Bitola");
+                TryAddCountField(def, avail, "Qtd.");
+
+                TryAddSortGroup(def, fSys);
+                TryAddSortGroup(def, fType);
+                TryAddSortGroup(def, fSize);
+                return sched;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static ViewSchedule? CreateFixtureSchedule(Document doc)
+        {
+            try
+            {
+                ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PlumbingFixtures));
+                sched.Name = MakeUniqueViewName(doc, "Bahr Hidro - Tabela de Aparelhos Sanitários");
+                ScheduleDefinition def = sched.Definition;
+                def.IsItemized = false;
+                def.ShowGrandTotal = true;
+                def.ShowGrandTotalTitle = true;
+
+                IList<SchedulableField> avail = def.GetSchedulableFields();
+                var fLvl = TryAddParamField(def, avail, BuiltInParameter.SCHEDULE_LEVEL_PARAM, "Nível");
+                var fType = TryAddParamField(def, avail, BuiltInParameter.ELEM_FAMILY_AND_TYPE_PARAM, "Aparelho Sanitário");
+                TryAddCountField(def, avail, "Qtd.");
+
+                TryAddSortGroup(def, fLvl);
+                TryAddSortGroup(def, fType);
+                return sched;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static ScheduleField? TryAddParamField(
+            ScheduleDefinition def,
+            IList<SchedulableField> available,
+            BuiltInParameter bip,
+            string? heading = null,
+            bool showTotals = false)
+        {
+            ElementId targetId = new ElementId(bip);
+            SchedulableField? sf = available.FirstOrDefault(f => f.ParameterId == targetId);
+            if (sf == null) return null;
+
+            ScheduleField field = def.AddField(sf);
+            if (!string.IsNullOrWhiteSpace(heading))
+                field.ColumnHeading = heading;
+            if (showTotals)
+                field.DisplayType = ScheduleFieldDisplayType.Totals;
+            return field;
+        }
+
+        private static ScheduleField? TryAddCountField(
+            ScheduleDefinition def,
+            IList<SchedulableField> available,
+            string heading = "Qtd.")
+        {
+            SchedulableField? sf = available.FirstOrDefault(f => f.FieldType == ScheduleFieldType.Count);
+            if (sf == null) return null;
+
+            ScheduleField field = def.AddField(sf);
+            field.ColumnHeading = heading;
+            field.DisplayType = ScheduleFieldDisplayType.Totals;
+            return field;
+        }
+
+        private static void TryAddSortGroup(ScheduleDefinition def, ScheduleField? field)
+        {
+            if (field == null) return;
+            try
+            {
+                def.AddSortGroupField(new ScheduleSortGroupField(field.FieldId));
+            }
+            catch { }
         }
 
         private static List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes)> DetectWetAreaZones(
@@ -167,7 +335,6 @@ namespace BahrHidro.Revit
             var result = new List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes)>();
             double marginFt = UnitUtils.ConvertToInternalUnits(0.65, UnitTypeId.Meters);
 
-            // 1. Tenta ler Rooms nativos do projeto
             var rooms = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_Rooms)
                 .WhereElementIsNotElementType()
@@ -197,7 +364,6 @@ namespace BahrHidro.Revit
 
             if (result.Count > 0) return result;
 
-            // 2. Fallback inteligente: agrupa aparelhos sanitários por proximidade (quando Rooms vêm de vínculo IFC/RVT)
             double clusterRadiusFt = UnitUtils.ConvertToInternalUnits(3.5, UnitTypeId.Meters);
             var used = new HashSet<long>();
             int idx = 1;

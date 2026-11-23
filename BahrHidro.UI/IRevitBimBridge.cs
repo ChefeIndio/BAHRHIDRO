@@ -164,7 +164,8 @@ namespace BahrHidro.UI
         int IsometricViewsCreated,
         int TagsPlaced,
         string SheetNumber,
-        string Summary);
+        string Summary,
+        int SchedulesCreated = 0);
 
     public sealed record ClashItem3DInfo(
         int Index,
@@ -204,7 +205,7 @@ Task<NetworkCleanupResult> CleanGeneratedNetwork();
         Task<string> OpenLiveViewByNameAsync(string viewName);
         Task<Sewer3DCalculationResult> CalculateAndApplySewer3D();
         Task<VerticalRiserSchematicResult> GenerateVerticalRiserSchematic();
-        Task<Executive3DDocResult> GenerateIsometricsAndAbntSheet(bool createIsometrics, bool createAbntSheet);
+        Task<Executive3DDocResult> GenerateIsometricsAndAbntSheet(bool createIsometrics, bool createAbntSheet, bool createNativeSchedules = true);
         Task<ClashAudit3DResult> RunStructuralAndLsfClashAudit();
         Task FocusElementIn3DView(long elementId);
         Task<HydraulicDiagnostic3DResult> ApplyHydraulicDiagnosticColorMap(BahrHidro.Core.Hydraulic.Network.NetworkCalculationResult? coldWaterResult);

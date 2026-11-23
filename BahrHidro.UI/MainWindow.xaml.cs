@@ -2686,8 +2686,9 @@ VerificarPressaoEstaticaMaximaVrp();
             try
             {
                 bool isos = ChkGerarIsometricos3D?.IsChecked == true;
+                bool schedules = ChkCriarTabelasNativas?.IsChecked == true;
                 bool sheet = ChkMontarPranchaAbnt?.IsChecked == true;
-                var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos, sheet);
+                var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos, sheet, schedules);
                 if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
                 MessageBox.Show(res.Summary, "Bahr Hidro — Documentação 3D ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
             }

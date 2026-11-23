@@ -798,13 +798,13 @@ namespace BahrHidro.Revit
             });
         }
 
-        public Task<Executive3DDocResult> GenerateIsometricsAndAbntSheet(bool createIsometrics, bool createAbntSheet)
+        public Task<Executive3DDocResult> GenerateIsometricsAndAbntSheet(bool createIsometrics, bool createAbntSheet, bool createNativeSchedules = true)
         {
             return _runner.RunAsync(uiApp =>
             {
                 _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
                 _doc = _uidoc.Document;
-                var (res, viewId) = RevitDocumentation3DProcessor.GenerateIsometricsAndAbntSheet(_doc, createIsometrics, createAbntSheet);
+                var (res, viewId) = RevitDocumentation3DProcessor.GenerateIsometricsAndAbntSheet(_doc, createIsometrics, createAbntSheet, createNativeSchedules);
                 if (viewId != ElementId.InvalidElementId && _doc.GetElement(viewId) is View targetView)
                 {
                     _uidoc.ActiveView = targetView;
