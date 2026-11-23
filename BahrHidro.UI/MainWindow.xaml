@@ -1417,6 +1417,19 @@
                                             <Button Content="🌐 Abrir Memorial Unificado (Imprimir PDF)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,8,8" Click="AbrirMemorialUnificadoPdf_Click"/>
                                             <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Revit" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Visibility="Collapsed" Margin="0,0,8,8" Click="SalvarDadosRevit_Click"/>
                                         </WrapPanel>
+                                    <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,14,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="ORÇAMENTO ESTIMATIVO — CATÁLOGO TIGRE/AMANCO &amp; SINAPI" FontSize="11.5" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,6"/>
+                                            <TextBlock Text="Mapeia automaticamente tubos, conexões e acessórios do 3D para referências comerciais Tigre/Amanco e códigos SINAPI." FontSize="11.5" Foreground="#15803D" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                            <WrapPanel Margin="0,0,0,8">
+                                                <Button Content="Calcular Orçamento SINAPI (3D)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Click="CalcularOrcamentoSinapi_Click"/>
+                                                <Button Content="Exportar Planilha SINAPI (.xlsx)" Style="{StaticResource SecondaryButton}" Click="ExportarOrcamentoSinapiExcel_Click"/>
+                                            </WrapPanel>
+                                            <Border Background="White" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="10">
+                                                <TextBlock x:Name="SinapiPreviewText" Text="Clique em 'Calcular Orçamento SINAPI (3D)' para visualizar os custos unitários, códigos SINAPI e o total estimado da obra." FontSize="11.5" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

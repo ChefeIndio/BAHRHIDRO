@@ -2714,5 +2714,76 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Erro ao gerar esquema vertical de prumadas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
+
+        private async System.Threading.Tasks.Task<BahrHidro.Core.Reporting.BimMaterialTakeoff?> ObterTakeoffParaSinapiAsync()
+        {
+            if (_revitBridge == null) return null;
+            return await _revitBridge.ExtractBomFromRevit(_snapshot.ProjectName ?? "Projeto Hidrossanitário BIM", 10.0);
+        }
+
+        private async void CalcularOrcamentoSinapi_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var takeoff = await ObterTakeoffParaSinapiAsync();
+                if (takeoff == null || (takeoff.Pipes.Count == 0 && takeoff.Fittings.Count == 0 && takeoff.Kits.Count == 0))
+                {
+                    MessageBox.Show("Nenhum tubo ou conexão foi encontrado no modelo 3D para orçar no SINAPI.", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
+                decimal total = lines.Sum(l => l.TotalPriceBrl);
+                var previewLines = lines.Take(8).Select(l =>
+                    $"• [{l.SinapiCode}] {l.Description} ({l.DiameterDisplay}) — {l.CommercialRef} | {l.Quantity:F2} {l.Unit} = R$ {l.TotalPriceBrl:N2}");
+
+                string extra = lines.Count > 8 ? $"\n... e mais {lines.Count - 8} item(ns) na planilha Excel." : "";
+                if (SinapiPreviewText != null)
+                {
+                    SinapiPreviewText.Text = $"TOTAL ESTIMADO DE MATERIAIS (SINAPI): R$ {total:N2} ({lines.Count} itens)\n" +
+                                             string.Join("\n", previewLines) + extra;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao calcular orçamento SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void ExportarOrcamentoSinapiExcel_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var takeoff = await ObterTakeoffParaSinapiAsync();
+                if (takeoff == null || (takeoff.Pipes.Count == 0 && takeoff.Fittings.Count == 0 && takeoff.Kits.Count == 0))
+                {
+                    MessageBox.Show("Modele ou extraia as tubulações no 3D antes de exportar a planilha SINAPI.", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var dlg = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Salvar Orçamento SINAPI & Catálogo Tigre/Amanco",
+                    Filter = "Planilha Excel (*.xlsx)|*.xlsx",
+                    FileName = "Orcamento_SINAPI_TigreAmanco_BahrHidro.xlsx"
+                };
+
+                if (dlg.ShowDialog() == true)
+                {
+                    BahrHidro.Core.Reporting.ExcelReportGenerator.GenerateProjectReportWithBom(_snapshot.ColdWaterNetwork, takeoff, dlg.FileName);
+                    var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
+                    decimal total = lines.Sum(l => l.TotalPriceBrl);
+                    MessageBox.Show(
+                        $"Planilha SINAPI exportada com sucesso!\n\nArquivo: {dlg.FileName}\nAba: 'Orçamento SINAPI & Fabricante'\nTotal Estimado: R$ {total:N2}",
+                        "Bahr Hidro — Orçamento SINAPI",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao exportar planilha SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }
