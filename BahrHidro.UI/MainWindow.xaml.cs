@@ -41,31 +41,8 @@ namespace BahrHidro.UI
         {
             try { try { InitializeComponent();
             this.WindowState = System.Windows.WindowState.Maximized;
-            this.Loaded += (s, e) =>
-            {
-                if (this.FindName("MainContentScrollViewer") is System.Windows.Controls.ScrollViewer msv &&
-                    msv.Content is System.Windows.Controls.Panel hostPanel)
-                {
-                    foreach (System.Windows.UIElement ch in hostPanel.Children)
-                    {
-                        if (ch is System.Windows.FrameworkElement fe)
-                            fe.IsVisibleChanged += (_, __) => { if (fe.Visibility == System.Windows.Visibility.Visible) msv.ScrollToTop(); };
-                    }
-                }
-            };
-            this.PreviewMouseWheel += (s, e) =>
-            {
-                if (e.Handled) return;
-                if (this.FindName("MainContentScrollViewer") is System.Windows.Controls.ScrollViewer msv && msv.ScrollableHeight > 0)
-                {
-                    var pos = e.GetPosition(msv);
-                    if (pos.X >= 0 && pos.Y >= 0 && pos.X <= msv.ActualWidth && pos.Y <= msv.ActualHeight)
-                    {
-                        msv.ScrollToVerticalOffset(msv.VerticalOffset - (e.Delta / 2.5));
-                        e.Handled = true;
-                    }
-                }
-            };
+            this.Loaded += BahrHidro_InitPageScrolls;
+            this.PreviewMouseWheel += BahrHidro_PageMouseWheel;
             this.WindowState = System.Windows.WindowState.Maximized;
             this.PreviewMouseWheel += BahrMouseWheelScroll;
             this.Loaded += BahrHidro_SyncScrollHosts;
@@ -4039,6 +4016,54 @@ VerificarPressaoEstaticaMaximaVrp();
         
 
         private void BahrMouseWheelScroll(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (e.Handled) return;
+            System.Windows.DependencyObject? curr = e.OriginalSource as System.Windows.DependencyObject;
+            while (curr != null && !(curr is System.Windows.Media.Visual))
+                curr = (curr as System.Windows.FrameworkContentElement)?.Parent ?? System.Windows.LogicalTreeHelper.GetParent(curr);
+
+            while (curr != null)
+            {
+                if (curr is System.Windows.Controls.ScrollViewer sv &&
+                    sv.VerticalScrollBarVisibility != System.Windows.Controls.ScrollBarVisibility.Disabled &&
+                    sv.ScrollableHeight > 0)
+                {
+                    sv.ScrollToVerticalOffset(sv.VerticalOffset - (e.Delta / 2.5));
+                    e.Handled = true;
+                    return;
+                }
+                curr = System.Windows.Media.VisualTreeHelper.GetParent(curr);
+            }
+        }
+
+        private void BahrHidro_InitPageScrolls(object sender, System.Windows.RoutedEventArgs e)
+        {
+            BindPageScrollsRecursive(this);
+        }
+
+        private void BindPageScrollsRecursive(System.Windows.DependencyObject rootObj)
+        {
+            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(rootObj);
+            for (int i = 0; i < count; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(rootObj, i);
+                if (child is System.Windows.Controls.ScrollViewer sv &&
+                    sv.Name != null && sv.Name.StartsWith("PageScroll_") &&
+                    sv.Content is System.Windows.FrameworkElement pageEl)
+                {
+                    sv.Visibility = pageEl.Visibility;
+                    pageEl.IsVisibleChanged += (_, __) =>
+                    {
+                        sv.Visibility = pageEl.Visibility;
+                        if (pageEl.Visibility == System.Windows.Visibility.Visible)
+                            sv.ScrollToTop();
+                    };
+                }
+                BindPageScrollsRecursive(child);
+            }
+        }
+
+        private void BahrHidro_PageMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
             if (e.Handled) return;
             System.Windows.DependencyObject? curr = e.OriginalSource as System.Windows.DependencyObject;
