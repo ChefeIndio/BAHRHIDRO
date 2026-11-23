@@ -999,7 +999,108 @@
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
                                 <TextBlock Text="Cálculo de acumulação de água quente (NBR 7198 / NBR 5626), classificação de pressão e especificação de componentes." FontSize="12" Foreground="#64748B"/>
-                            </StackPanel>
+                            
+                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="DIMENSIONAMENTO TÉRMICO: BOILER, AQUECEDOR A GÁS E SOLAR (NBR 7198 / NBR 15569)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Calcula demanda térmica a 60 °C, volume do boiler, aquecedor de passagem a gás (vazão corrigida ΔT 20 °C), área de coletores solares e dilatação linear." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="Tipologia (NBR 7198)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="ThermalTypologyComboBox" SelectedIndex="0" Padding="6,4">
+                                                <ComboBoxItem Content="Residencial Unifamiliar"/>
+                                                <ComboBoxItem Content="Residencial Multifamiliar"/>
+                                                <ComboBoxItem Content="Hotel / Pousada"/>
+                                                <ComboBoxItem Content="Academia / Vestiário"/>
+                                                <ComboBoxItem Content="Hospital / Clínica"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="População (Pessoas)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalOccupantsTextBox" Text="5" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="4">
+                                            <TextBlock Text="Temp. Água Fria (°C)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalColdTempTextBox" Text="18" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="6">
+                                            <TextBlock Text="Temp. Boiler (°C)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalStorageTempTextBox" Text="60" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Duchas Simultâneas" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalShowersTextBox" Text="2" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Lavatórios Simultâneos" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalLavatoriesTextBox" Text="1" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="4">
+                                            <TextBlock Text="Pias Cozinha Simult." FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalKitchensTextBox" Text="1" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="6">
+                                            <TextBlock Text="Maior Trecho Reto (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalPipeRunTextBox" Text="12" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="0">
+                                            <TextBlock Text="Região Solar (NBR 15569)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="ThermalSolarRegionComboBox" SelectedIndex="0" Padding="6,4">
+                                                <ComboBoxItem Content="Sul (4,25 kWh/m².dia)"/>
+                                                <ComboBoxItem Content="Sudeste (4,85 kWh/m².dia)"/>
+                                                <ComboBoxItem Content="Centro-Oeste (5,25 kWh/m².dia)"/>
+                                                <ComboBoxItem Content="Nordeste (5,65 kWh/m².dia)"/>
+                                                <ComboBoxItem Content="Norte (5,05 kWh/m².dia)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="2">
+                                            <TextBlock Text="Fração Solar (%)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="ThermalSolarFractionTextBox" Text="75" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="4" Grid.Column="4" Grid.ColumnSpan="3" VerticalAlignment="Bottom">
+                                            <CheckBox x:Name="ChkThermalVacuumTube" Content="Coletor Solar de Tubo a Vácuo (η = 68% | Desmarcado = Placa Plana η = 54%)" IsChecked="False" FontSize="11.5" Margin="0,0,0,6"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <WrapPanel Margin="0,4,0,10">
+                                        <Button Content="Dimensionar Boiler, Gás &amp; Solar (NBR 7198 / 15569)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="CalcularAquecimentoTermico_Click"/>
+                                        <Button Content="Exportar Memorial Térmico (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialTermico_Click"/>
+                                    </WrapPanel>
+
+                                    <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="12">
+                                        <TextBlock x:Name="ThermalSizingResultText" Text="Preencha os parâmetros acima e clique em 'Dimensionar Boiler, Gás &amp; Solar' para obter o volume do reservatório térmico, potência do aquecedor a gás e área de coletores." FontFamily="Consolas" FontSize="11.5" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
                         </DockPanel>
                     </Border>
                     <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">

@@ -3218,5 +3218,97 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Erro ao executar plano JSON no Revit 3D:\n{ex.Message}", "Bahr Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private string _lastThermalMemorialText = "";
+
+        private static double ParseThermalDouble(string? raw, double fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            string cleaned = raw.Trim().Replace(',', '.');
+            return double.TryParse(cleaned, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v)
+                ? v
+                : fallback;
+        }
+
+        private static int ParseThermalInt(string? raw, int fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            return int.TryParse(raw.Trim(), out int v) ? v : fallback;
+        }
+
+        private void CalcularAquecimentoTermico_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var typology = (ThermalTypologyComboBox?.SelectedIndex ?? 0) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.HotWater.BuildingHotWaterTypology.ResidencialUnifamiliar,
+                    1 => BahrHidro.Core.Hydraulic.HotWater.BuildingHotWaterTypology.ResidencialMultifamiliar,
+                    2 => BahrHidro.Core.Hydraulic.HotWater.BuildingHotWaterTypology.HotelPousada,
+                    3 => BahrHidro.Core.Hydraulic.HotWater.BuildingHotWaterTypology.AcademiaVestiario,
+                    4 => BahrHidro.Core.Hydraulic.HotWater.BuildingHotWaterTypology.HospitalClinica,
+                    _ => BahrHidro.Core.Hydraulic.HotWater.BuildingHotWaterTypology.ResidencialUnifamiliar
+                };
+
+                var region = (ThermalSolarRegionComboBox?.SelectedIndex ?? 0) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.HotWater.BrazilianSolarRegion.Sul,
+                    1 => BahrHidro.Core.Hydraulic.HotWater.BrazilianSolarRegion.Sudeste,
+                    2 => BahrHidro.Core.Hydraulic.HotWater.BrazilianSolarRegion.CentroOeste,
+                    3 => BahrHidro.Core.Hydraulic.HotWater.BrazilianSolarRegion.Nordeste,
+                    4 => BahrHidro.Core.Hydraulic.HotWater.BrazilianSolarRegion.Norte,
+                    _ => BahrHidro.Core.Hydraulic.HotWater.BrazilianSolarRegion.Sul
+                };
+
+                var input = new BahrHidro.Core.Hydraulic.HotWater.HotWaterThermalInput(
+                    Typology: typology,
+                    OccupantsCount: ParseThermalInt(ThermalOccupantsTextBox?.Text, 5),
+                    ColdWaterTempC: ParseThermalDouble(ThermalColdTempTextBox?.Text, 18.0),
+                    StorageTempC: ParseThermalDouble(ThermalStorageTempTextBox?.Text, 60.0),
+                    UsageTempC: 40.0,
+                    SimultaneousShowers: ParseThermalInt(ThermalShowersTextBox?.Text, 2),
+                    SimultaneousLavatories: ParseThermalInt(ThermalLavatoriesTextBox?.Text, 1),
+                    SimultaneousKitchenSinks: ParseThermalInt(ThermalKitchensTextBox?.Text, 1),
+                    SimultaneousBathtubs: 0,
+                    SolarRegion: region,
+                    SolarFractionPercent: ParseThermalDouble(ThermalSolarFractionTextBox?.Text, 75.0),
+                    VacuumTubeCollector: ChkThermalVacuumTube?.IsChecked == true,
+                    LongestPipeRunMeters: ParseThermalDouble(ThermalPipeRunTextBox?.Text, 12.0));
+
+                var res = BahrHidro.Core.Hydraulic.HotWater.HotWaterThermalSizingCalculator.Calculate(input);
+                _lastThermalMemorialText = res.TechnicalMemorialText;
+
+                if (ThermalSizingResultText != null)
+                {
+                    ThermalSizingResultText.Text = res.TechnicalMemorialText;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao calcular dimensionamento térmico:\n{ex.Message}", "Bahr Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExportarMemorialTermico_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_lastThermalMemorialText))
+                CalcularAquecimentoTermico_Click(sender, e);
+
+            if (string.IsNullOrWhiteSpace(_lastThermalMemorialText))
+                return;
+
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Salvar Memorial de Cálculo Térmico (NBR 7198 / NBR 15569)",
+                Filter = "Arquivo de Texto (*.txt)|*.txt",
+                FileName = "Memorial_Aquecimento_Agua_NBR7198_NBR15569.txt"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                System.IO.File.WriteAllText(dlg.FileName, _lastThermalMemorialText, System.Text.Encoding.UTF8);
+                MessageBox.Show($"Memorial Térmico exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
 }
 }
