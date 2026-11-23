@@ -213,7 +213,7 @@
                     <TextBlock Text="ETAPAS DO PROJETO" FontSize="10.5" FontWeight="Bold" Foreground="#64748B"/>
                 </Border>
 
-                                                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="10,4" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
+                                                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="10,4" SelectedItemChanged="NavegadorTree_SelectedItemChanged" ScrollViewer.VerticalScrollBarVisibility="Auto">
                     <TreeView.Resources>
                         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#E2E8F0"/>
                         <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#0F172A"/>
@@ -233,7 +233,7 @@
                     </TreeViewItem>
 
                     <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="10.5" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
-                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Vistas 3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Isométricos 2D/3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavMemorial" Header="Gerar Memoriais &amp; SINAPI" Tag="Memorial" FontWeight="SemiBold" Foreground="#1E293B"/>
                     </TreeViewItem>
 
@@ -434,7 +434,7 @@
                                     <CheckBox x:Name="ChkMontarPranchaAbnt" Content="Montar Prancha Executiva ABNT (HID-01) com Planta, Isométricos 2D/3D, Prumadas e Tabelas" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
                                     <WrapPanel Margin="0,0,0,14">
-                                        <Button Content="Gerar Isométricos 3D &amp; Prancha ABNT" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Click="GerarDocumentacao3DAbnt_Click"/>
+                                        <Button Content="Gerar Isométricos 2D/3D &amp; Prancha ABNT" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Click="GerarDocumentacao3DAbnt_Click"/>
                                         <Button Content="Gerar Esquema Vertical de Prumadas" Style="{StaticResource SecondaryButton}" Click="GerarEsquemaVertical_Click"/>
                                     </WrapPanel>
 
@@ -936,107 +936,8 @@
                                     </DataGrid>
                                 </StackPanel>
                             </Grid>
-                        </StackPanel>
-                    </ScrollViewer>
-                </DockPanel>
-
-                <!-- 1B. PRESSURIZAÇÃO / BOMBA (ABA DEDICADA) -->
-                <DockPanel x:Name="PanelBomba" Visibility="Collapsed">
-                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Pressurização &amp; Dimensionamento de Bomba (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
-                            <TextBlock Text="Verificação automática de pressão dinâmica mínima nos pontos de consumo e dimensionamento do conjunto motobomba." FontSize="12" Foreground="#64748B"/>
-                        </StackPanel>
-                    </Border>
-                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
-                        <DockPanel>
-                            <Button DockPanel.Dock="Left" Content="← Voltar para Água Fria" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
-                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 3 — Água Quente (Boiler) →" Style="{StaticResource PrimaryButton}" Click="BtnIrAguaQuente_Click"/>
-                            <TextBlock Text="Sub-etapa 2B • Pressurização / Motobomba" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </DockPanel>
-                    </Border>
-
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
-                        <Grid MaxWidth="1040" HorizontalAlignment="Left">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="20"/>
-                                <ColumnDefinition Width="1.15*"/>
-                            </Grid.ColumnDefinitions>
-
-                                                        <!-- Diagnóstico e Dimensionamento Direto (NBR 5626) -->
-                            <Border Grid.Column="0" x:Name="BombaStatusCard" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
-                                <StackPanel>
-                                    <DockPanel Margin="0,0,0,10">
-                                        <Button DockPanel.Dock="Right" Content="Recalcular" Style="{StaticResource SecondaryButton}" Height="28" Padding="10,0" Click="RecalcularBomba_Click"/>
-                                        <TextBlock Text="Diagnóstico e Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
-                                    </DockPanel>
-
-                                    <TextBlock x:Name="BombaDiagnosticoText" Text="Calcule a rede de Água Fria para verificar automaticamente a necessidade de pressurização." FontWeight="Bold" FontSize="13" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,14"/>
-
-                                    <Grid Margin="0,0,0,14">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="210"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Ponto Crítico (Mais Desfavorável):" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BombaNoCriticoText" Text="--"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pressão Atual no Ponto Crítico:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BombaPressaoAtualText" Text="--"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Vazão de Projeto (Q):" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BombaVazaoText" Text="--"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Altura Manométrica (AMT):" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
-
-                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Potência Comercial Estimada:" FontWeight="Bold"/>
-                                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
-                                    </Grid>
-
-                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10">
-                                        <TextBlock FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="17"
-                                                   Text="Critério Normativo Automático (ABNT NBR 5626): Pressão dinâmica mínima de 1,00 m.c.a. (10 kPa) e rendimento padrão do conjunto de 60%. Ao atender o ponto crítico (aparelho mais alto/distante com menor pressão), todo o restante do sistema é atendido automaticamente."/>
-                                    </Border>
-                                </StackPanel>
-                            </Border>
-
-
-
-                            <!-- Sugestões Comerciais e Peças Obrigatórias -->
-                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
-                                <StackPanel>
-                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
-                                    <TextBlock x:Name="BombaSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
-                                               Text="• Equipamento Recomendado: Pressurizador silencioso com inversor de frequência ou fluxostato automático (ex.: Grundfos Scala2 / CMB, Komeco TP40/TP80, Rowa Tango/Press).&#x0a;&#x0a;• Peças Obrigatórias no Barrilete (NBR 5626):&#x0a;  1. Válvula de retenção horizontal/vertical na sucção e no recalque;&#x0a;  2. Registros de esfera/gaveta antes e depois da bomba para manutenção;&#x0a;  3. By-pass com válvula de retenção para abastecimento por gravidade em falta de energia;&#x0a;  4. Manômetro com registro na saída do recalque;&#x0a;  5. Uniões e juntas flexíveis antivibração (essencial em estruturas Light Steel Framing)."/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </ScrollViewer>
-                </DockPanel>
-
-                <!-- 2. ÁGUA QUENTE (BOILER) -->
-                <DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed">
-                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
-                        <DockPanel>
-                            <StackPanel x:Name="HeaderActionsAguaQuente" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button Content="Ler Ocupantes do Revit" Style="{StaticResource RevitActionButton}" Click="EstimarPopulacaoRevit_Click"/>
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
-                                <TextBlock Text="Cálculo de acumulação de água quente (NBR 7198 / NBR 5626), classificação de pressão e especificação de componentes." FontSize="12" Foreground="#64748B"/>
-                            
-                            
-                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
+                        
+<Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
                                 <StackPanel>
                                     <TextBlock Text="RESERVATÓRIOS (INFERIOR / SUPERIOR), RECALQUE, AMT E BOMBAS (ABNT NBR 5626)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
                                     <TextBlock Text="Dimensiona reserva potável e de incêndio (RTI), tubulações de sucção e recalque (Bresse / Hazen-Williams), Altura Manométrica Total (AMT), NPSH e seleção de bombas (1+1)." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
@@ -1141,8 +1042,190 @@
                                     </Border>
                                 </StackPanel>
                             </Border>
+</StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
 
-                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
+                <!-- 1B. PRESSURIZAÇÃO / BOMBA (ABA DEDICADA) -->
+                <DockPanel x:Name="PanelBomba" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Pressurização &amp; Dimensionamento de Bomba (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Verificação automática de pressão dinâmica mínima nos pontos de consumo e dimensionamento do conjunto motobomba." FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Voltar para Água Fria" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 3 — Água Quente (Boiler) →" Style="{StaticResource PrimaryButton}" Click="BtnIrAguaQuente_Click"/>
+                            <TextBlock Text="Sub-etapa 2B • Pressurização / Motobomba" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1040" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="1.15*"/>
+                            </Grid.ColumnDefinitions>
+
+                                                        <!-- Diagnóstico e Dimensionamento Direto (NBR 5626) -->
+                            <Border Grid.Column="0" x:Name="BombaStatusCard" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <DockPanel Margin="0,0,0,10">
+                                        <Button DockPanel.Dock="Right" Content="Recalcular" Style="{StaticResource SecondaryButton}" Height="28" Padding="10,0" Click="RecalcularBomba_Click"/>
+                                        <TextBlock Text="Diagnóstico e Dimensionamento" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                    </DockPanel>
+
+                                    <TextBlock x:Name="BombaDiagnosticoText" Text="Calcule a rede de Água Fria para verificar automaticamente a necessidade de pressurização." FontWeight="Bold" FontSize="13" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+                                    <Grid Margin="0,0,0,14">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="210"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Ponto Crítico (Mais Desfavorável):" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BombaNoCriticoText" Text="--"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Pressão Atual no Ponto Crítico:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BombaPressaoAtualText" Text="--"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Vazão de Projeto (Q):" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BombaVazaoText" Text="--"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Altura Manométrica (AMT):" FontWeight="Bold"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Potência Comercial Estimada:" FontWeight="Bold"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+                                    </Grid>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10">
+                                        <TextBlock FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" LineHeight="17"
+                                                   Text="Critério Normativo Automático (ABNT NBR 5626): Pressão dinâmica mínima de 1,00 m.c.a. (10 kPa) e rendimento padrão do conjunto de 60%. Ao atender o ponto crítico (aparelho mais alto/distante com menor pressão), todo o restante do sistema é atendido automaticamente."/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+
+
+
+                            <!-- Sugestões Comerciais e Peças Obrigatórias -->
+                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
+                                    <TextBlock x:Name="BombaSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
+                                               Text="• Equipamento Recomendado: Pressurizador silencioso com inversor de frequência ou fluxostato automático (ex.: Grundfos Scala2 / CMB, Komeco TP40/TP80, Rowa Tango/Press).&#x0a;&#x0a;• Peças Obrigatórias no Barrilete (NBR 5626):&#x0a;  1. Válvula de retenção horizontal/vertical na sucção e no recalque;&#x0a;  2. Registros de esfera/gaveta antes e depois da bomba para manutenção;&#x0a;  3. By-pass com válvula de retenção para abastecimento por gravidade em falta de energia;&#x0a;  4. Manômetro com registro na saída do recalque;&#x0a;  5. Uniões e juntas flexíveis antivibração (essencial em estruturas Light Steel Framing)."/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- 2. ÁGUA QUENTE (BOILER) -->
+                <DockPanel x:Name="PanelAguaQuente" Visibility="Collapsed">
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                        <DockPanel>
+                            <StackPanel x:Name="HeaderActionsAguaQuente" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                <Button Content="Ler Ocupantes do Revit" Style="{StaticResource RevitActionButton}" Click="EstimarPopulacaoRevit_Click"/>
+                            </StackPanel>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Dimensionamento de Reservatório Térmico (Boiler)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Cálculo de acumulação de água quente (NBR 7198 / NBR 5626), classificação de pressão e especificação de componentes." FontSize="12" Foreground="#64748B"/>
+                            
+                            
+                            
+
+                            
+                        </StackPanel>
+                        </DockPanel>
+                    </Border>
+                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 2: Água Fria" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
+                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 4 — Esgoto Sanitário →" Style="{StaticResource PrimaryButton}" Click="BtnIrEsgoto_Click"/>
+                            <TextBlock Text="Etapa 3 de 5 • Água Quente &amp; Boiler (ABNT NBR 7198)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DockPanel>
+                    </Border>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
+                        <Grid MaxWidth="1060" HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="1.15*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                                    <StackPanel>
+                                        <TextBlock Text="Perfil da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                        <ComboBox x:Name="BoilerPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6"/>
+
+                                        <Grid Margin="0,0,0,16">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="BoilerOcupantesTextBox" Text="5"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Pressão de Trabalho (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="BoilerPressaoTextBox" Text="4,0"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Button Content="Dimensionar Boiler" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularBoiler_Click"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="200"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="28"/>
+                                            <RowDefinition Height="32"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Estimado:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BoilerConsumoText" Text="--"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume de Acumulação:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Modelo Comercial Sugerido:" FontWeight="SemiBold"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BoilerComercialText" Text="--" FontWeight="Bold" Foreground="#0F172A"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Classificação de Pressão:" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BoilerTipoText" Text="--" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Sugestões Comerciais e Peças Obrigatórias (Boiler) -->
+                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS (ÁGUA QUENTE)" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
+                                    <TextBlock x:Name="BoilerSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
+                                               Text="• Marcas e Linhas de Referência: Komeco (KSS / Inox), Bosch / Heliotek (MK / HP), Soletrol ou Cumulus (tanque interno em Aço Inox 304 ou 316L).&#x0a;&#x0a;• Tubulação Recomendada: PPR PN 20 / PN 25 (termofusão) ou CPVC Aquatherm (soldável), com isolamento térmico nos trechos embutidos em Steel Frame.&#x0a;&#x0a;• Peças Obrigatórias no Projeto (NBR 7198):&#x0a;  1. Válvula de segurança e alívio (pressão/temperatura) na saída de água quente;&#x0a;  2. Tubo de respiro (suspiro) acima do nível máximo da caixa d'água fria (para baixa pressão) ou válvula eliminadora de ar (alta pressão);&#x0a;  3. Válvula de retenção na entrada de alimentação de água fria;&#x0a;  4. Registros de esfera/gaveta na entrada, saída e dreno de limpeza."/>
+                                
+<Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
                                 <StackPanel>
                                     <TextBlock Text="DIMENSIONAMENTO TÉRMICO: BOILER, AQUECEDOR A GÁS E SOLAR (NBR 7198 / NBR 15569)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
                                     <TextBlock Text="Calcula demanda térmica a 60 °C, volume do boiler, aquecedor de passagem a gás (vazão corrigida ΔT 20 °C), área de coletores solares e dilatação linear." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
@@ -1242,86 +1325,7 @@
                                     </Border>
                                 </StackPanel>
                             </Border>
-                        </StackPanel>
-                        </DockPanel>
-                    </Border>
-                    <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
-                        <DockPanel>
-                            <Button DockPanel.Dock="Left" Content="← Etapa 2: Água Fria" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaFria_Click"/>
-                            <Button DockPanel.Dock="Right" Content="Próxima: Etapa 4 — Esgoto Sanitário →" Style="{StaticResource PrimaryButton}" Click="BtnIrEsgoto_Click"/>
-                            <TextBlock Text="Etapa 3 de 5 • Água Quente &amp; Boiler (ABNT NBR 7198)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </DockPanel>
-                    </Border>
-
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="24,18">
-                        <Grid MaxWidth="1060" HorizontalAlignment="Left">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1*"/>
-                                <ColumnDefinition Width="20"/>
-                                <ColumnDefinition Width="1.15*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0">
-                                <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
-                                    <StackPanel>
-                                        <TextBlock Text="Perfil da Edificação" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                        <ComboBox x:Name="BoilerPerfilComboBox" SelectedIndex="0" Margin="0,0,0,12" Padding="6"/>
-
-                                        <Grid Margin="0,0,0,16">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="16"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0">
-                                                <TextBlock Text="Número de Ocupantes / Pessoas" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                                <TextBox x:Name="BoilerOcupantesTextBox" Text="5"/>
-                                            </StackPanel>
-                                            <StackPanel Grid.Column="2">
-                                                <TextBlock Text="Pressão de Trabalho (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
-                                                <TextBox x:Name="BoilerPressaoTextBox" Text="4,0"/>
-                                            </StackPanel>
-                                        </Grid>
-
-                                        <Button Content="Dimensionar Boiler" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularBoiler_Click"/>
-                                    </StackPanel>
-                                </Border>
-
-                                <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="18">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="200"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="28"/>
-                                            <RowDefinition Height="32"/>
-                                        </Grid.RowDefinitions>
-
-                                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Consumo Diário Estimado:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BoilerConsumoText" Text="--"/>
-
-                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume de Acumulação:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#1D4ED8"/>
-
-                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Modelo Comercial Sugerido:" FontWeight="SemiBold"/>
-                                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BoilerComercialText" Text="--" FontWeight="Bold" Foreground="#0F172A"/>
-
-                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Classificação de Pressão:" FontWeight="SemiBold" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BoilerTipoText" Text="--" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap"/>
-                                    </Grid>
-                                </Border>
-                            </StackPanel>
-
-                            <!-- Sugestões Comerciais e Peças Obrigatórias (Boiler) -->
-                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
-                                <StackPanel>
-                                    <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS (ÁGUA QUENTE)" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
-                                    <TextBlock x:Name="BoilerSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
-                                               Text="• Marcas e Linhas de Referência: Komeco (KSS / Inox), Bosch / Heliotek (MK / HP), Soletrol ou Cumulus (tanque interno em Aço Inox 304 ou 316L).&#x0a;&#x0a;• Tubulação Recomendada: PPR PN 20 / PN 25 (termofusão) ou CPVC Aquatherm (soldável), com isolamento térmico nos trechos embutidos em Steel Frame.&#x0a;&#x0a;• Peças Obrigatórias no Projeto (NBR 7198):&#x0a;  1. Válvula de segurança e alívio (pressão/temperatura) na saída de água quente;&#x0a;  2. Tubo de respiro (suspiro) acima do nível máximo da caixa d'água fria (para baixa pressão) ou válvula eliminadora de ar (alta pressão);&#x0a;  3. Válvula de retenção na entrada de alimentação de água fria;&#x0a;  4. Registros de esfera/gaveta na entrada, saída e dreno de limpeza."/>
-                                </StackPanel>
+</StackPanel>
                             </Border>
                         </Grid>
                     </ScrollViewer>
@@ -1574,6 +1578,104 @@
                                     </Border>
                                 </StackPanel>
                             </Grid>
+
+<Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="TRATAMENTO INDIVIDUAL DE ESGOTO &amp; CAIXA DE GORDURA (NBR 8160 / NBR 7229 / NBR 13969)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Dimensiona Caixa de Gordura (CGP/CGS/CGD/CGE), Tanque Séptico (período de detenção e acúmulo de lodo K), Filtro Anaeróbio (brita 4/5) e Sumidouro conforme percolação do solo e lençol freático." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="12"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="8"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="0">
+                                            <TextBlock Text="Tipologia Predial (NBR 7229)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="SewageTypologyComboBox" SelectedIndex="1" Padding="6,4">
+                                                <ComboBoxItem Content="Residência Padrão Alto (160 L/d)"/>
+                                                <ComboBoxItem Content="Residência Padrão Médio (130 L/d)"/>
+                                                <ComboBoxItem Content="Residência Padrão Baixo (100 L/d)"/>
+                                                <ComboBoxItem Content="Hotel / Pousada (100 L/d)"/>
+                                                <ComboBoxItem Content="Comercial / Escritório (50 L/d)"/>
+                                                <ComboBoxItem Content="Escola / Externato (50 L/d)"/>
+                                                <ComboBoxItem Content="Fábrica / Indústria (70 L/d)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="2">
+                                            <TextBlock Text="Contribuintes (Pessoas)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="SewageOccupantsTextBox" Text="10" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="4">
+                                            <TextBlock Text="Pias de Cozinha (NBR 8160)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="SewageKitchenSinksTextBox" Text="2" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="0" Grid.Column="6">
+                                            <TextBlock Text="Temp. Mês Mais Frio (°C)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="SewageTempBandComboBox" SelectedIndex="1" Padding="6,4">
+                                                <ComboBoxItem Content="t ≤ 10 °C (Região Fria)"/>
+                                                <ComboBoxItem Content="10 °C &lt; t ≤ 20 °C (Sul/Sudeste)"/>
+                                                <ComboBoxItem Content="t &gt; 20 °C (Centro/Norte/NE)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="0">
+                                            <TextBlock Text="Intervalo Limpeza Fossa" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="SewageCleaningYearsComboBox" SelectedIndex="0" Padding="6,4">
+                                                <ComboBoxItem Content="1 ano (Padrão NBR 7229)"/>
+                                                <ComboBoxItem Content="2 anos"/>
+                                                <ComboBoxItem Content="3 anos"/>
+                                                <ComboBoxItem Content="4 anos"/>
+                                                <ComboBoxItem Content="5 anos"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="2">
+                                            <TextBlock Text="Solo / Percolação (NBR 13969)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <ComboBox x:Name="SewageSoilProfileComboBox" SelectedIndex="1" Padding="6,4">
+                                                <ComboBoxItem Content="Areia Grossa (Ci = 100 L/m².d)"/>
+                                                <ComboBoxItem Content="Areia Fina / Silte (Ci = 65)"/>
+                                                <ComboBoxItem Content="Silte Argiloso (Ci = 40)"/>
+                                                <ComboBoxItem Content="Argila Arenosa (Ci = 25)"/>
+                                                <ComboBoxItem Content="Argila Compacta (Ci = 10)"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="4">
+                                            <TextBlock Text="Prof. Lençol Freático (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="SewageWaterTableTextBox" Text="4,5" Padding="6,4"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Row="2" Grid.Column="6">
+                                            <TextBlock Text="Ø Sumidouro Preferencial (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
+                                            <TextBox x:Name="SewageSumidouroDiaTextBox" Text="1,50" Padding="6,4"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <WrapPanel Margin="0,4,0,10">
+                                        <Button Content="Dimensionar Caixa de Gordura, Fossa, Filtro &amp; Sumidouro" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="CalcularTratamentoEsgoto_Click"/>
+                                        <Button Content="Inserir Fossa, Filtro, Sumidouro &amp; Gordura no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="InserirTratamentoEsgoto3D_Click"/>
+                                        <Button Content="Exportar Memorial Tratamento de Esgoto (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialTratamentoEsgoto_Click"/>
+                                    </WrapPanel>
+
+                                    <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="12">
+                                        <TextBlock x:Name="SewageTreatmentResultText" Text="Preencha os parâmetros acima e clique em 'Dimensionar Caixa de Gordura, Fossa, Filtro &amp; Sumidouro' para calcular volumes, diâmetros e profundidades normativas." FontFamily="Consolas" FontSize="11.5" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
 </StackPanel>
                     </ScrollViewer>
                 </DockPanel>
@@ -1724,103 +1826,7 @@
                                             <Button x:Name="SalvarDadosRevitButton" Content="Salvar Dados no Revit" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Visibility="Collapsed" Margin="0,0,8,8" Click="SalvarDadosRevit_Click"/>
                                         </WrapPanel>
                                     
-                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="TRATAMENTO INDIVIDUAL DE ESGOTO &amp; CAIXA DE GORDURA (NBR 8160 / NBR 7229 / NBR 13969)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
-                                    <TextBlock Text="Dimensiona Caixa de Gordura (CGP/CGS/CGD/CGE), Tanque Séptico (período de detenção e acúmulo de lodo K), Filtro Anaeróbio (brita 4/5) e Sumidouro conforme percolação do solo e lençol freático." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
-
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="12"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="12"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="12"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="8"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="0">
-                                            <TextBlock Text="Tipologia Predial (NBR 7229)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <ComboBox x:Name="SewageTypologyComboBox" SelectedIndex="1" Padding="6,4">
-                                                <ComboBoxItem Content="Residência Padrão Alto (160 L/d)"/>
-                                                <ComboBoxItem Content="Residência Padrão Médio (130 L/d)"/>
-                                                <ComboBoxItem Content="Residência Padrão Baixo (100 L/d)"/>
-                                                <ComboBoxItem Content="Hotel / Pousada (100 L/d)"/>
-                                                <ComboBoxItem Content="Comercial / Escritório (50 L/d)"/>
-                                                <ComboBoxItem Content="Escola / Externato (50 L/d)"/>
-                                                <ComboBoxItem Content="Fábrica / Indústria (70 L/d)"/>
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="2">
-                                            <TextBlock Text="Contribuintes (Pessoas)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <TextBox x:Name="SewageOccupantsTextBox" Text="10" Padding="6,4"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="4">
-                                            <TextBlock Text="Pias de Cozinha (NBR 8160)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <TextBox x:Name="SewageKitchenSinksTextBox" Text="2" Padding="6,4"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="0" Grid.Column="6">
-                                            <TextBlock Text="Temp. Mês Mais Frio (°C)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <ComboBox x:Name="SewageTempBandComboBox" SelectedIndex="1" Padding="6,4">
-                                                <ComboBoxItem Content="t ≤ 10 °C (Região Fria)"/>
-                                                <ComboBoxItem Content="10 °C &lt; t ≤ 20 °C (Sul/Sudeste)"/>
-                                                <ComboBoxItem Content="t &gt; 20 °C (Centro/Norte/NE)"/>
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="0">
-                                            <TextBlock Text="Intervalo Limpeza Fossa" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <ComboBox x:Name="SewageCleaningYearsComboBox" SelectedIndex="0" Padding="6,4">
-                                                <ComboBoxItem Content="1 ano (Padrão NBR 7229)"/>
-                                                <ComboBoxItem Content="2 anos"/>
-                                                <ComboBoxItem Content="3 anos"/>
-                                                <ComboBoxItem Content="4 anos"/>
-                                                <ComboBoxItem Content="5 anos"/>
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="2">
-                                            <TextBlock Text="Solo / Percolação (NBR 13969)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <ComboBox x:Name="SewageSoilProfileComboBox" SelectedIndex="1" Padding="6,4">
-                                                <ComboBoxItem Content="Areia Grossa (Ci = 100 L/m².d)"/>
-                                                <ComboBoxItem Content="Areia Fina / Silte (Ci = 65)"/>
-                                                <ComboBoxItem Content="Silte Argiloso (Ci = 40)"/>
-                                                <ComboBoxItem Content="Argila Arenosa (Ci = 25)"/>
-                                                <ComboBoxItem Content="Argila Compacta (Ci = 10)"/>
-                                            </ComboBox>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="4">
-                                            <TextBlock Text="Prof. Lençol Freático (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <TextBox x:Name="SewageWaterTableTextBox" Text="4,5" Padding="6,4"/>
-                                        </StackPanel>
-
-                                        <StackPanel Grid.Row="2" Grid.Column="6">
-                                            <TextBlock Text="Ø Sumidouro Preferencial (m)" FontSize="11" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,3"/>
-                                            <TextBox x:Name="SewageSumidouroDiaTextBox" Text="1,50" Padding="6,4"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <WrapPanel Margin="0,4,0,10">
-                                        <Button Content="Dimensionar Caixa de Gordura, Fossa, Filtro &amp; Sumidouro" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="CalcularTratamentoEsgoto_Click"/>
-                                        <Button Content="Inserir Fossa, Filtro, Sumidouro &amp; Gordura no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="InserirTratamentoEsgoto3D_Click"/>
-                                        <Button Content="Exportar Memorial Tratamento de Esgoto (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialTratamentoEsgoto_Click"/>
-                                    </WrapPanel>
-
-                                    <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="6" Padding="12">
-                                        <TextBlock x:Name="SewageTreatmentResultText" Text="Preencha os parâmetros acima e clique em 'Dimensionar Caixa de Gordura, Fossa, Filtro &amp; Sumidouro' para calcular volumes, diâmetros e profundidades normativas." FontFamily="Consolas" FontSize="11.5" Foreground="#1E293B" TextWrapping="Wrap"/>
-                                    </Border>
-                                </StackPanel>
-                            </Border>
+                            
 
                                     
                                     <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,14,0,0">
