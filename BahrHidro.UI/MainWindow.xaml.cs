@@ -169,9 +169,9 @@ namespace BahrHidro.UI
                     "AguaFria" => "Etapa 2 de 5 • Água Fria (NBR 5626)",
                     "Bomba" => "Etapa 2B • Pressurização & Bomba",
                     "AguaQuente" => "Etapa 3 de 5 • Água Quente & Boiler (NBR 7198)",
-                    "Esgoto" => "Etapa 4 de 5 • Esgoto & Caixa de Gordura (NBR 8160)",
+                    "Esgoto" => "Etapa 4 de 5 • Esgoto Sanitário (NBR 8160)",
                     "Pluvial" => "Etapa 5 de 5 • Calhas & Pluvial (NBR 10844)",
-                    "CaixaGordura" => "Etapa 4 de 5 • Esgoto & Caixa de Gordura (NBR 8160)",
+                    "CaixaGordura" => "Etapa 4 de 5 • Esgoto Sanitário (NBR 8160)",
                     "Memorial" => "Entrega Final • Todos os Memoriais",
                     "Configuracoes" => "Parâmetros Técnicos do Escritório",
                     _ => "Bahr Hidro BIM"
@@ -688,7 +688,6 @@ namespace BahrHidro.UI
 
                 // Encadeamento automático para Boiler (Etapa 3) e Caixa de Gordura (Etapa 6)
                 if (BoilerOcupantesTextBox != null) BoilerOcupantesTextBox.Text = populacao.ToString();
-                if (GorduraPessoasTextBox != null) GorduraPessoasTextBox.Text = populacao.ToString();
 
                 AtualizarDiagnosticoReservatorioERua(resultado.TotalRequiredVolumeLiters, comSup);
             }
@@ -751,12 +750,6 @@ namespace BahrHidro.UI
                     FixturesSummary = _sewerFixtures.Where(f => f.Quantity > 0).Select(f => $"{f.Quantity}x {f.Name} ({f.Uhc} UHC)").ToList(),
                     MandatoryRecommendations = itensObrigatorios
                 };
-
-                if (cozinhasDetectadas > 0 && GorduraCozinhasTextBox != null)
-                {
-                    GorduraCozinhasTextBox.Text = cozinhasDetectadas.ToString();
-                    CalcularCaixaGordura_Click(sender, e);
-                }
             }
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
@@ -2440,8 +2433,8 @@ namespace BahrHidro.UI
 
         private void CalcularCaixaGordura_Click(object sender, RoutedEventArgs e)
         {
-            int cozinhas = int.TryParse(GorduraCozinhasTextBox?.Text?.Trim(), out int c) && c > 0 ? c : 1;
-            int pessoas = int.TryParse(GorduraPessoasTextBox?.Text?.Trim(), out int p) && p > 0 ? p : cozinhas * 5;
+            int cozinhas = int.TryParse("1"?.Trim(), out int c) && c > 0 ? c : 1;
+            int pessoas = int.TryParse((CaixaPopulacaoTextBox?.Text ?? "5")?.Trim(), out int p) && p > 0 ? p : cozinhas * 5;
 
             string spec;
             string modeloCg;
@@ -2486,9 +2479,6 @@ namespace BahrHidro.UI
                 saidaCg = 100;
                 spec = $"{modeloCg} — Volume útil mín. V = 2N + 20 = {volCg:F0} L | Parte submersa septo: 40 cm | Tubo saída: DN 100 (ABNT NBR 8160).";
             }
-
-            if (GorduraResultadoText != null)
-                GorduraResultadoText.Text = $"Resultado NBR 8160 ({cozinhas} cozinha(s), {pessoas} pessoa(s)): {spec}";
 
             _snapshot.GreaseTrap = new GreaseTrapSnapshotData
             {

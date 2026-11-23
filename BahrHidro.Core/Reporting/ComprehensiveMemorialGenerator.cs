@@ -12,6 +12,7 @@ namespace BahrHidro.Core.Reporting
 {
     public sealed class ReservoirSnapshotData
     {
+        public ReservoirSnapshotData() { }
         public string BuildingCategory { get; set; } = "";
         public int Population { get; set; }
         public int ReserveDays { get; set; }
@@ -26,6 +27,7 @@ namespace BahrHidro.Core.Reporting
 
     public sealed class BoilerSnapshotData
     {
+        public BoilerSnapshotData() { }
         public string BuildingProfile { get; set; } = "";
         public int Occupants { get; set; }
         public double ColdWaterPressureMca { get; set; }
@@ -38,6 +40,7 @@ namespace BahrHidro.Core.Reporting
 
     public sealed class SewerSnapshotData
     {
+        public SewerSnapshotData() { }
         public int TotalUhc { get; set; }
         public int RequiredDiameterMm { get; set; }
         public double MinimumSlopePercent { get; set; }
@@ -48,6 +51,7 @@ namespace BahrHidro.Core.Reporting
 
     public sealed class GreaseTrapSnapshotData
     {
+        public GreaseTrapSnapshotData() { }
         public int KitchenCount { get; set; }
         public int Population { get; set; }
         public string ModelName { get; set; } = "";
@@ -59,6 +63,7 @@ namespace BahrHidro.Core.Reporting
 
     public sealed class PumpSnapshotData
     {
+        public PumpSnapshotData() { }
         public bool RequiresPump { get; set; }
         public double RequiredAmtMca { get; set; }
         public double TotalFlowLps { get; set; }
@@ -69,6 +74,7 @@ namespace BahrHidro.Core.Reporting
 
     public sealed class ProjectEngineeringSnapshot
     {
+        public ProjectEngineeringSnapshot() { }
         public string ProjectName { get; set; } = "Projeto Hidrossanitário BIM";
         public string ClientName { get; set; } = "";
         public string Address { get; set; } = "";

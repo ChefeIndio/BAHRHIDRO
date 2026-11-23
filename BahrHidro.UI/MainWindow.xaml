@@ -228,7 +228,7 @@
                         <TreeViewItem x:Name="NavAguaFria" Header="2. Água Fria" Tag="AguaFria" FontWeight="SemiBold" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavBomba" Header="    ↳ Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#475569"/>
                         <TreeViewItem x:Name="NavAguaQuente" Header="3. Água Quente (Boiler)" Tag="AguaQuente" FontWeight="SemiBold" Foreground="#1E293B"/>
-                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto &amp; Caixa de Gordura" Tag="Esgoto" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto Sanitário" Tag="Esgoto" FontWeight="SemiBold" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavPluvial" Header="5. Calhas &amp; Pluvial" Tag="Pluvial" FontWeight="SemiBold" Foreground="#1E293B"/>
                     </TreeViewItem>
 
@@ -340,10 +340,10 @@
                                         <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
                                             <TextBlock Text="ETAPA 4" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
-                                        <TextBlock Text="Esgoto &amp; Cx. Gordura" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Esgoto Sanitário" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <TextBlock Text="Soma UHC dos aparelhos, define bitolas/declividades NBR 8160 e dimensiona a Caixa de Gordura." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
-                                    <Button Content="Abrir Esgoto &amp; Gordura" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click"/>
+                                    <TextBlock Text="Contagem de aparelhos por UHC, diâmetro mínimo do coletor e declividades normativas (NBR 8160)." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48"/>
+                                    <Button Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click"/>
                                 </StackPanel>
                             </Border>
 
@@ -1157,8 +1157,8 @@
                                 <Button Content="Selecionar no 3D" Style="{StaticResource RevitApplyButton}" Click="ImportarEsgotoRevit_Click"/>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="4. Esgoto Sanitário &amp; Caixa de Gordura (ABNT NBR 8160)" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
-                                <TextBlock Text="Somatório de UHC, diâmetros mínimos, declividades normativas e dimensionamento da caixa de gordura." FontSize="12" Foreground="#64748B"/>
+                                <TextBlock Text="4. Esgoto Sanitário (ABNT NBR 8160)" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Contagem de aparelhos sanitários, somatório de UHC, diâmetro mínimo do coletor e declividade normativa." FontSize="12" Foreground="#64748B"/>
                             </StackPanel>
                         </DockPanel>
                     </Border>
@@ -1168,7 +1168,7 @@
                         <DockPanel>
                             <Button DockPanel.Dock="Left" Content="← Etapa 3: Água Quente (Boiler)" Style="{StaticResource SecondaryButton}" Click="BtnIrAguaQuente_Click"/>
                             <Button DockPanel.Dock="Right" Content="Próxima: Etapa 5 — Calhas &amp; Pluvial →" Style="{StaticResource PrimaryButton}" Click="BtnIrPluvial_Click"/>
-                            <TextBlock Text="Etapa 4 de 5 • Esgoto Sanitário &amp; Caixa de Gordura (ABNT NBR 8160)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Etapa 4 de 5 • Esgoto Sanitário (ABNT NBR 8160)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>
                     </Border>
 
@@ -1250,22 +1250,7 @@
                                     </Border>
                                 </StackPanel>
                             </Grid>
-
-                            <!-- CAIXA DE GORDURA INTEGRADA NA MESMA TELA -->
-                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18">
-                                <StackPanel>
-                                    <TextBlock Text="CAIXA DE GORDURA (ABNT NBR 8160 — ITEM 5.1.5)" FontSize="12" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,10"/>
-                                    <WrapPanel VerticalAlignment="Center" Margin="0,0,0,10">
-                                        <TextBlock Text="Nº de Cozinhas:" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" Foreground="#334155"/>
-                                        <TextBox x:Name="GorduraCozinhasTextBox" Text="1" Width="65" Margin="0,0,16,0"/>
-                                        <TextBlock Text="Nº de Pessoas (Edificação):" VerticalAlignment="Center" Margin="0,0,6,0" FontWeight="SemiBold" Foreground="#334155"/>
-                                        <TextBox x:Name="GorduraPessoasTextBox" Text="5" Width="75" Margin="0,0,16,0"/>
-                                        <Button Content="Dimensionar Caixa de Gordura" Style="{StaticResource PrimaryButton}" Click="CalcularCaixaGordura_Click"/>
-                                    </WrapPanel>
-                                    <TextBlock x:Name="GorduraResultadoText" Text="Resultado NBR 8160: Caixa de Gordura Simples (CGS) — Volume útil mín. 31 L | Ø interno 40 cm | Submersão septo 20 cm | Saída DN 75." FontSize="12.5" FontWeight="SemiBold" Foreground="#0F172A" TextWrapping="Wrap"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
+</StackPanel>
                     </ScrollViewer>
                 </DockPanel>
 
@@ -1287,7 +1272,7 @@
                     </Border>
                     <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
                         <DockPanel>
-                            <Button DockPanel.Dock="Left" Content="← Etapa 4: Esgoto &amp; Cx. Gordura" Style="{StaticResource SecondaryButton}" Click="BtnIrEsgoto_Click"/>
+                            <Button DockPanel.Dock="Left" Content="← Etapa 4: Esgoto Sanitário" Style="{StaticResource SecondaryButton}" Click="BtnIrEsgoto_Click"/>
                             <Button DockPanel.Dock="Right" Content="Finalizar: Gerar Todos os Memoriais →" Style="{StaticResource PrimaryButton}" Click="BtnIrMemorial_Click"/>
                             <TextBlock Text="Etapa 5 de 5 • Calhas &amp; Águas Pluviais (ABNT NBR 10844)" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </DockPanel>

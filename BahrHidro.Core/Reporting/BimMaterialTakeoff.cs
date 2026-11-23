@@ -41,6 +41,7 @@ namespace BahrHidro.Core.Reporting
         double HeightHFromFloorMeters,
         string Status);
 
+    [method: System.Text.Json.Serialization.JsonConstructor]
     public sealed record BimMaterialTakeoff(
         string ProjectName,
         double WasteMarginPercent,
