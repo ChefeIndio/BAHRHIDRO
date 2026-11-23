@@ -2586,5 +2586,79 @@ namespace BahrHidro.UI
                 MessageBox.Show($"Aviso ao carregar sub-rede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
-}
+
+        private async void DimensionarEsgoto3DRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = await _revitBridge.CalculateAndApplySewer3D();
+
+                if (EsgotoUhcText != null) EsgotoUhcText.Text = $"{res.TotalUhc} UHC";
+                if (EsgotoDiametroText != null) EsgotoDiametroText.Text = $"DN {res.MainCollectorDiameterMm} mm";
+                if (EsgotoInclinacaoText != null) EsgotoInclinacaoText.Text = $"{res.MainCollectorSlopePercent:F1}%";
+                if (EsgotoTipoText != null) EsgotoTipoText.Text = "Rede 3D Integrada (NBR 8160)";
+
+                if (Esgoto3DRisersText != null)
+                {
+                    if (res.Risers.Count > 0)
+                    {
+                        var lines = res.Risers.Select(r =>
+                            $"• {r.RiserName} ({r.Classification}): {r.AccumulatedUhc} UHC → DN {r.DiameterMm} mm" +
+                            (r.SlopePercent > 0 ? $" (i={r.SlopePercent:F1}%)" : $" (H={r.HeightMeters:F2}m)"));
+                        Esgoto3DRisersText.Text = string.Join("\n", lines);
+                    }
+                    else
+                    {
+                        Esgoto3DRisersText.Text = res.Summary;
+                    }
+                }
+
+                var counts = await _revitBridge.ImportAllSewerFixturesFromRevit();
+                if (counts.Count > 0)
+                {
+                    foreach (var item in _sewerFixtures)
+                        item.Quantity = counts.TryGetValue(item.Name, out int q) ? q : 0;
+                    SewerItemsControl?.Items.Refresh();
+                }
+
+                _snapshot.Sewer = new SewerSnapshotData
+                {
+                    TotalUhc = res.TotalUhc,
+                    RequiredDiameterMm = res.MainCollectorDiameterMm,
+                    MinimumSlopePercent = res.MainCollectorSlopePercent,
+                    ComponentType = "Coletor Predial / Prumadas 3D (ABNT NBR 8160)",
+                    FixturesSummary = _sewerFixtures.Where(f => f.Quantity > 0).Select(f => $"{f.Quantity}x {f.Name} ({f.Uhc} UHC)").ToList(),
+                    MandatoryRecommendations = $"Dimensionamento 3D aplicado em {res.PipesUpdated} de {res.PipesAnalyzed} trechos sanitários. PVC Esgoto Série Normal (ramais) e Série Reforçada (tubos de queda e subcoletores). Ventilação conforme ABNT NBR 8160 com terminal +0,30 m acima da cobertura."
+                };
+
+                if (MemStatusEsgotoText != null)
+                    MemStatusEsgotoText.Text = $"Rede 3D: {res.TotalUhc} UHC | Coletor: DN {res.MainCollectorDiameterMm} mm (i = {res.MainCollectorSlopePercent:F1}%).";
+
+                MessageBox.Show(res.Summary, "Bahr Hidro — Esgoto 3D (ABNT NBR 8160)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao dimensionar rede de esgoto 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private async void GerarEsquemaVertical_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = await _revitBridge.GenerateVerticalRiserSchematic();
+                MessageBox.Show(
+                    $"{res.Summary}\n\nA vista '{res.ViewName}' foi criada no Navegador de Projetos (Vistas de Detalhe) e aberta na tela do Revit.",
+                    "Bahr Hidro — Esquema Vertical de Prumadas",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar esquema vertical de prumadas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+    }
 }

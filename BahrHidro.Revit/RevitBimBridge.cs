@@ -771,5 +771,31 @@ namespace BahrHidro.Revit
             uidoc.ActiveView = target;
             return true;
         }
+
+        public Task<Sewer3DCalculationResult> CalculateAndApplySewer3D()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var (res, _) = RevitSewer3DProcessor.CalculateAndApplySewer3D(_doc);
+                return res;
+            });
+        }
+
+        public Task<VerticalRiserSchematicResult> GenerateVerticalRiserSchematic()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var (res, viewId) = RevitSewer3DProcessor.GenerateVerticalRiserSchematic(_doc);
+                if (_doc.GetElement(viewId) is View schematicView)
+                {
+                    _uidoc.ActiveView = schematicView;
+                }
+                return res;
+            });
+        }
 }
 }

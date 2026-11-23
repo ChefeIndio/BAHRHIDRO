@@ -644,7 +644,8 @@
                                 <StackPanel x:Name="HeaderActionsAguaFria" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
                                     <Button Content="Detectar Rede (3D)" Style="{StaticResource RevitActionButton}" Margin="0,0,6,0" Click="DetectarRedeAutoRevit_Click"/>
                                     <Button Content="Apontar Início no 3D" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0" Click="ImportarRevit_Click"/>
-                                    <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Click="AplicarRevit_Click"/>
+                                    <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Margin="0,0,6,0" Click="AplicarRevit_Click"/>
+                                    <Button Content="Esquema Vertical" Style="{StaticResource SecondaryButton}" Click="GerarEsquemaVertical_Click"/>
                                     <Button x:Name="BtnPintarAuditoria3D" Content="Pintar 3D" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Visibility="Collapsed" Click="PintarAuditoria3D_Click"/>
                                     <Button x:Name="BtnLimparAuditoria3D" Content="Limpar Cores" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Visibility="Collapsed" Click="LimparAuditoria3D_Click"/>
                                 </StackPanel>
@@ -1153,8 +1154,10 @@
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsEsgoto" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button Content="Ler Aparelhos do Revit" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="ImportarEsgotoAutoRevit_Click"/>
-                                <Button Content="Selecionar no 3D" Style="{StaticResource RevitApplyButton}" Click="ImportarEsgotoRevit_Click"/>
+                                <Button Content="Dimensionar &amp; Aplicar 3D (NBR 8160)" Style="{StaticResource RevitApplyButton}" Margin="0,0,6,0" Click="DimensionarEsgoto3DRevit_Click"/>
+                                <Button Content="Esquema Vertical" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0" Click="GerarEsquemaVertical_Click"/>
+                                <Button Content="Ler Aparelhos" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0" Click="ImportarEsgotoAutoRevit_Click"/>
+                                <Button Content="Selecionar no 3D" Style="{StaticResource SecondaryButton}" Click="ImportarEsgotoRevit_Click"/>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="4. Esgoto Sanitário (ABNT NBR 8160)" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
@@ -1244,7 +1247,13 @@
                                     <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="16">
                                         <StackPanel>
                                             <TextBlock Text="COMPONENTES OBRIGATÓRIOS (ABNT NBR 8160)" FontSize="11.5" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,6"/>
-                                            <TextBlock x:Name="EsgotoSugestoesText" TextWrapping="Wrap" FontSize="12" Foreground="#334155" LineHeight="18"
+                                            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                    <StackPanel>
+                                        <TextBlock Text="PRUMADAS &amp; COLETORES 3D DIMENSIONADOS" FontSize="11" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,4"/>
+                                        <TextBlock x:Name="Esgoto3DRisersText" Text="Clique em 'Dimensionar &amp; Aplicar 3D (NBR 8160)' para calcular UHC por trecho e atualizar as bitolas diretamente nos tubos 3D." FontSize="11.5" Foreground="#475569" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock x:Name="EsgotoSugestoesText" TextWrapping="Wrap" FontSize="12" Foreground="#334155" LineHeight="18"
                                                        Text="• PVC Esgoto Série Normal (ramais) e Série Reforçada (prumadas/subcoletores).&#x0a;• Caixa Sifonada com grelha (fecho hídrico mín. 50 mm), ventilação DN 50/75 e Caixas de Inspeção (60×60 cm)."/>
                                         </StackPanel>
                                     </Border>
