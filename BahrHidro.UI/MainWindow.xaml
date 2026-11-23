@@ -429,8 +429,9 @@
                                     <TextBlock Text="GERADOR AUTOMÁTICO DE VISTAS E PRANCHAS" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12"/>
 
                                     <CheckBox x:Name="ChkGerarIsometricos3D" Content="Gerar Vistas Isométricas 3D recortadas e bloqueadas por ambiente molhado (Escala 1:25)" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                                    <CheckBox x:Name="ChkGerarIsometricos2D" Content="Gerar Vistas Isométricas 2D Esquemáticas (Projeção 30° ABNT com Nós, Setas e Bitolas)" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,8"/>
                                     <CheckBox x:Name="ChkCriarTabelasNativas" Content="Criar Tabelas Nativas do Revit (Tubulações, Conexões e Aparelhos Sanitários) e inserir na prancha" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,8"/>
-                                    <CheckBox x:Name="ChkMontarPranchaAbnt" Content="Montar Prancha Executiva ABNT (HID-01) com Planta, Isométricos 3D, Prumadas e Tabelas" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,16"/>
+                                    <CheckBox x:Name="ChkMontarPranchaAbnt" Content="Montar Prancha Executiva ABNT (HID-01) com Planta, Isométricos 2D/3D, Prumadas e Tabelas" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,16"/>
 
                                     <WrapPanel Margin="0,0,0,14">
                                         <Button Content="Gerar Isométricos 3D &amp; Prancha ABNT" Style="{StaticResource PrimaryButton}" Margin="0,0,8,0" Click="GerarDocumentacao3DAbnt_Click"/>

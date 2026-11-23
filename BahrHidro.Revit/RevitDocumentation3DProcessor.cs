@@ -12,11 +12,15 @@ namespace BahrHidro.Revit
 {
     public static class RevitDocumentation3DProcessor
     {
+        private const double Cos30 = 0.8660254037844386;
+        private const double Sin30 = 0.5;
+
         public static (Executive3DDocResult Result, ElementId TargetViewId) GenerateIsometricsAndAbntSheet(
             Document doc,
             bool createIsometrics,
             bool createAbntSheet,
-            bool createNativeSchedules = true)
+            bool createNativeSchedules = true,
+            bool createIsometrics2D = true)
         {
             var fixtures = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_PlumbingFixtures)
@@ -33,15 +37,55 @@ namespace BahrHidro.Revit
                 throw new InvalidOperationException("Nenhum aparelho sanitário ou tubulação encontrado no modelo 3D.");
 
             var zones = DetectWetAreaZones(doc, fixtures, pipes);
-            var createdIsoViews = new List<View3D>();
+            var createdIso2DViews = new List<ViewDrafting>();
+            var createdIso3DViews = new List<View3D>();
             var createdSchedules = new List<ViewSchedule>();
             int tagsPlaced = 0;
             ElementId activeTargetId = ElementId.InvalidElementId;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 3D, Tabelas Nativas e Prancha ABNT"))
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 2D/3D, Tabelas Nativas e Prancha ABNT"))
             {
                 tx.Start();
 
+                // 1. Geração dos Isométricos 2D Esquemáticos (Projeção 30° ABNT em ViewDrafting)
+                if (createIsometrics2D)
+                {
+                    ViewFamilyType? vftDrafting = new FilteredElementCollector(doc)
+                        .OfClass(typeof(ViewFamilyType))
+                        .Cast<ViewFamilyType>()
+                        .FirstOrDefault(v => v.ViewFamily == ViewFamily.Drafting);
+
+                    ElementId textTypeId = doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+                    if (textTypeId == ElementId.InvalidElementId)
+                    {
+                        textTypeId = new FilteredElementCollector(doc)
+                            .OfClass(typeof(TextNoteType))
+                            .FirstElementId();
+                    }
+
+                    if (vftDrafting != null)
+                    {
+                        foreach (var (zoneName, box, zonePipes, zoneFixtures) in zones.Take(6))
+                        {
+                            if (zonePipes.Count == 0 && zoneFixtures.Count == 0) continue;
+
+                            ViewDrafting iso2d = Build2DIsometricDraftingView(
+                                doc,
+                                vftDrafting.Id,
+                                textTypeId,
+                                zoneName,
+                                box,
+                                zonePipes,
+                                zoneFixtures);
+
+                            createdIso2DViews.Add(iso2d);
+                            if (activeTargetId == ElementId.InvalidElementId)
+                                activeTargetId = iso2d.Id;
+                        }
+                    }
+                }
+
+                // 2. Geração dos Isométricos 3D (Section Box + Etiquetas)
                 if (createIsometrics)
                 {
                     ViewFamilyType? vft3d = new FilteredElementCollector(doc)
@@ -51,7 +95,7 @@ namespace BahrHidro.Revit
 
                     if (vft3d != null)
                     {
-                        foreach (var (zoneName, box, zonePipes) in zones.Take(6))
+                        foreach (var (zoneName, box, zonePipes, _) in zones.Take(6))
                         {
                             string viewName = MakeUniqueViewName(doc, $"Bahr Hidro - Isométrico 3D - {zoneName}");
                             View3D iso = View3D.CreateIsometric(doc, vft3d.Id);
@@ -86,13 +130,14 @@ namespace BahrHidro.Revit
                                 }
                             }
 
-                            createdIsoViews.Add(iso);
+                            createdIso3DViews.Add(iso);
                             if (activeTargetId == ElementId.InvalidElementId)
                                 activeTargetId = iso.Id;
                         }
                     }
                 }
 
+                // 3. Criação das 3 Tabelas Nativas do Revit (Tubulações, Conexões e Aparelhos Sanitários)
                 if (createNativeSchedules)
                 {
                     var pipeSched = CreatePipeSchedule(doc);
@@ -108,6 +153,7 @@ namespace BahrHidro.Revit
                         activeTargetId = createdSchedules[0].Id;
                 }
 
+                // 4. Montagem Automática da Prancha Executiva ABNT (HID-01)
                 string sheetCode = "";
                 if (createAbntSheet)
                 {
@@ -122,35 +168,38 @@ namespace BahrHidro.Revit
                     ViewSheet sheet = ViewSheet.Create(doc, tbId);
                     sheetCode = MakeUniqueSheetNumber(doc, "HID-01");
                     sheet.SheetNumber = sheetCode;
-                    sheet.Name = "INSTALAÇÕES HIDROSSANITÁRIAS — ISOMÉTRICOS 3D, PRUMADAS E QUANTITATIVOS (ABNT)";
+                    sheet.Name = "INSTALAÇÕES HIDROSSANITÁRIAS — ISOMÉTRICOS 2D/3D, PRUMADAS E QUANTITATIVOS (ABNT)";
 
-                    double cursorX = UnitUtils.ConvertToInternalUnits(0.16, UnitTypeId.Meters);
-                    double topY = UnitUtils.ConvertToInternalUnits(0.45, UnitTypeId.Meters);
-                    double botY = UnitUtils.ConvertToInternalUnits(0.20, UnitTypeId.Meters);
-                    double stepX = UnitUtils.ConvertToInternalUnits(0.21, UnitTypeId.Meters);
+                    double cursorX = UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters);
+                    double stepX = UnitUtils.ConvertToInternalUnits(0.19, UnitTypeId.Meters);
 
-                    // 1. Insere até 3 vistas isométricas 3D na prancha
-                    for (int i = 0; i < Math.Min(3, createdIsoViews.Count); i++)
+                    double row2DY = UnitUtils.ConvertToInternalUnits(0.49, UnitTypeId.Meters);
+                    double row3DY = createdIso2DViews.Count > 0
+                        ? UnitUtils.ConvertToInternalUnits(0.32, UnitTypeId.Meters)
+                        : UnitUtils.ConvertToInternalUnits(0.47, UnitTypeId.Meters);
+                    double botY = UnitUtils.ConvertToInternalUnits(0.14, UnitTypeId.Meters);
+
+                    // Faixa Superior: até 3 Vistas Isométricas 2D Esquemáticas
+                    for (int i = 0; i < Math.Min(3, createdIso2DViews.Count); i++)
                     {
-                        var v = createdIsoViews[i];
-                        if (Viewport.CanAddViewToSheet(doc, sheet.Id, v.Id))
+                        var v2d = createdIso2DViews[i];
+                        if (Viewport.CanAddViewToSheet(doc, sheet.Id, v2d.Id))
                         {
-                            Viewport.Create(doc, sheet.Id, v.Id, new XYZ(cursorX + i * stepX, topY, 0));
+                            Viewport.Create(doc, sheet.Id, v2d.Id, new XYZ(cursorX + i * stepX, row2DY, 0));
                         }
                     }
 
-                    // 2. Insere o Esquema Vertical de Prumadas caso exista
-                    ViewDrafting? riserView = new FilteredElementCollector(doc)
-                        .OfClass(typeof(ViewDrafting))
-                        .Cast<ViewDrafting>()
-                        .FirstOrDefault(v => v.Name.Contains("Esquema Vertical de Prumadas", StringComparison.OrdinalIgnoreCase));
-
-                    if (riserView != null && Viewport.CanAddViewToSheet(doc, sheet.Id, riserView.Id))
+                    // Faixa Intermediária: até 3 Vistas Isométricas 3D
+                    for (int i = 0; i < Math.Min(3, createdIso3DViews.Count); i++)
                     {
-                        Viewport.Create(doc, sheet.Id, riserView.Id, new XYZ(cursorX + 1.9 * stepX, botY, 0));
+                        var v3d = createdIso3DViews[i];
+                        if (Viewport.CanAddViewToSheet(doc, sheet.Id, v3d.Id))
+                        {
+                            Viewport.Create(doc, sheet.Id, v3d.Id, new XYZ(cursorX + i * stepX, row3DY, 0));
+                        }
                     }
 
-                    // 3. Insere a primeira planta baixa hidráulica disponível
+                    // Faixa Inferior: Planta Baixa + Esquema Vertical de Prumadas
                     ViewPlan? floorPlan = new FilteredElementCollector(doc)
                         .OfClass(typeof(ViewPlan))
                         .Cast<ViewPlan>()
@@ -161,7 +210,17 @@ namespace BahrHidro.Revit
                         Viewport.Create(doc, sheet.Id, floorPlan.Id, new XYZ(cursorX, botY, 0));
                     }
 
-                    // 4. Insere as 3 Tabelas Nativas (Tubulações, Conexões e Aparelhos Sanitários) em coluna à direita
+                    ViewDrafting? riserView = new FilteredElementCollector(doc)
+                        .OfClass(typeof(ViewDrafting))
+                        .Cast<ViewDrafting>()
+                        .FirstOrDefault(v => v.Name.Contains("Esquema Vertical de Prumadas", StringComparison.OrdinalIgnoreCase));
+
+                    if (riserView != null && Viewport.CanAddViewToSheet(doc, sheet.Id, riserView.Id))
+                    {
+                        Viewport.Create(doc, sheet.Id, riserView.Id, new XYZ(cursorX + 1.6 * stepX, botY, 0));
+                    }
+
+                    // Coluna Direita: 3 Tabelas Nativas (Tubulações, Conexões e Aparelhos Sanitários)
                     if (createdSchedules.Count > 0)
                     {
                         double schedX = UnitUtils.ConvertToInternalUnits(0.68, UnitTypeId.Meters);
@@ -194,12 +253,312 @@ namespace BahrHidro.Revit
 
                 tx.Commit();
 
-                string summary = $"Documentação 3D ABNT concluída: {createdIsoViews.Count} vista(s) isométrica(s) 3D, " +
-                                 $"{tagsPlaced} etiqueta(s), {createdSchedules.Count} tabela(s) nativa(s) do Revit (Tubulações, Conexões e Aparelhos)" +
+                string summary = $"Documentação ABNT concluída: {createdIso2DViews.Count} isométrico(s) 2D (30°), " +
+                                 $"{createdIso3DViews.Count} isométrico(s) 3D, {tagsPlaced} etiqueta(s), " +
+                                 $"{createdSchedules.Count} tabela(s) nativa(s)" +
                                  (createAbntSheet ? $" e Prancha '{sheetCode}' montada automaticamente." : ".");
 
-                return (new Executive3DDocResult(createdIsoViews.Count, tagsPlaced, sheetCode, summary, createdSchedules.Count), activeTargetId);
+                return (new Executive3DDocResult(createdIso3DViews.Count, tagsPlaced, sheetCode, summary, createdSchedules.Count, createdIso2DViews.Count), activeTargetId);
             }
+        }
+
+        private static ViewDrafting Build2DIsometricDraftingView(
+            Document doc,
+            ElementId draftingVftId,
+            ElementId textTypeId,
+            string zoneName,
+            BoundingBoxXYZ zoneBox,
+            List<Pipe> zonePipes,
+            List<Element> zoneFixtures)
+        {
+            ViewDrafting view = ViewDrafting.Create(doc, draftingVftId);
+            view.Name = MakeUniqueViewName(doc, $"Bahr Hidro - Isométrico 2D - {zoneName}");
+            view.Scale = 20;
+
+            XYZ origin3D = zoneBox.Min;
+            XYZ ProjectIso2D(XYZ p3d)
+            {
+                double dx = p3d.X - origin3D.X;
+                double dy = p3d.Y - origin3D.Y;
+                double dz = p3d.Z - origin3D.Z;
+                double u = (dx - dy) * Cos30;
+                double v = dz + (dx + dy) * Sin30;
+                return new XYZ(u, v, 0.0);
+            }
+
+            var ogsCold = MakeLineOgs(new Color(0, 102, 204), 5);
+            var ogsHot = MakeLineOgs(new Color(220, 38, 38), 5);
+            var ogsSanitary = MakeLineOgs(new Color(146, 64, 14), 6);
+            var ogsVent = MakeLineOgs(new Color(22, 163, 74), 4);
+            var ogsNode = MakeLineOgs(new Color(15, 23, 42), 3);
+            var ogsFixture = MakeLineOgs(new Color(71, 85, 105), 3);
+            var ogsFrame = MakeLineOgs(new Color(148, 163, 184), 2);
+
+            double minU = double.MaxValue, minV = double.MaxValue;
+            double maxU = double.MinValue, maxV = double.MinValue;
+
+            void ExpandBounds(XYZ pt)
+            {
+                if (pt.X < minU) minU = pt.X;
+                if (pt.Y < minV) minV = pt.Y;
+                if (pt.X > maxU) maxU = pt.X;
+                if (pt.Y > maxV) maxV = pt.Y;
+            }
+
+            var nodePoints = new List<XYZ>();
+            double nodeMergeTol = UnitUtils.ConvertToInternalUnits(0.03, UnitTypeId.Meters);
+            double nodeRadius = UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters);
+
+            void RegisterNode(XYZ pt2d)
+            {
+                foreach (var existing in nodePoints)
+                {
+                    if (existing.DistanceTo(pt2d) <= nodeMergeTol)
+                        return;
+                }
+                nodePoints.Add(pt2d);
+            }
+
+            // 1. Desenha todos os trechos de tubulação projetados a 30°
+            foreach (var p in zonePipes)
+            {
+                if (p.Location is not LocationCurve lc || lc.Curve == null) continue;
+                XYZ a3 = lc.Curve.GetEndPoint(0);
+                XYZ b3 = lc.Curve.GetEndPoint(1);
+                XYZ a2 = ProjectIso2D(a3);
+                XYZ b2 = ProjectIso2D(b3);
+
+                ExpandBounds(a2);
+                ExpandBounds(b2);
+
+                if (a2.DistanceTo(b2) < 0.008) continue;
+
+                string sysRaw = p.get_Parameter(BuiltInParameter.RBS_SYSTEM_NAME_PARAM)?.AsString() ?? "";
+                string sysNorm = Normalize(sysRaw);
+
+                OverrideGraphicSettings ogs = ogsCold;
+                string sysCode = "AF";
+                if (sysNorm.Contains("quente") || sysNorm.Contains("hot"))
+                {
+                    ogs = ogsHot;
+                    sysCode = "AQ";
+                }
+                else if (sysNorm.Contains("esgoto") || sysNorm.Contains("sanit") || sysNorm.Contains("gordura") || sysNorm.Contains("pluvial"))
+                {
+                    ogs = ogsSanitary;
+                    sysCode = sysNorm.Contains("pluvial") ? "AP" : "ES";
+                }
+                else if (sysNorm.Contains("ventil"))
+                {
+                    ogs = ogsVent;
+                    sysCode = "VENT";
+                }
+
+                DetailCurve dc = doc.Create.NewDetailCurve(view, Line.CreateBound(a2, b2));
+                view.SetElementOverrides(dc.Id, ogs);
+
+                RegisterNode(a2);
+                RegisterNode(b2);
+
+                // Seta de sentido de fluxo nos trechos com comprimento > 0,45 m
+                double lenM = UnitUtils.ConvertFromInternalUnits(a3.DistanceTo(b3), UnitTypeId.Meters);
+                if (lenM >= 0.45)
+                {
+                    XYZ mid2 = (a2 + b2) * 0.5;
+                    XYZ dir = (b2 - a2).Normalize();
+                    XYZ perp = new XYZ(-dir.Y, dir.X, 0.0);
+                    double arrLen = UnitUtils.ConvertToInternalUnits(0.08, UnitTypeId.Meters);
+                    double arrWid = UnitUtils.ConvertToInternalUnits(0.035, UnitTypeId.Meters);
+
+                    XYZ tip = mid2 + dir * (arrLen * 0.5);
+                    XYZ w1 = tip - dir * arrLen + perp * arrWid;
+                    XYZ w2 = tip - dir * arrLen - perp * arrWid;
+
+                    if (tip.DistanceTo(w1) > 0.005 && tip.DistanceTo(w2) > 0.005)
+                    {
+                        var l1 = doc.Create.NewDetailCurve(view, Line.CreateBound(tip, w1));
+                        var l2 = doc.Create.NewDetailCurve(view, Line.CreateBound(tip, w2));
+                        view.SetElementOverrides(l1.Id, ogs);
+                        view.SetElementOverrides(l2.Id, ogs);
+                    }
+                }
+
+                // Rótulo técnico do trecho (Sistema + Ø DN + Declividade)
+                if (textTypeId != ElementId.InvalidElementId && lenM >= 0.25)
+                {
+                    double diaFt = p.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0.08;
+                    int dnMm = (int)Math.Round(UnitUtils.ConvertFromInternalUnits(diaFt, UnitTypeId.Millimeters));
+                    string tagText = $"{sysCode} Ø{dnMm}";
+                    if (sysCode == "ES" || sysCode == "AP")
+                    {
+                        double slopeVal = p.get_Parameter(BuiltInParameter.RBS_PIPE_SLOPE)?.AsDouble() ?? 0.0;
+                        if (slopeVal > 0.001)
+                            tagText += $" (i={slopeVal * 100.0:0.#}%)";
+                    }
+
+                    XYZ labelPos = (a2 + b2) * 0.5 + new XYZ(
+                        UnitUtils.ConvertToInternalUnits(0.04, UnitTypeId.Meters),
+                        UnitUtils.ConvertToInternalUnits(0.07, UnitTypeId.Meters),
+                        0.0);
+                    try
+                    {
+                        TextNote.Create(doc, view.Id, labelPos, tagText, textTypeId);
+                    }
+                    catch { }
+                }
+            }
+
+            // 2. Desenha nós/conexões (círculos isométricos nos vértices)
+            foreach (var np in nodePoints)
+            {
+                try
+                {
+                    Arc c1 = Arc.Create(np, nodeRadius, 0.0, Math.PI, XYZ.BasisX, XYZ.BasisY);
+                    Arc c2 = Arc.Create(np, nodeRadius, Math.PI, 2.0 * Math.PI, XYZ.BasisX, XYZ.BasisY);
+                    var d1 = doc.Create.NewDetailCurve(view, c1);
+                    var d2 = doc.Create.NewDetailCurve(view, c2);
+                    view.SetElementOverrides(d1.Id, ogsNode);
+                    view.SetElementOverrides(d2.Id, ogsNode);
+                }
+                catch { }
+            }
+
+            // 3. Desenha símbolos e chamadas dos aparelhos sanitários projetados
+            double fxHalf = UnitUtils.ConvertToInternalUnits(0.11, UnitTypeId.Meters);
+            foreach (var fx in zoneFixtures.Take(16))
+            {
+                BoundingBoxXYZ? bb = fx.get_BoundingBox(null);
+                if (bb == null) continue;
+                XYZ c3 = (bb.Min + bb.Max) * 0.5;
+                XYZ c2 = ProjectIso2D(c3);
+                ExpandBounds(c2);
+
+                // Losango isométrico representando o aparelho sanitário
+                XYZ pTop = c2 + new XYZ(0, fxHalf * 0.65, 0);
+                XYZ pRight = c2 + new XYZ(fxHalf, 0, 0);
+                XYZ pBot = c2 - new XYZ(0, fxHalf * 0.65, 0);
+                XYZ pLeft = c2 - new XYZ(fxHalf, 0, 0);
+
+                var edges = new[]
+                {
+                    Line.CreateBound(pTop, pRight),
+                    Line.CreateBound(pRight, pBot),
+                    Line.CreateBound(pBot, pLeft),
+                    Line.CreateBound(pLeft, pTop)
+                };
+                foreach (var edge in edges)
+                {
+                    var dc = doc.Create.NewDetailCurve(view, edge);
+                    view.SetElementOverrides(dc.Id, ogsFixture);
+                }
+
+                if (textTypeId != ElementId.InvalidElementId)
+                {
+                    string shortLabel = GetShortFixtureLabel(fx);
+                    XYZ txtPos = pTop + new XYZ(
+                        UnitUtils.ConvertToInternalUnits(0.05, UnitTypeId.Meters),
+                        UnitUtils.ConvertToInternalUnits(0.10, UnitTypeId.Meters),
+                        0.0);
+                    try
+                    {
+                        var leader = doc.Create.NewDetailCurve(view, Line.CreateBound(pTop, txtPos));
+                        view.SetElementOverrides(leader.Id, ogsFrame);
+                        TextNote.Create(doc, view.Id, txtPos, shortLabel, textTypeId);
+                    }
+                    catch { }
+                }
+            }
+
+            if (minU > maxU)
+            {
+                minU = 0; minV = 0;
+                maxU = UnitUtils.ConvertToInternalUnits(2.0, UnitTypeId.Meters);
+                maxV = UnitUtils.ConvertToInternalUnits(2.0, UnitTypeId.Meters);
+            }
+
+            // 4. Moldura Técnica, Cabeçalho e Tríade de Eixos Isométricos (X / Y / Z)
+            double pad = UnitUtils.ConvertToInternalUnits(0.45, UnitTypeId.Meters);
+            double headerH = UnitUtils.ConvertToInternalUnits(0.32, UnitTypeId.Meters);
+
+            XYZ fBL = new XYZ(minU - pad, minV - pad, 0);
+            XYZ fBR = new XYZ(maxU + pad, minV - pad, 0);
+            XYZ fTR = new XYZ(maxU + pad, maxV + pad + headerH, 0);
+            XYZ fTL = new XYZ(minU - pad, maxV + pad + headerH, 0);
+            XYZ fDivL = new XYZ(minU - pad, maxV + pad, 0);
+            XYZ fDivR = new XYZ(maxU + pad, maxV + pad, 0);
+
+            foreach (var borderLine in new[]
+            {
+                Line.CreateBound(fBL, fBR),
+                Line.CreateBound(fBR, fTR),
+                Line.CreateBound(fTR, fTL),
+                Line.CreateBound(fTL, fBL),
+                Line.CreateBound(fDivL, fDivR)
+            })
+            {
+                var dc = doc.Create.NewDetailCurve(view, borderLine);
+                view.SetElementOverrides(dc.Id, ogsFrame);
+            }
+
+            // Tríade de eixos isométricos (X, Y, Z) no canto inferior esquerdo
+            XYZ triadOrigin = fBL + new XYZ(
+                UnitUtils.ConvertToInternalUnits(0.24, UnitTypeId.Meters),
+                UnitUtils.ConvertToInternalUnits(0.18, UnitTypeId.Meters),
+                0);
+            double axisLen = UnitUtils.ConvertToInternalUnits(0.18, UnitTypeId.Meters);
+            XYZ axisZ = triadOrigin + new XYZ(0, axisLen, 0);
+            XYZ axisX = triadOrigin + new XYZ(axisLen * Cos30, axisLen * Sin30, 0);
+            XYZ axisY = triadOrigin + new XYZ(-axisLen * Cos30, axisLen * Sin30, 0);
+
+            foreach (var ax in new[]
+            {
+                Line.CreateBound(triadOrigin, axisZ),
+                Line.CreateBound(triadOrigin, axisX),
+                Line.CreateBound(triadOrigin, axisY)
+            })
+            {
+                var dc = doc.Create.NewDetailCurve(view, ax);
+                view.SetElementOverrides(dc.Id, ogsNode);
+            }
+
+            if (textTypeId != ElementId.InvalidElementId)
+            {
+                try
+                {
+                    XYZ titlePos = fDivL + new XYZ(
+                        UnitUtils.ConvertToInternalUnits(0.08, UnitTypeId.Meters),
+                        UnitUtils.ConvertToInternalUnits(0.24, UnitTypeId.Meters),
+                        0);
+                    TextNote.Create(doc, view.Id, titlePos, $"ISOMÉTRICO 2D — {zoneName.ToUpperInvariant()}  |  PROJEÇÃO 30° ABNT (ESC. 1:20)", textTypeId);
+                    TextNote.Create(doc, view.Id, axisZ + new XYZ(0.02, 0.04, 0), "Z", textTypeId);
+                    TextNote.Create(doc, view.Id, axisX + new XYZ(0.02, 0.02, 0), "X", textTypeId);
+                    TextNote.Create(doc, view.Id, axisY + new XYZ(-0.06, 0.02, 0), "Y", textTypeId);
+                }
+                catch { }
+            }
+
+            return view;
+        }
+
+        private static string GetShortFixtureLabel(Element fx)
+        {
+            string raw = Normalize($"{(fx as FamilyInstance)?.Symbol?.FamilyName} {fx.Name}");
+            if (raw.Contains("bacia") || raw.Contains("vaso") || raw.Contains("sanit")) return "Bacia Sanitária";
+            if (raw.Contains("lavat") || raw.Contains("cuba")) return "Lavatório";
+            if (raw.Contains("chuveiro") || raw.Contains("ducha")) return "Chuveiro";
+            if (raw.Contains("pia") || raw.Contains("cozinha")) return "Pia Cozinha";
+            if (raw.Contains("tanque")) return "Tanque";
+            if (raw.Contains("maquina")) return "Máq. Lavar";
+            if (raw.Contains("ralo") || raw.Contains("sifonada")) return "Cx. Sifonada";
+            return string.IsNullOrWhiteSpace(fx.Name) ? "Aparelho" : fx.Name;
+        }
+
+        private static OverrideGraphicSettings MakeLineOgs(Color color, int weight)
+        {
+            var ogs = new OverrideGraphicSettings();
+            ogs.SetProjectionLineColor(color);
+            ogs.SetProjectionLineWeight(weight);
+            return ogs;
         }
 
         private static ViewSchedule? CreatePipeSchedule(Document doc)
@@ -327,12 +686,12 @@ namespace BahrHidro.Revit
             catch { }
         }
 
-        private static List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes)> DetectWetAreaZones(
+        private static List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes, List<Element> Fixtures)> DetectWetAreaZones(
             Document doc,
             List<Element> fixtures,
             List<Pipe> pipes)
         {
-            var result = new List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes)>();
+            var result = new List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes, List<Element> Fixtures)>();
             double marginFt = UnitUtils.ConvertToInternalUnits(0.65, UnitTypeId.Meters);
 
             var rooms = new FilteredElementCollector(doc)
@@ -354,11 +713,11 @@ namespace BahrHidro.Revit
                 };
 
                 var roomPipes = pipes.Where(p => IsElementInsideBox(p, expanded)).ToList();
-                bool hasFixture = fixtures.Any(f => IsElementInsideBox(f, expanded));
-                if (hasFixture || roomPipes.Count >= 2)
+                var roomFixtures = fixtures.Where(f => IsElementInsideBox(f, expanded)).ToList();
+                if (roomFixtures.Count > 0 || roomPipes.Count >= 2)
                 {
                     string rName = SanitizeName($"{r.Name} ({r.Level?.Name ?? "Nível"})");
-                    result.Add((rName, expanded, roomPipes));
+                    result.Add((rName, expanded, roomPipes, roomFixtures));
                 }
             }
 
@@ -399,7 +758,30 @@ namespace BahrHidro.Revit
                     Max = new XYZ(maxX + marginFt, maxY + marginFt, maxZ + marginFt)
                 };
                 var zPipes = pipes.Where(p => IsElementInsideBox(p, box)).ToList();
-                result.Add(($"Setor Molhado {idx++:00}", box, zPipes));
+                var zFixtures = fixtures.Where(f => IsElementInsideBox(f, box)).ToList();
+                result.Add(($"Setor Molhado {idx++:00}", box, zPipes, zFixtures));
+            }
+
+            if (result.Count == 0 && pipes.Count > 0)
+            {
+                double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
+                double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
+                foreach (var p in pipes)
+                {
+                    BoundingBoxXYZ? pb = p.get_BoundingBox(null);
+                    if (pb == null) continue;
+                    minX = Math.Min(minX, pb.Min.X); minY = Math.Min(minY, pb.Min.Y); minZ = Math.Min(minZ, pb.Min.Z);
+                    maxX = Math.Max(maxX, pb.Max.X); maxY = Math.Max(maxY, pb.Max.Y); maxZ = Math.Max(maxZ, pb.Max.Z);
+                }
+                if (minX < maxX)
+                {
+                    var globalBox = new BoundingBoxXYZ
+                    {
+                        Min = new XYZ(minX - marginFt, minY - marginFt, minZ - marginFt),
+                        Max = new XYZ(maxX + marginFt, maxY + marginFt, maxZ + marginFt)
+                    };
+                    result.Add(("Rede Geral 01", globalBox, pipes, fixtures));
+                }
             }
 
             return result;
