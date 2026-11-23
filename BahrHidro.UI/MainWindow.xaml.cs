@@ -3399,5 +3399,104 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Memorial de Reservatórios e Bombas exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
+
+        private string _lastSewageTreatmentMemorialText = "";
+
+        private static double ParseSewageDouble(string? raw, double fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            string cleaned = raw.Trim().Replace(',', '.');
+            return double.TryParse(cleaned, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v)
+                ? v
+                : fallback;
+        }
+
+        private static int ParseSewageInt(string? raw, int fallback)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return fallback;
+            return int.TryParse(raw.Trim(), out int v) ? v : fallback;
+        }
+
+        private void CalcularTratamentoEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var typology = (SewageTypologyComboBox?.SelectedIndex ?? 1) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.ResidenciaPadraoAlto,
+                    1 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.ResidenciaPadraoMedio,
+                    2 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.ResidenciaPadraoBaixo,
+                    3 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.HotelPousada,
+                    4 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.ComercialEscritorio,
+                    5 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.EscolaExternato,
+                    6 => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.FabricaIndustria,
+                    _ => BahrHidro.Core.Hydraulic.SewageTreatment.SewageBuildingTypology.ResidenciaPadraoMedio
+                };
+
+                var tempBand = (SewageTempBandComboBox?.SelectedIndex ?? 1) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.SewageTreatment.ColdMonthTemperatureBand.MenorOuIgual10C,
+                    1 => BahrHidro.Core.Hydraulic.SewageTreatment.ColdMonthTemperatureBand.Entre10e20C,
+                    2 => BahrHidro.Core.Hydraulic.SewageTreatment.ColdMonthTemperatureBand.MaiorQue20C,
+                    _ => BahrHidro.Core.Hydraulic.SewageTreatment.ColdMonthTemperatureBand.Entre10e20C
+                };
+
+                int cleaningYears = (SewageCleaningYearsComboBox?.SelectedIndex ?? 0) + 1;
+
+                var soil = (SewageSoilProfileComboBox?.SelectedIndex ?? 1) switch
+                {
+                    0 => BahrHidro.Core.Hydraulic.SewageTreatment.SoilPercolationProfile.AreiaGrossaPedregulho,
+                    1 => BahrHidro.Core.Hydraulic.SewageTreatment.SoilPercolationProfile.AreiaFinaSilteArenoso,
+                    2 => BahrHidro.Core.Hydraulic.SewageTreatment.SoilPercolationProfile.SilteArgiloso,
+                    3 => BahrHidro.Core.Hydraulic.SewageTreatment.SoilPercolationProfile.ArgilaArenosa,
+                    4 => BahrHidro.Core.Hydraulic.SewageTreatment.SoilPercolationProfile.ArgilaCompactaImpermeavel,
+                    _ => BahrHidro.Core.Hydraulic.SewageTreatment.SoilPercolationProfile.AreiaFinaSilteArenoso
+                };
+
+                var input = new BahrHidro.Core.Hydraulic.SewageTreatment.SewageTreatmentInput(
+                    Typology: typology,
+                    OccupantsCount: ParseSewageInt(SewageOccupantsTextBox?.Text, 10),
+                    KitchenSinksCount: ParseSewageInt(SewageKitchenSinksTextBox?.Text, 2),
+                    TemperatureBand: tempBand,
+                    CleaningIntervalYears: cleaningYears,
+                    SoilProfile: soil,
+                    WaterTableDepthMeters: ParseSewageDouble(SewageWaterTableTextBox?.Text, 4.5),
+                    PreferredSumidouroDiameterMeters: ParseSewageDouble(SewageSumidouroDiaTextBox?.Text, 1.50));
+
+                var res = BahrHidro.Core.Hydraulic.SewageTreatment.SewageTreatmentAndGreaseTrapCalculator.Calculate(input);
+                _lastSewageTreatmentMemorialText = res.TechnicalMemorialText;
+
+                if (SewageTreatmentResultText != null)
+                {
+                    SewageTreatmentResultText.Text = res.TechnicalMemorialText;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao calcular tratamento de esgoto e caixa de gordura:\n{ex.Message}", "Bahr Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void ExportarMemorialTratamentoEsgoto_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_lastSewageTreatmentMemorialText))
+                CalcularTratamentoEsgoto_Click(sender, e);
+
+            if (string.IsNullOrWhiteSpace(_lastSewageTreatmentMemorialText))
+                return;
+
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Salvar Memorial de Caixa de Gordura, Fossa, Filtro e Sumidouro",
+                Filter = "Arquivo de Texto (*.txt)|*.txt",
+                FileName = "Memorial_Tratamento_Esgoto_NBR8160_NBR7229_NBR13969.txt"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                System.IO.File.WriteAllText(dlg.FileName, _lastSewageTreatmentMemorialText, System.Text.Encoding.UTF8);
+                MessageBox.Show($"Memorial de Tratamento de Esgoto exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
 }
 }
