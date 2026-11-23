@@ -3220,6 +3220,7 @@ VerificarPressaoEstaticaMaximaVrp();
         }
 
         private string _lastThermalMemorialText = "";
+        private BahrHidro.Core.Hydraulic.HotWater.HotWaterThermalResult? _lastThermalResult;
 
         private static double ParseThermalDouble(string? raw, double fallback)
         {
@@ -3276,6 +3277,7 @@ VerificarPressaoEstaticaMaximaVrp();
                     LongestPipeRunMeters: ParseThermalDouble(ThermalPipeRunTextBox?.Text, 12.0));
 
                 var res = BahrHidro.Core.Hydraulic.HotWater.HotWaterThermalSizingCalculator.Calculate(input);
+                _lastThermalResult = res;
                 _lastThermalMemorialText = res.TechnicalMemorialText;
 
                 if (ThermalSizingResultText != null)
@@ -3312,6 +3314,7 @@ VerificarPressaoEstaticaMaximaVrp();
         }
 
         private string _lastReservoirMemorialText = "";
+        private BahrHidro.Core.Hydraulic.Pumping.ReservoirPumpingResult? _lastReservoirResult;
 
         private static double ParseResDouble(string? raw, double fallback)
         {
@@ -3365,6 +3368,7 @@ VerificarPressaoEstaticaMaximaVrp();
                     PumpEfficiencyPercent: ParseResDouble(ResPumpEfficiencyTextBox?.Text, 60.0));
 
                 var res = BahrHidro.Core.Hydraulic.Pumping.ReservoirAndPumpingCalculator.Calculate(input);
+                _lastReservoirResult = res;
                 _lastReservoirMemorialText = res.TechnicalMemorialText;
 
                 if (ResSizingResultText != null)
@@ -3401,6 +3405,7 @@ VerificarPressaoEstaticaMaximaVrp();
         }
 
         private string _lastSewageTreatmentMemorialText = "";
+        private BahrHidro.Core.Hydraulic.SewageTreatment.SewageTreatmentResult? _lastSewageTreatmentResult;
 
         private static double ParseSewageDouble(string? raw, double fallback)
         {
@@ -3464,6 +3469,7 @@ VerificarPressaoEstaticaMaximaVrp();
                     PreferredSumidouroDiameterMeters: ParseSewageDouble(SewageSumidouroDiaTextBox?.Text, 1.50));
 
                 var res = BahrHidro.Core.Hydraulic.SewageTreatment.SewageTreatmentAndGreaseTrapCalculator.Calculate(input);
+                _lastSewageTreatmentResult = res;
                 _lastSewageTreatmentMemorialText = res.TechnicalMemorialText;
 
                 if (SewageTreatmentResultText != null)
@@ -3496,6 +3502,134 @@ VerificarPressaoEstaticaMaximaVrp();
             {
                 System.IO.File.WriteAllText(dlg.FileName, _lastSewageTreatmentMemorialText, System.Text.Encoding.UTF8);
                 MessageBox.Show($"Memorial de Tratamento de Esgoto exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void GerarMemorialUnificadoDocx_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (ChkDocxAutoCalcularPendentes?.IsChecked == true)
+                {
+                    if (_lastReservoirResult == null && ResOccupantsTextBox != null)
+                        CalcularReservatoriosBombas_Click(sender, e);
+                    if (_lastThermalResult == null && ThermalOccupantsTextBox != null)
+                        CalcularAquecimentoTermico_Click(sender, e);
+                    if (_lastSewageTreatmentResult == null && SewageOccupantsTextBox != null)
+                        CalcularTratamentoEsgoto_Click(sender, e);
+                }
+
+                var pt = new System.Globalization.CultureInfo("pt-BR");
+                var coldRows = new List<(string Param, string Value)>();
+                var coldAlerts = new List<string>();
+
+                if (_snapshot?.ColdWaterNetwork != null)
+                {
+                    var cw = _snapshot.ColdWaterNetwork;
+                    var t = cw.GetType();
+                    int pipeCount = (t.GetProperty("Pipes")?.GetValue(cw) as System.Collections.ICollection)?.Count
+                                    ?? (t.GetProperty("Segments")?.GetValue(cw) as System.Collections.ICollection)?.Count ?? 0;
+                    int nodeCount = (t.GetProperty("Nodes")?.GetValue(cw) as System.Collections.ICollection)?.Count ?? 0;
+
+                    coldRows.Add(("Trechos / Nós Dimensionados", $"{pipeCount} trecho(s)  |  {nodeCount} nó(s)"));
+                    coldRows.Add(("Critério de Dimensionamento", "Método dos Pesos Relativos (ABNT NBR 5626) — Velocidade máx. 3,0 m/s"));
+
+                    double maxStatic = 0;
+                    double minResidual = double.MaxValue;
+                    double maxVel = 0;
+                    if (t.GetProperty("Nodes")?.GetValue(cw) is System.Collections.IEnumerable nodes)
+                    {
+                        foreach (var n in nodes)
+                        {
+                            if (n == null) continue;
+                            var nt = n.GetType();
+                            if (nt.GetProperty("StaticPressureMca")?.GetValue(n) is double st && st > maxStatic) maxStatic = st;
+                            if ((nt.GetProperty("ResidualPressureMca")?.GetValue(n) ?? nt.GetProperty("AvailablePressureMca")?.GetValue(n)) is double dyn && dyn < minResidual) minResidual = dyn;
+                        }
+                    }
+                    if ((t.GetProperty("Pipes")?.GetValue(cw) ?? t.GetProperty("Segments")?.GetValue(cw)) is System.Collections.IEnumerable segs)
+                    {
+                        foreach (var s in segs)
+                        {
+                            if (s == null) continue;
+                            var st = s.GetType();
+                            if ((st.GetProperty("VelocityMs")?.GetValue(s) ?? st.GetProperty("Velocity")?.GetValue(s)) is double v && v > maxVel) maxVel = v;
+                        }
+                    }
+
+                    if (maxStatic > 0)
+                        coldRows.Add(("Pressão Estática Máxima", $"{maxStatic:F2} m.c.a. (Limite NBR 5626: 40,00 m.c.a.)"));
+                    if (minResidual < double.MaxValue && minResidual > -100)
+                        coldRows.Add(("Pressão Dinâmica Mínima", $"{minResidual:F2} m.c.a. (Mínimo normativo: 1,00 m.c.a.)"));
+                    if (maxVel > 0)
+                        coldRows.Add(("Velocidade Máxima na Rede", $"{maxVel:F2} m/s (Limite normativo: 3,00 m/s)"));
+
+                    if (maxStatic > 40.0)
+                        coldAlerts.Add($"OBRIGATÓRIO NBR 5626: Pressão estática máxima de {maxStatic:F2} m.c.a. excede 40,0 m.c.a. — instalar Válvula Redutora de Pressão (VRP) nos pavimentos inferiores.");
+                    if (minResidual < 1.0 && minResidual > -100)
+                        coldAlerts.Add($"NBR 5626: Pressão dinâmica mínima de {minResidual:F2} m.c.a. abaixo de 1,0 m.c.a. — elevar reservatório superior ou aumentar bitola do barrilete.");
+                }
+                else
+                {
+                    coldRows.Add(("Status da Rede 3D", "Dimensionamento NBR 5626 habilitado — executar cálculo da rede 3D para detalhamento nó a nó."));
+                }
+
+                var sewage3DRows = new List<(string Param, string Value)>
+                {
+                    ("Critério Normativo", "Unidades Hunter de Contribuição (UHC) — ABNT NBR 8160"),
+                    ("Declividades Mínimas Aplicadas", "2,0% para tubulações até DN 75 mm  |  1,0% para tubulações ≥ DN 100 mm"),
+                    ("Ventilação Sanitária", "Verificação automática da distância máxima entre desconectores e ramais de ventilação (Tabela 5 NBR 8160)")
+                };
+
+                var clashAndSinapiRows = new List<(string Param, string Value)>();
+                clashAndSinapiRows.Add(("Compatibilização 3D (Clash LSF / Estrutura)",
+                    _lastClashItems.Count == 0
+                        ? "0 interferências registradas na sessão atual (ou auditoria pendente)."
+                        : $"{_lastClashItems.Count} interferência(s) detectada(s) entre tubulações e elementos estruturais/LSF."));
+
+                if (_sinapiBudgetRows.Count > 0)
+                {
+                    decimal direct = _sinapiBudgetRows.Sum(r => r.TotalPriceBrl);
+                    double bdiPct = ObterBdiPercentual();
+                    decimal bdiVal = Math.Round(direct * ((decimal)bdiPct / 100m), 2);
+                    decimal total = direct + bdiVal;
+                    clashAndSinapiRows.Add(("Orçamento Estimativo (Tigre/Amanco & SINAPI)",
+                        $"{_sinapiBudgetRows.Count} itens  |  Custo Direto: {direct.ToString("C2", pt)}  |  BDI ({bdiPct:F2}%): {bdiVal.ToString("C2", pt)}  |  Total: {total.ToString("C2", pt)}"));
+                }
+
+                var exportData = new BahrHidro.Core.Reporting.UnifiedMemorialExportData(
+                    ProjectName: _snapshot?.ProjectName ?? "Projeto Hidrossanitário BIM",
+                    ClientOrAuthor: "Responsável Técnico — Bahr Hidro BIM (Revit 2026)",
+                    ColdWaterRows: coldRows,
+                    ColdWaterAlerts: coldAlerts,
+                    PumpingResult: _lastReservoirResult,
+                    ThermalResult: _lastThermalResult,
+                    Sewage3DRows: sewage3DRows,
+                    SewageTreatmentResult: _lastSewageTreatmentResult,
+                    ClashAndSinapiRows: clashAndSinapiRows);
+
+                var dlg = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Salvar Memorial Descritivo Executivo Unificado (.docx)",
+                    Filter = "Documento Word (*.docx)|*.docx",
+                    FileName = "Memorial_Descritivo_Executivo_BahrHidro.docx"
+                };
+
+                if (dlg.ShowDialog() == true)
+                {
+                    BahrHidro.Core.Reporting.UnifiedExecutiveMemorialDocxGenerator.GenerateDocx(exportData, dlg.FileName);
+                    MessageBox.Show(
+                        $"Memorial Descritivo Executivo Unificado (.docx) gerado com sucesso!\n\n" +
+                        $"Arquivo: {dlg.FileName}\n" +
+                        $"Capítulos incluídos: Água Fria, Reservatórios/Bombas, Água Quente (Boiler/Gás/Solar), Esgoto 3D, Tratamento Individual e Clash/SINAPI.",
+                        "Bahr Hidro — Memorial Executivo (.docx)",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar Memorial Descritivo Único (.docx):\n{ex.Message}", "Bahr Hidro — Memorial (.docx)", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 }
