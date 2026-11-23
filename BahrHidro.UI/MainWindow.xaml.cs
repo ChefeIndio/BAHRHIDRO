@@ -40,8 +40,9 @@ namespace BahrHidro.UI
         public MainWindow()
         {
             try { try { InitializeComponent();
-            this.PreviewMouseWheel += BahrHidro_PreviewMouseWheel;
             this.Loaded += BahrHidro_SyncScrollHosts;
+            this.SizeChanged += (s, e) => BahrHidro_UpdateScrollHeights();
+            this.PreviewMouseWheel += BahrHidro_PreviewMouseWheel;
             if (PageClash3D?.Parent is System.Windows.Controls.Panel navHost)
             {
                 foreach (UIElement child in navHost.Children)
@@ -3916,32 +3917,9 @@ VerificarPressaoEstaticaMaximaVrp();
 
         
 
-        private void BahrHidro_SyncScrollHosts(object sender, RoutedEventArgs e)
-        {
-            SyncAllScrollViewers(this);
-        }
+        
 
-        private void SyncAllScrollViewers(DependencyObject rootObj)
-        {
-            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(rootObj);
-            for (int i = 0; i < count; i++)
-            {
-                var child = System.Windows.Media.VisualTreeHelper.GetChild(rootObj, i);
-                if (child is System.Windows.Controls.ScrollViewer sv &&
-                    sv.Name != null && sv.Name.StartsWith("Scroll_") &&
-                    sv.Content is FrameworkElement innerPage)
-                {
-                    sv.Visibility = innerPage.Visibility;
-                    innerPage.IsVisibleChanged += (s, args) =>
-                    {
-                        sv.Visibility = innerPage.Visibility;
-                        if (innerPage.Visibility == Visibility.Visible)
-                            sv.ScrollToTop();
-                    };
-                }
-                SyncAllScrollViewers(child);
-            }
-        }
+        
 
         private void BahrHidro_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
         {
@@ -3961,6 +3939,70 @@ VerificarPressaoEstaticaMaximaVrp();
                     return;
                 }
                 curr = System.Windows.Media.VisualTreeHelper.GetParent(curr);
+            }
+        }
+
+        private void BahrHidro_SyncScrollHosts(object sender, RoutedEventArgs e)
+        {
+            SyncAllScrollViewers(this);
+            BahrHidro_UpdateScrollHeights();
+        }
+
+        private void BahrHidro_UpdateScrollHeights()
+        {
+            double winH = this.ActualHeight;
+            if (winH <= 120) return;
+            UpdateScrollTree(this, winH);
+        }
+
+        private void UpdateScrollTree(DependencyObject parent, double winH)
+        {
+            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                if (child is System.Windows.Controls.ScrollViewer sv &&
+                    sv.Name != null && sv.Name.StartsWith("Scroll_"))
+                {
+                    double topY = 76;
+                    try
+                    {
+                        if (sv.IsVisible)
+                        {
+                            var pt = sv.TransformToAncestor(this).Transform(new Point(0, 0));
+                            if (pt.Y > 0 && pt.Y < winH - 100)
+                                topY = pt.Y;
+                        }
+                    }
+                    catch { }
+                    sv.Height = Math.Max(300, winH - topY - 18);
+                }
+                UpdateScrollTree(child, winH);
+            }
+        }
+
+        private void SyncAllScrollViewers(DependencyObject rootObj)
+        {
+            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(rootObj);
+            for (int i = 0; i < count; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(rootObj, i);
+                if (child is System.Windows.Controls.ScrollViewer sv &&
+                    sv.Name != null && sv.Name.StartsWith("Scroll_") &&
+                    sv.Content is FrameworkElement innerPage)
+                {
+                    sv.Visibility = innerPage.Visibility;
+                    innerPage.IsVisibleChanged += (s, args) =>
+                    {
+                        sv.Visibility = innerPage.Visibility;
+                        if (innerPage.Visibility == Visibility.Visible)
+                        {
+                            sv.ScrollToTop();
+                            BahrHidro_UpdateScrollHeights();
+                        }
+                    };
+                }
+                SyncAllScrollViewers(child);
             }
         }
 }
