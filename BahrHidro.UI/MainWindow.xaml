@@ -1835,6 +1835,46 @@
                                         </StackPanel>
                                     </Border>
 
+                                    
+                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,16,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="ETAPA 4 — AUDITORIA DE CALIBRAÇÃO DO TEMPLATE (.RTE) &amp; CHECKLIST PROJETO PILOTO" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Valida níveis, tipos de tubo, preferências de roteamento (joelhos/tês), classificações de sistemas (AF, AQ, Esgoto, Vent.), aparelhos com conectores MEP, tags e carimbos antes de rodar o projeto piloto." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <WrapPanel Margin="0,0,0,10">
+                                        <Button Content="Auditar Template &amp; Prontidão do Piloto" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="AuditarTemplatePiloto_Click"/>
+                                        <Button Content="Auto-Corrigir Sistemas Base no Template" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="AutoCorrigirTemplatePiloto_Click"/>
+                                    </WrapPanel>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                        <TextBlock x:Name="TemplateAuditStatusText" Text="Clique em 'Auditar Template &amp; Prontidão do Piloto' para verificar a compatibilidade do modelo/template Revit 2026." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap"/>
+                                    </Border>
+
+                                    <DataGrid x:Name="TemplateAuditDataGrid"
+                                              AutoGenerateColumns="False"
+                                              CanUserAddRows="False"
+                                              CanUserDeleteRows="False"
+                                              IsReadOnly="True"
+                                              HeadersVisibility="Column"
+                                              GridLinesVisibility="Horizontal"
+                                              HorizontalGridLinesBrush="#E2E8F0"
+                                              Background="White"
+                                              BorderBrush="#CBD5E1"
+                                              BorderThickness="1"
+                                              RowHeight="28"
+                                              MaxHeight="240"
+                                              FontSize="11.5">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="78"/>
+                                            <DataGridTextColumn Header="Categoria" Binding="{Binding Category}" Width="140"/>
+                                            <DataGridTextColumn Header="Requisito BIM" Binding="{Binding ItemName}" Width="210"/>
+                                            <DataGridTextColumn Header="Diagnóstico Atual" Binding="{Binding CurrentState}" Width="200"/>
+                                            <DataGridTextColumn Header="Ação / Recomendação Técnica" Binding="{Binding Recommendation}" Width="*"/>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </Border>
+
                                     <Border Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,14,0,0">
                                         <StackPanel>
                                             <DockPanel Margin="0,0,0,8">

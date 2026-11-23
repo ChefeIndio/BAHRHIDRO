@@ -3782,5 +3782,42 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Erro ao inserir unidades de tratamento no Revit 3D:\n{ex.Message}", "Bahr Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private async void AuditarTemplatePiloto_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                var res = await _revitBridge.RunTemplateCalibrationAudit();
+                if (TemplateAuditDataGrid != null)
+                    TemplateAuditDataGrid.ItemsSource = res.Items;
+                if (TemplateAuditStatusText != null)
+                    TemplateAuditStatusText.Text = res.Summary;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao auditar template Revit:\n{ex.Message}", "Bahr Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void AutoCorrigirTemplatePiloto_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                string msg = await _revitBridge.AutoFixTemplateBasics();
+                var res = await _revitBridge.RunTemplateCalibrationAudit();
+                if (TemplateAuditDataGrid != null)
+                    TemplateAuditDataGrid.ItemsSource = res.Items;
+                if (TemplateAuditStatusText != null)
+                    TemplateAuditStatusText.Text = $"{msg}  |  {res.Summary}";
+
+                MessageBox.Show($"{msg}\n\n{res.Summary}", "Bahr Hidro — Auto-Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao auto-corrigir template:\n{ex.Message}", "Bahr Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 }
 }

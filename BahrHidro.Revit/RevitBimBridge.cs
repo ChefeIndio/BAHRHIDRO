@@ -906,5 +906,25 @@ namespace BahrHidro.Revit
                 return result;
             });
         }
+
+        public Task<TemplateCalibrationAuditResult> RunTemplateCalibrationAudit()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                return RevitTemplateCalibrationAuditor.RunAudit(_doc);
+            });
+        }
+
+        public Task<string> AutoFixTemplateBasics()
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                return RevitTemplateCalibrationAuditor.AutoFixTemplateBasics(_doc);
+            });
+        }
 }
 }
