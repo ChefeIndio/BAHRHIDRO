@@ -3744,5 +3744,43 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Erro na integração com a API do Claude:\n{ex.Message}", "Bahr Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private async void InserirReservatorios3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                if (_lastReservoirResult == null)
+                    CalcularReservatoriosBombas_Click(sender, e);
+                if (_lastReservoirResult == null)
+                    return;
+
+                var res = await _revitBridge.PlaceReservoirsIn3D(_lastReservoirResult);
+                MessageBox.Show(res.Summary, "Bahr Hidro — Reservatórios 3D (NBR 5626)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao inserir reservatórios no Revit 3D:\n{ex.Message}", "Bahr Hidro — Reservatórios 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private async void InserirTratamentoEsgoto3D_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                if (_lastSewageTreatmentResult == null)
+                    CalcularTratamentoEsgoto_Click(sender, e);
+                if (_lastSewageTreatmentResult == null)
+                    return;
+
+                var res = await _revitBridge.PlaceSewageTreatmentTrainIn3D(_lastSewageTreatmentResult);
+                MessageBox.Show(res.Summary, "Bahr Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao inserir unidades de tratamento no Revit 3D:\n{ex.Message}", "Bahr Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
 }
 }

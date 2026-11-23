@@ -874,5 +874,37 @@ namespace BahrHidro.Revit
                 return RevitAdvanced3DAuditProcessor.ExecuteAutoRoutingPlanJson(_doc, planJson);
             });
         }
+
+        public Task<EquipmentPlacement3DResult> PlaceReservoirsIn3D(BahrHidro.Core.Hydraulic.Pumping.ReservoirPumpingResult res)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var (result, ids) = RevitParametricEquipmentPlacer.PlaceReservoirsIn3D(_doc, res);
+                if (ids.Count > 0)
+                {
+                    _uidoc.Selection.SetElementIds(ids);
+                    _uidoc.ShowElements(ids);
+                }
+                return result;
+            });
+        }
+
+        public Task<EquipmentPlacement3DResult> PlaceSewageTreatmentTrainIn3D(BahrHidro.Core.Hydraulic.SewageTreatment.SewageTreatmentResult res)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                var (result, ids) = RevitParametricEquipmentPlacer.PlaceSewageTreatmentTrainIn3D(_doc, res);
+                if (ids.Count > 0)
+                {
+                    _uidoc.Selection.SetElementIds(ids);
+                    _uidoc.ShowElements(ids);
+                }
+                return result;
+            });
+        }
 }
 }

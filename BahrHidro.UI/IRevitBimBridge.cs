@@ -192,6 +192,10 @@ namespace BahrHidro.UI
         int CriticalPressurePipes,
         string Summary);
 
+    public sealed record EquipmentPlacement3DResult(
+        int ElementsCreated,
+        string Summary);
+
     public interface IRevitBimBridge
     {Task<RevitNetworkImportData> ImportNetworkAutomaticallyFromRevit(int subNetworkIndex = -1, double streetPressureMca = 15.0);
         Task<RevitReservoirScanResult> ScanReservoirsAndStreetFeed();Task ImportNetworkFromRevit(Window ownerWindow, Action<RevitNetworkImportData> onNetworkImported);Task<int> ApplyDiametersToRevit(NetworkCalculationResult result);Task<(string ProjectName, string ClientName, string Address, string Author)> GetProjectInfo();Task SaveProjectInfo(string projectName, string clientName, string address, string author);Task<string> GetModelOverviewSummary();Task<Dictionary<string, int>> ImportAllSewerFixturesFromRevit();Task<Dictionary<string, int>> ImportSewerFixturesFromRevit(Window ownerWindow);Task<RevitRoofData?> CaptureAllRoofsFromRevit();Task<RevitRoofData?> CaptureRoofFromRevit(Window ownerWindow);Task<RevitPopulationEstimate> EstimateBuildingPopulation();Task<RevitTemplateRoutingOptions> GetRoutingTemplateOptions();Task<List<DetectedRoutingPoint>> DetectRoutingPointsFromModel(long? levelId);Task<DetectedRoutingPoint?> PickManualRoutingPoint(Window ownerWindow, string fixtureCategory, long? levelId);Task<RevitAutoRoutingResult> ExecuteAutomaticPipeRouting(RevitAutoRoutingRequest request);Task<BimMaterialTakeoff> ExtractBomFromRevit(string projectName, double wasteMarginPercent);Task<(int TaggedCount, string Message)> TagPipesInActiveView();Task<(int ViewsCreated, int TotalTagsPlaced, string Summary)> GenerateWetZoneIsometricViews();Task<ClashCheckSummaryResult> RunHydraulicClashCheck();Task<SheetGenerationResult> GenerateHydraulicSheets();Task<(int ViewsCreated, int TotalTagsPlaced, string Summary)> GenerateHydraulicWallElevations();Task<(int DeletedCount, string Summary)> ClearGeneratedRouting(string disciplineMode);Task<VisualAuditSummaryResult> ApplyHydraulicVisualAudit(NetworkCalculationResult result);Task<(int ClearedCount, string Summary)> ClearHydraulicVisualAudit();Task<LsfPunchingAuditResult> AuditLsfStudPunching();Task<(int ViewsAnnotated, int CalloutsPlaced, string Summary)> ApplyFabricationCoordinatesToElevations();Task<MultilevelRiserResult> GenerateMultilevelRisers();
@@ -211,5 +215,7 @@ Task<NetworkCleanupResult> CleanGeneratedNetwork();
         Task<HydraulicDiagnostic3DResult> ApplyHydraulicDiagnosticColorMap(BahrHidro.Core.Hydraulic.Network.NetworkCalculationResult? coldWaterResult);
         Task<string> ExtractSpatialWetAreaJson();
         Task<int> ExecuteAutoRoutingPlanJson(string planJson);
+        Task<EquipmentPlacement3DResult> PlaceReservoirsIn3D(BahrHidro.Core.Hydraulic.Pumping.ReservoirPumpingResult res);
+        Task<EquipmentPlacement3DResult> PlaceSewageTreatmentTrainIn3D(BahrHidro.Core.Hydraulic.SewageTreatment.SewageTreatmentResult res);
 }
 }

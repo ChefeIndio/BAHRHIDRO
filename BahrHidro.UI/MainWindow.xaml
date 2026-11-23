@@ -1131,6 +1131,7 @@
 
                                     <WrapPanel Margin="0,4,0,10">
                                         <Button Content="Dimensionar Reservatórios, Recalque &amp; Bombas (NBR 5626)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="CalcularReservatoriosBombas_Click"/>
+                                        <Button Content="Inserir Reservatórios no 3D (Revit)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="InserirReservatorios3D_Click"/>
                                         <Button Content="Exportar Memorial Reservatórios &amp; Bombas (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialReservatorios_Click"/>
                                     </WrapPanel>
 
@@ -1810,6 +1811,7 @@
 
                                     <WrapPanel Margin="0,4,0,10">
                                         <Button Content="Dimensionar Caixa de Gordura, Fossa, Filtro &amp; Sumidouro" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="CalcularTratamentoEsgoto_Click"/>
+                                        <Button Content="Inserir Fossa, Filtro, Sumidouro &amp; Gordura no 3D" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="InserirTratamentoEsgoto3D_Click"/>
                                         <Button Content="Exportar Memorial Tratamento de Esgoto (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialTratamentoEsgoto_Click"/>
                                     </WrapPanel>
 
