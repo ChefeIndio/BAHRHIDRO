@@ -3820,5 +3820,70 @@ VerificarPressaoEstaticaMaximaVrp();
                 MessageBox.Show($"Erro ao auto-corrigir template:\n{ex.Message}", "Bahr Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        private bool _isGeneratingAbntDocs;
+
+        private async void GerarIsometricosSomente_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null || _isGeneratingAbntDocs) return;
+            _isGeneratingAbntDocs = true;
+            if (BtnGerarIsometricosSomente != null) BtnGerarIsometricosSomente.IsEnabled = false;
+            if (BtnGerarPranchaAbnt != null) BtnGerarPranchaAbnt.IsEnabled = false;
+
+            try
+            {
+                bool isos2d = ChkGerarIsometricos2D?.IsChecked == true;
+                bool isos3d = ChkGerarIsometricos3D?.IsChecked == true;
+                if (!isos2d && !isos3d)
+                {
+                    MessageBox.Show("Marque ao menos 'Isométrica 2D' ou 'Isométrica 3D'.", "Bahr Hidro — Isométricos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos3d, createAbntSheet: false, createNativeSchedules: false, createIsometrics2D: isos2d);
+                if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
+                   MessageBox.Show(res.Summary, "Bahr Hidro — Vistas Isométricas 2D / 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar vistas isométricas:\n{ex.Message}", "Bahr Hidro — Isométricos", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isGeneratingAbntDocs = false;
+                if (BtnGerarIsometricosSomente != null) BtnGerarIsometricosSomente.IsEnabled = true;
+                if (BtnGerarPranchaAbnt != null) BtnGerarPranchaAbnt.IsEnabled = true;
+            }
+        }
+
+        private async void GerarIsometricosEPranchaAbnt_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null || _isGeneratingAbntDocs) return;
+            _isGeneratingAbntDocs = true;
+            if (BtnGerarIsometricosSomente != null) BtnGerarIsometricosSomente.IsEnabled = false;
+            if (BtnGerarPranchaAbnt != null) BtnGerarPranchaAbnt.IsEnabled = false;
+
+            try
+            {
+                bool isos2d = ChkGerarIsometricos2D?.IsChecked == true;
+                bool isos3d = ChkGerarIsometricos3D?.IsChecked == true;
+                bool schedules = ChkCriarTabelasNativas?.IsChecked == true;
+                bool sheet = ChkMontarPranchaAbnt?.IsChecked == true;
+
+                var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos3d, sheet, schedules, isos2d);
+                if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
+                   MessageBox.Show(res.Summary, "Bahr Hidro — Prancha & Isométricos ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao gerar prancha ABNT:\n{ex.Message}", "Bahr Hidro — Prancha ABNT", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                _isGeneratingAbntDocs = false;
+                if (BtnGerarIsometricosSomente != null) BtnGerarIsometricosSomente.IsEnabled = true;
+                if (BtnGerarPranchaAbnt != null) BtnGerarPranchaAbnt.IsEnabled = true;
+            }
+        }
 }
 }

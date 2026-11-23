@@ -22,6 +22,9 @@ namespace BahrHidro.Revit
             bool createNativeSchedules = true,
             bool createIsometrics2D = true)
         {
+            if (!createIsometrics && !createIsometrics2D && !createAbntSheet && !createNativeSchedules)
+                throw new InvalidOperationException("Selecione ao menos uma opção (Isométrica 2D, Isométrica 3D, Tabelas ou Prancha ABNT).");
+
             var fixtures = new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_PlumbingFixtures)
                 .WhereElementIsNotElementType()
@@ -43,11 +46,11 @@ namespace BahrHidro.Revit
             int tagsPlaced = 0;
             ElementId activeTargetId = ElementId.InvalidElementId;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 2D/3D, Tabelas Nativas e Prancha ABNT"))
+            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 2D/3D e Prancha ABNT"))
             {
                 tx.Start();
 
-                // 1. Geração dos Isométricos 2D Esquemáticos (Projeção 30° ABNT em ViewDrafting)
+                // 1. Vistas Isométricas 2D Esquemáticas (Projeção 30° ABNT - Escala 1:20)
                 if (createIsometrics2D)
                 {
                     ViewFamilyType? vftDrafting = new FilteredElementCollector(doc)
@@ -65,7 +68,7 @@ namespace BahrHidro.Revit
 
                     if (vftDrafting != null)
                     {
-                        foreach (var (zoneName, box, zonePipes, zoneFixtures) in zones.Take(6))
+                        foreach (var (zoneName, box, zonePipes, zoneFixtures) in zones.Take(4))
                         {
                             if (zonePipes.Count == 0 && zoneFixtures.Count == 0) continue;
 
@@ -85,7 +88,7 @@ namespace BahrHidro.Revit
                     }
                 }
 
-                // 2. Geração dos Isométricos 3D (Section Box + Etiquetas)
+                // 2. Vistas Isométricas 3D (Linha Oculta ABNT - evita loop de shader 63% na prancha)
                 if (createIsometrics)
                 {
                     ViewFamilyType? vft3d = new FilteredElementCollector(doc)
@@ -95,38 +98,42 @@ namespace BahrHidro.Revit
 
                     if (vft3d != null)
                     {
-                        foreach (var (zoneName, box, zonePipes, _) in zones.Take(6))
+                        foreach (var (zoneName, box, zonePipes, _) in zones.Take(4))
                         {
                             string viewName = MakeUniqueViewName(doc, $"Bahr Hidro - Isométrico 3D - {zoneName}");
                             View3D iso = View3D.CreateIsometric(doc, vft3d.Id);
                             iso.Name = viewName;
                             iso.Scale = 25;
                             iso.DetailLevel = ViewDetailLevel.Fine;
-                            iso.DisplayStyle = DisplayStyle.ShadingWithEdges;
+                            iso.DisplayStyle = DisplayStyle.HLR;
                             iso.IsSectionBoxActive = true;
                             iso.SetSectionBox(box);
 
                             if (iso.CanSaveOrientation())
                                 iso.SaveOrientationAndLock();
 
-                            foreach (var p in zonePipes.Take(14))
+                            // Etiqueta apenas quando não estiver montando prancha em lote para evitar recálculo gráfico
+                            if (!createAbntSheet)
                             {
-                                if (p.Location is LocationCurve lc && lc.Curve != null)
+                                foreach (var p in zonePipes.Take(10))
                                 {
-                                    XYZ mid = lc.Curve.Evaluate(0.5, true);
-                                    try
+                                    if (p.Location is LocationCurve lc && lc.Curve != null)
                                     {
-                                        IndependentTag.Create(
-                                            doc,
-                                            iso.Id,
-                                            new Reference(p),
-                                            false,
-                                            TagMode.TM_ADDBY_CATEGORY,
-                                            TagOrientation.Horizontal,
-                                            mid);
-                                        tagsPlaced++;
+                                        XYZ mid = lc.Curve.Evaluate(0.5, true);
+                                        try
+                                        {
+                                            IndependentTag.Create(
+                                                doc,
+                                                iso.Id,
+                                                new Reference(p),
+                                                false,
+                                                TagMode.TM_ADDBY_CATEGORY,
+                                                TagOrientation.Horizontal,
+                                                mid);
+                                            tagsPlaced++;
+                                        }
+                                        catch { }
                                     }
-                                    catch { }
                                 }
                             }
 
@@ -137,7 +144,7 @@ namespace BahrHidro.Revit
                     }
                 }
 
-                // 3. Criação das 3 Tabelas Nativas do Revit (Tubulações, Conexões e Aparelhos Sanitários)
+                // 3. Tabelas Nativas do Revit (Tubulações, Conexões e Aparelhos Sanitários)
                 if (createNativeSchedules)
                 {
                     var pipeSched = CreatePipeSchedule(doc);
@@ -153,7 +160,13 @@ namespace BahrHidro.Revit
                         activeTargetId = createdSchedules[0].Id;
                 }
 
-                // 4. Montagem Automática da Prancha Executiva ABNT (HID-01)
+                // Regenera uma única vez antes de inserir Viewports na folha (elimina loop de 63%)
+                if (createAbntSheet)
+                {
+                    doc.Regenerate();
+                }
+
+                // 4. Montagem Limpa da Prancha Executiva ABNT (HID-01)
                 string sheetCode = "";
                 if (createAbntSheet)
                 {
@@ -168,59 +181,57 @@ namespace BahrHidro.Revit
                     ViewSheet sheet = ViewSheet.Create(doc, tbId);
                     sheetCode = MakeUniqueSheetNumber(doc, "HID-01");
                     sheet.SheetNumber = sheetCode;
-                    sheet.Name = "INSTALAÇÕES HIDROSSANITÁRIAS — ISOMÉTRICOS 2D/3D, PRUMADAS E QUANTITATIVOS (ABNT)";
+                    sheet.Name = "INSTALAÇÕES HIDROSSANITÁRIAS — ISOMÉTRICOS 2D/3D E QUANTITATIVOS (ABNT)";
 
-                    double cursorX = UnitUtils.ConvertToInternalUnits(0.15, UnitTypeId.Meters);
-                    double stepX = UnitUtils.ConvertToInternalUnits(0.19, UnitTypeId.Meters);
+                    double cursorX = UnitUtils.ConvertToInternalUnits(0.16, UnitTypeId.Meters);
+                    double stepX = UnitUtils.ConvertToInternalUnits(0.20, UnitTypeId.Meters);
 
-                    double row2DY = UnitUtils.ConvertToInternalUnits(0.49, UnitTypeId.Meters);
+                    double row2DY = UnitUtils.ConvertToInternalUnits(0.46, UnitTypeId.Meters);
                     double row3DY = createdIso2DViews.Count > 0
-                        ? UnitUtils.ConvertToInternalUnits(0.32, UnitTypeId.Meters)
-                        : UnitUtils.ConvertToInternalUnits(0.47, UnitTypeId.Meters);
-                    double botY = UnitUtils.ConvertToInternalUnits(0.14, UnitTypeId.Meters);
+                        ? UnitUtils.ConvertToInternalUnits(0.25, UnitTypeId.Meters)
+                        : UnitUtils.ConvertToInternalUnits(0.42, UnitTypeId.Meters);
 
-                    // Faixa Superior: até 3 Vistas Isométricas 2D Esquemáticas
+                    // Insere até 3 Isométricos 2D na faixa superior
                     for (int i = 0; i < Math.Min(3, createdIso2DViews.Count); i++)
                     {
                         var v2d = createdIso2DViews[i];
-                        if (Viewport.CanAddViewToSheet(doc, sheet.Id, v2d.Id))
+                        try
                         {
-                            Viewport.Create(doc, sheet.Id, v2d.Id, new XYZ(cursorX + i * stepX, row2DY, 0));
+                            if (Viewport.CanAddViewToSheet(doc, sheet.Id, v2d.Id))
+                                Viewport.Create(doc, sheet.Id, v2d.Id, new XYZ(cursorX + i * stepX, row2DY, 0));
                         }
+                        catch { }
                     }
 
-                    // Faixa Intermediária: até 3 Vistas Isométricas 3D
+                    // Insere até 3 Isométricos 3D na faixa inferior
                     for (int i = 0; i < Math.Min(3, createdIso3DViews.Count); i++)
                     {
                         var v3d = createdIso3DViews[i];
-                        if (Viewport.CanAddViewToSheet(doc, sheet.Id, v3d.Id))
+                        try
                         {
-                            Viewport.Create(doc, sheet.Id, v3d.Id, new XYZ(cursorX + i * stepX, row3DY, 0));
+                            if (Viewport.CanAddViewToSheet(doc, sheet.Id, v3d.Id))
+                                Viewport.Create(doc, sheet.Id, v3d.Id, new XYZ(cursorX + i * stepX, row3DY, 0));
                         }
+                        catch { }
                     }
 
-                    // Faixa Inferior: Planta Baixa + Esquema Vertical de Prumadas
-                    ViewPlan? floorPlan = new FilteredElementCollector(doc)
-                        .OfClass(typeof(ViewPlan))
-                        .Cast<ViewPlan>()
-                        .FirstOrDefault(vp => !vp.IsTemplate && vp.ViewType == ViewType.FloorPlan && Viewport.CanAddViewToSheet(doc, sheet.Id, vp.Id));
-
-                    if (floorPlan != null)
-                    {
-                        Viewport.Create(doc, sheet.Id, floorPlan.Id, new XYZ(cursorX, botY, 0));
-                    }
-
+                    // Insere Esquema Vertical de Prumadas caso já exista
                     ViewDrafting? riserView = new FilteredElementCollector(doc)
                         .OfClass(typeof(ViewDrafting))
                         .Cast<ViewDrafting>()
                         .FirstOrDefault(v => v.Name.Contains("Esquema Vertical de Prumadas", StringComparison.OrdinalIgnoreCase));
 
-                    if (riserView != null && Viewport.CanAddViewToSheet(doc, sheet.Id, riserView.Id))
+                    if (riserView != null)
                     {
-                        Viewport.Create(doc, sheet.Id, riserView.Id, new XYZ(cursorX + 1.6 * stepX, botY, 0));
+                        try
+                        {
+                            if (Viewport.CanAddViewToSheet(doc, sheet.Id, riserView.Id))
+                                Viewport.Create(doc, sheet.Id, riserView.Id, new XYZ(cursorX, UnitUtils.ConvertToInternalUnits(0.11, UnitTypeId.Meters), 0));
+                        }
+                        catch { }
                     }
 
-                    // Coluna Direita: 3 Tabelas Nativas (Tubulações, Conexões e Aparelhos Sanitários)
+                    // Insere Tabelas Nativas na coluna direita da prancha
                     if (createdSchedules.Count > 0)
                     {
                         double schedX = UnitUtils.ConvertToInternalUnits(0.68, UnitTypeId.Meters);
@@ -253,10 +264,9 @@ namespace BahrHidro.Revit
 
                 tx.Commit();
 
-                string summary = $"Documentação ABNT concluída: {createdIso2DViews.Count} isométrico(s) 2D (30°), " +
-                                 $"{createdIso3DViews.Count} isométrico(s) 3D, {tagsPlaced} etiqueta(s), " +
-                                 $"{createdSchedules.Count} tabela(s) nativa(s)" +
-                                 (createAbntSheet ? $" e Prancha '{sheetCode}' montada automaticamente." : ".");
+                string summary = $"Concluído sem travamentos: {createdIso2DViews.Count} isométrico(s) 2D (30°), " +
+                                 $"{createdIso3DViews.Count} isométrico(s) 3D, {createdSchedules.Count} tabela(s) nativa(s)" +
+                                 (createAbntSheet ? $" e Prancha '{sheetCode}' gerada." : ".");
 
                 return (new Executive3DDocResult(createdIso3DViews.Count, tagsPlaced, sheetCode, summary, createdSchedules.Count, createdIso2DViews.Count), activeTargetId);
             }
@@ -319,7 +329,6 @@ namespace BahrHidro.Revit
                 nodePoints.Add(pt2d);
             }
 
-            // 1. Desenha todos os trechos de tubulação projetados a 30°
             foreach (var p in zonePipes)
             {
                 if (p.Location is not LocationCurve lc || lc.Curve == null) continue;
@@ -360,7 +369,6 @@ namespace BahrHidro.Revit
                 RegisterNode(a2);
                 RegisterNode(b2);
 
-                // Seta de sentido de fluxo nos trechos com comprimento > 0,45 m
                 double lenM = UnitUtils.ConvertFromInternalUnits(a3.DistanceTo(b3), UnitTypeId.Meters);
                 if (lenM >= 0.45)
                 {
@@ -383,7 +391,6 @@ namespace BahrHidro.Revit
                     }
                 }
 
-                // Rótulo técnico do trecho (Sistema + Ø DN + Declividade)
                 if (textTypeId != ElementId.InvalidElementId && lenM >= 0.25)
                 {
                     double diaFt = p.get_Parameter(BuiltInParameter.RBS_PIPE_DIAMETER_PARAM)?.AsDouble() ?? 0.08;
@@ -408,7 +415,6 @@ namespace BahrHidro.Revit
                 }
             }
 
-            // 2. Desenha nós/conexões (círculos isométricos nos vértices)
             foreach (var np in nodePoints)
             {
                 try
@@ -423,7 +429,6 @@ namespace BahrHidro.Revit
                 catch { }
             }
 
-            // 3. Desenha símbolos e chamadas dos aparelhos sanitários projetados
             double fxHalf = UnitUtils.ConvertToInternalUnits(0.11, UnitTypeId.Meters);
             foreach (var fx in zoneFixtures.Take(16))
             {
@@ -433,20 +438,18 @@ namespace BahrHidro.Revit
                 XYZ c2 = ProjectIso2D(c3);
                 ExpandBounds(c2);
 
-                // Losango isométrico representando o aparelho sanitário
                 XYZ pTop = c2 + new XYZ(0, fxHalf * 0.65, 0);
                 XYZ pRight = c2 + new XYZ(fxHalf, 0, 0);
                 XYZ pBot = c2 - new XYZ(0, fxHalf * 0.65, 0);
                 XYZ pLeft = c2 - new XYZ(fxHalf, 0, 0);
 
-                var edges = new[]
+                foreach (var edge in new[]
                 {
                     Line.CreateBound(pTop, pRight),
                     Line.CreateBound(pRight, pBot),
                     Line.CreateBound(pBot, pLeft),
                     Line.CreateBound(pLeft, pTop)
-                };
-                foreach (var edge in edges)
+                })
                 {
                     var dc = doc.Create.NewDetailCurve(view, edge);
                     view.SetElementOverrides(dc.Id, ogsFixture);
@@ -476,7 +479,6 @@ namespace BahrHidro.Revit
                 maxV = UnitUtils.ConvertToInternalUnits(2.0, UnitTypeId.Meters);
             }
 
-            // 4. Moldura Técnica, Cabeçalho e Tríade de Eixos Isométricos (X / Y / Z)
             double pad = UnitUtils.ConvertToInternalUnits(0.45, UnitTypeId.Meters);
             double headerH = UnitUtils.ConvertToInternalUnits(0.32, UnitTypeId.Meters);
 
@@ -500,7 +502,6 @@ namespace BahrHidro.Revit
                 view.SetElementOverrides(dc.Id, ogsFrame);
             }
 
-            // Tríade de eixos isométricos (X, Y, Z) no canto inferior esquerdo
             XYZ triadOrigin = fBL + new XYZ(
                 UnitUtils.ConvertToInternalUnits(0.24, UnitTypeId.Meters),
                 UnitUtils.ConvertToInternalUnits(0.18, UnitTypeId.Meters),
@@ -583,10 +584,7 @@ namespace BahrHidro.Revit
                 TryAddSortGroup(def, fDia);
                 return sched;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
         private static ViewSchedule? CreateFittingSchedule(Document doc)
@@ -611,10 +609,7 @@ namespace BahrHidro.Revit
                 TryAddSortGroup(def, fSize);
                 return sched;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
         private static ViewSchedule? CreateFixtureSchedule(Document doc)
@@ -637,35 +632,22 @@ namespace BahrHidro.Revit
                 TryAddSortGroup(def, fType);
                 return sched;
             }
-            catch
-            {
-                return null;
-            }
+            catch { return null; }
         }
 
-        private static ScheduleField? TryAddParamField(
-            ScheduleDefinition def,
-            IList<SchedulableField> available,
-            BuiltInParameter bip,
-            string? heading = null,
-            bool showTotals = false)
+        private static ScheduleField? TryAddParamField(ScheduleDefinition def, IList<SchedulableField> available, BuiltInParameter bip, string? heading = null, bool showTotals = false)
         {
             ElementId targetId = new ElementId(bip);
             SchedulableField? sf = available.FirstOrDefault(f => f.ParameterId == targetId);
             if (sf == null) return null;
 
             ScheduleField field = def.AddField(sf);
-            if (!string.IsNullOrWhiteSpace(heading))
-                field.ColumnHeading = heading;
-            if (showTotals)
-                field.DisplayType = ScheduleFieldDisplayType.Totals;
+            if (!string.IsNullOrWhiteSpace(heading)) field.ColumnHeading = heading;
+            if (showTotals) field.DisplayType = ScheduleFieldDisplayType.Totals;
             return field;
         }
 
-        private static ScheduleField? TryAddCountField(
-            ScheduleDefinition def,
-            IList<SchedulableField> available,
-            string heading = "Qtd.")
+        private static ScheduleField? TryAddCountField(ScheduleDefinition def, IList<SchedulableField> available, string heading = "Qtd.")
         {
             SchedulableField? sf = available.FirstOrDefault(f => f.FieldType == ScheduleFieldType.Count);
             if (sf == null) return null;
@@ -679,17 +661,10 @@ namespace BahrHidro.Revit
         private static void TryAddSortGroup(ScheduleDefinition def, ScheduleField? field)
         {
             if (field == null) return;
-            try
-            {
-                def.AddSortGroupField(new ScheduleSortGroupField(field.FieldId));
-            }
-            catch { }
+            try { def.AddSortGroupField(new ScheduleSortGroupField(field.FieldId)); } catch { }
         }
 
-        private static List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes, List<Element> Fixtures)> DetectWetAreaZones(
-            Document doc,
-            List<Element> fixtures,
-            List<Pipe> pipes)
+        private static List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes, List<Element> Fixtures)> DetectWetAreaZones(Document doc, List<Element> fixtures, List<Pipe> pipes)
         {
             var result = new List<(string Name, BoundingBoxXYZ Box, List<Pipe> Pipes, List<Element> Fixtures)>();
             double marginFt = UnitUtils.ConvertToInternalUnits(0.65, UnitTypeId.Meters);
