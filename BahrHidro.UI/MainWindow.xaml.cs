@@ -40,6 +40,7 @@ namespace BahrHidro.UI
         public MainWindow()
         {
             try { try { InitializeComponent();
+            this.PreviewMouseWheel += BahrHidro_PreviewMouseWheel;
             if (PageClash3D?.Parent is System.Windows.Controls.Panel navHost)
             {
                 foreach (UIElement child in navHost.Children)
@@ -3910,6 +3911,26 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             if (PageClash3D != null)
                 PageClash3D.Visibility = Visibility.Visible;
+        }
+
+        private void BahrHidro_PreviewMouseWheel(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (e.Handled) return;
+            DependencyObject? curr = e.OriginalSource as DependencyObject;
+            while (curr != null && !(curr is System.Windows.Media.Visual))
+                curr = (curr as FrameworkContentElement)?.Parent ?? LogicalTreeHelper.GetParent(curr);
+            while (curr != null)
+            {
+                if (curr is System.Windows.Controls.ScrollViewer sv &&
+                    sv.VerticalScrollBarVisibility != System.Windows.Controls.ScrollBarVisibility.Disabled &&
+                    sv.ScrollableHeight > 0)
+                {
+                    sv.ScrollToVerticalOffset(sv.VerticalOffset - (e.Delta / 2.5));
+                    e.Handled = true;
+                    return;
+                }
+                curr = System.Windows.Media.VisualTreeHelper.GetParent(curr);
+            }
         }
 }
 }
