@@ -40,6 +40,8 @@ namespace BahrHidro.UI
         public MainWindow()
         {
             try { try { InitializeComponent();
+            this.LayoutUpdated += (s, e) => EnforceWorkAreaScrollLimit();
+            this.PreviewMouseWheel += BahrMouseWheelScroll;
             this.Loaded += BahrHidro_SyncScrollHosts;
             this.SizeChanged += (s, e) => BahrHidro_UpdateScrollHeights();
             this.PreviewMouseWheel += BahrHidro_PreviewMouseWheel;
@@ -4003,6 +4005,66 @@ VerificarPressaoEstaticaMaximaVrp();
                     };
                 }
                 SyncAllScrollViewers(child);
+            }
+        }
+
+        private void EnforceWorkAreaScrollLimit()
+        {
+            double workH = System.Windows.SystemParameters.WorkArea.Height;
+            if (workH > 200 && this.MaxHeight != workH)
+                this.MaxHeight = workH;
+
+            double visibleWinH = System.Math.Min(this.ActualHeight > 150 ? this.ActualHeight : 680, workH > 200 ? workH : 720);
+            EnforceScrollChildren(this, visibleWinH);
+        }
+
+        private void EnforceScrollChildren(System.Windows.DependencyObject parent, double visibleWinH)
+        {
+            int count = System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent);
+            for (int i = 0; i < count; i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
+                if (child is System.Windows.Controls.ScrollViewer sv && sv.IsVisible && sv.ActualWidth > 320)
+                {
+                    double topY = 78;
+                    try
+                    {
+                        var pt = sv.TransformToAncestor(this).Transform(new System.Windows.Point(0, 0));
+                        if (pt.Y > 0 && pt.Y < visibleWinH - 120)
+                            topY = pt.Y;
+                    }
+                    catch { }
+
+                    double allowedH = System.Math.Max(260, visibleWinH - topY - 18);
+                    if (System.Math.Abs(sv.MaxHeight - allowedH) > 2)
+                    {
+                        sv.MaxHeight = allowedH;
+                        sv.Height = allowedH;
+                        sv.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Visible;
+                    }
+                }
+                EnforceScrollChildren(child, visibleWinH);
+            }
+        }
+
+        private void BahrMouseWheelScroll(object sender, System.Windows.Input.MouseWheelEventArgs e)
+        {
+            if (e.Handled) return;
+            System.Windows.DependencyObject? curr = e.OriginalSource as System.Windows.DependencyObject;
+            while (curr != null && !(curr is System.Windows.Media.Visual))
+                curr = (curr as System.Windows.FrameworkContentElement)?.Parent ?? System.Windows.LogicalTreeHelper.GetParent(curr);
+
+            while (curr != null)
+            {
+                if (curr is System.Windows.Controls.ScrollViewer sv &&
+                    sv.VerticalScrollBarVisibility != System.Windows.Controls.ScrollBarVisibility.Disabled &&
+                    sv.ScrollableHeight > 0)
+                {
+                    sv.ScrollToVerticalOffset(sv.VerticalOffset - (e.Delta / 2.5));
+                    e.Handled = true;
+                    return;
+                }
+                curr = System.Windows.Media.VisualTreeHelper.GetParent(curr);
             }
         }
 }
