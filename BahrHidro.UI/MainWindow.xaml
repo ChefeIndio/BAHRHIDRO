@@ -635,20 +635,31 @@
                 <!-- 1. ÁGUA FRIA (REDE BIM 3D - SOMENTE LEITURA AUTOMÁTICA) -->
                 <DockPanel x:Name="PanelAguaFria" Visibility="Collapsed">
                     <!-- Cabeçalho Padronizado do Módulo -->
-                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
-                        <DockPanel>
-                            <StackPanel x:Name="HeaderActionsAguaFria" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button Content="Detectar Rede Automática (3D)" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="DetectarRedeAutoRevit_Click"/>
-                                <Button Content="Selecionar Início no 3D" Style="{StaticResource SecondaryButton}" Height="34" Padding="12,0" Margin="0,0,8,0" Click="ImportarRevit_Click"/>
-                                <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Click="AplicarRevit_Click"/>
-                                <Button x:Name="BtnPintarAuditoria3D" Content="Pintar Pressão/Velocidade (3D)" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="PintarAuditoria3D_Click"/>
-                                <Button x:Name="BtnLimparAuditoria3D" Content="Limpar Cores 3D" Style="{StaticResource SecondaryButton}" Margin="8,0,0,0" Visibility="Collapsed" Click="LimparAuditoria3D_Click"/>
-                            </StackPanel>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Rede de Água Fria — Dimensionamento Hidráulico (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
-                                <TextBlock Text="Leitura topológica automática do modelo 3D, cálculo de vazões pelos pesos relativos e dimensionamento comercial." FontSize="12" Foreground="#64748B"/>
-                            </StackPanel>
-                        </DockPanel>
+                    <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <StackPanel x:Name="HeaderActionsAguaFria" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                                    <Button Content="Detectar Rede (3D)" Style="{StaticResource RevitActionButton}" Margin="0,0,6,0" Click="DetectarRedeAutoRevit_Click"/>
+                                    <Button Content="Apontar Início no 3D" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0" Click="ImportarRevit_Click"/>
+                                    <Button Content="Aplicar Diâmetros no Revit" Style="{StaticResource RevitApplyButton}" Click="AplicarRevit_Click"/>
+                                    <Button x:Name="BtnPintarAuditoria3D" Content="Pintar 3D" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Visibility="Collapsed" Click="PintarAuditoria3D_Click"/>
+                                    <Button x:Name="BtnLimparAuditoria3D" Content="Limpar Cores" Style="{StaticResource SecondaryButton}" Margin="6,0,0,0" Visibility="Collapsed" Click="LimparAuditoria3D_Click"/>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="2. Rede de Água Fria — Dimensionamento Hidráulico (NBR 5626)" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
+                                    <TextBlock Text="Alimentação da rua até o reservatório e rede interna de distribuição por gravidade." FontSize="12" Foreground="#64748B"/>
+                                </StackPanel>
+                            </DockPanel>
+
+                            <!-- Barra de Sub-rede e Origem (Gravidade vs Entrada da Rua) -->
+                            <WrapPanel VerticalAlignment="Center">
+                                <TextBlock Text="Sub-rede / Trecho:" FontSize="12" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <ComboBox x:Name="SubRedeComboBox" Width="340" Margin="0,0,14,0" SelectionChanged="SubRedeComboBox_SelectionChanged"/>
+                                <TextBlock Text="Pressão da Rua / Entrada (m.c.a.):" FontSize="12" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                <TextBox x:Name="PressaoRuaAguaFriaTextBox" Text="15,0" Width="68" Margin="0,0,8,0"/>
+                                <Button Content="Recarregar Sub-rede" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Click="RecarregarSubRede_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
                     </Border>
                     <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
                         <DockPanel>
@@ -1017,11 +1028,12 @@
                     <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
                         <DockPanel>
                             <StackPanel x:Name="HeaderActionsReservatorios" DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
-                                <Button Content="Ler População do Revit" Style="{StaticResource RevitActionButton}" Click="EstimarPopulacaoRevit_Click"/>
+                                <Button Content="Detectar Reservatório &amp; Rua (3D)" Style="{StaticResource RevitActionButton}" Margin="0,0,8,0" Click="DetectarReservatoriosRevit_Click"/>
+                                <Button Content="Ler População do Revit" Style="{StaticResource SecondaryButton}" Click="EstimarPopulacaoRevit_Click"/>
                             </StackPanel>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Dimensionamento de Reservatórios (NBR 5626)" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
-                                <TextBlock Text="Reservação superior e inferior (cisterna), capacidades comerciais recomendadas e acessórios obrigatórios de barrilete." FontSize="12" Foreground="#64748B"/>
+                                <TextBlock Text="1. Dimensionamento &amp; Auditoria de Reservatórios (NBR 5626)" FontSize="17" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Detecta reservatórios já modelados no 3D, verifica alimentação pela rua e dimensiona volumes." FontSize="12" Foreground="#64748B"/>
                             </StackPanel>
                         </DockPanel>
                     </Border>
@@ -1079,7 +1091,23 @@
                                             </StackPanel>
                                         </Grid>
 
-                                        <Button Content="Calcular Reservação" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularCaixa_Click"/>
+                                        <Grid Margin="0,0,0,14">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <TextBlock Text="Pressão da Rua / Rede Pública (m.c.a.)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="CaixaPressaoRuaTextBox" Text="15,0"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="2">
+                                                <TextBlock Text="Cota Reservatório Superior (m)" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                                                <TextBox x:Name="CaixaCotaSuperiorTextBox" Text="4,20"/>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Button Content="Calcular e Verificar Abastecimento" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Click="CalcularCaixa_Click"/>
                                     </StackPanel>
                                 </Border>
 
@@ -1112,13 +1140,22 @@
                             </StackPanel>
 
                             <!-- Sugestões Comerciais e Peças Obrigatórias (Reservatórios) -->
-                            <Border Grid.Column="2" Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18" VerticalAlignment="Top">
+                            <StackPanel Grid.Column="2">
+                                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,14">
+                                    <StackPanel>
+                                        <TextBlock Text="DIAGNÓSTICO DO RESERVATÓRIO 3D &amp; ALIMENTAÇÃO PELA RUA" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6"/>
+                                        <TextBlock x:Name="CaixaDiagnostico3DText" Text="Clique em 'Detectar Reservatório &amp; Rua (3D)' ou calcule para verificar se a pressão da rua abastece diretamente o reservatório superior." FontSize="12.5" Foreground="#1E40AF" TextWrapping="Wrap"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18">
                                 <StackPanel>
                                     <TextBlock Text="SUGESTÕES COMERCIAIS &amp; PEÇAS OBRIGATÓRIAS (RESERVAÇÃO)" FontSize="13" FontWeight="Bold" Foreground="#166534" Margin="0,0,0,10"/>
                                     <TextBlock x:Name="CaixaSugestoesText" TextWrapping="Wrap" FontSize="13" Foreground="#14532D" LineHeight="20"
                                                Text="• Modelos Comerciais Recomendados: Caixas d'água em Polietileno com tampa de rosca (Tigre / Fortlev / Acqualimp) ou Aço Inox 304 para reservatório superior; cisterna enterrada em Polietileno reforçado ou fibra.&#x0a;&#x0a;• Peças Obrigatórias no Projeto (ABNT NBR 5626):&#x0a;  1. Torneira de boia de vazão total na tubulação de alimentação;&#x0a;  2. Tubo extravasor (ladrão) com diâmetro 1 bitola acima da alimentação e descarga livre visível;&#x0a;  3. Tubulação de limpeza no fundo com registro de bloqueio;&#x0a;  4. Tubo de ventilação (suspiro) após o registro geral do barrilete;&#x0a;  5. Chave de boia elétrica (nível superior/inferior) para controle automático da bomba de recalque."/>
-                                </StackPanel>
-                            </Border>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
+                                                    
                         </Grid>
                     </ScrollViewer>
                 </DockPanel>

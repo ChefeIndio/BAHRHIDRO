@@ -106,18 +106,31 @@ namespace BahrHidro.Revit
             });
         }
 
-        public Task<RevitNetworkImportData> ImportNetworkAutomaticallyFromRevit()
+        public Task<RevitReservoirScanResult> ScanReservoirsAndStreetFeed()
         {
             return _runner.RunAsync(uiApp =>
             {
                 _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
                 _doc = _uidoc.Document;
-            _ultimaExtracao = RevitNetworkExtractor.ExtractAutomaticFromDocument(_doc);
-            return new RevitNetworkImportData(
-                _ultimaExtracao.Network,
-                _ultimaExtracao.OriginalDiametersMmBySegmentId,
-                _ultimaExtracao.DetectionSummary);
-        
+                return RevitNetworkExtractor.ScanReservoirsInDocument(_doc);
+            });
+        }
+
+        public Task<RevitNetworkImportData> ImportNetworkAutomaticallyFromRevit(int subNetworkIndex = -1, double streetPressureMca = 15.0)
+        {
+            return _runner.RunAsync(uiApp =>
+            {
+                _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
+                _doc = _uidoc.Document;
+                _ultimaExtracao = RevitNetworkExtractor.ExtractAutomaticFromDocument(_doc, subNetworkIndex, streetPressureMca);
+                return new RevitNetworkImportData(
+                    _ultimaExtracao.Network,
+                    _ultimaExtracao.OriginalDiametersMmBySegmentId,
+                    _ultimaExtracao.DetectionSummary,
+                    _ultimaExtracao.SubNetworkOptions,
+                    _ultimaExtracao.SelectedSubNetworkIndex,
+                    _ultimaExtracao.IsStreetFeedNetwork,
+                    _ultimaExtracao.SuggestedInletPressureMca);
             });
         }
 

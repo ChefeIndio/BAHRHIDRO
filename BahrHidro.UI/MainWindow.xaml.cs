@@ -126,6 +126,8 @@ namespace BahrHidro.UI
         }
 
         private readonly ProjectEngineeringSnapshot _snapshot = new();
+        private RevitReservoirScanResult? _ultimoScanReservatorios;
+        private bool _ignorandoTrocaSubRede = false;
         private readonly Stack<string> _tabHistory = new();
         private string _activePanelTag = "Inicio";
         private bool _isGoingBackTab = false;
@@ -687,6 +689,8 @@ namespace BahrHidro.UI
                 // Encadeamento automático para Boiler (Etapa 3) e Caixa de Gordura (Etapa 6)
                 if (BoilerOcupantesTextBox != null) BoilerOcupantesTextBox.Text = populacao.ToString();
                 if (GorduraPessoasTextBox != null) GorduraPessoasTextBox.Text = populacao.ToString();
+
+                AtualizarDiagnosticoReservatorioERua(resultado.TotalRequiredVolumeLiters, comSup);
             }
             catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
@@ -775,7 +779,9 @@ namespace BahrHidro.UI
             if (_revitBridge == null) return;
             try
             {
-                var importData = await _revitBridge.ImportNetworkAutomaticallyFromRevit();
+                int subIdx = SubRedeComboBox != null ? SubRedeComboBox.SelectedIndex : -1;
+                double pressaoRua = TryParsePtBrDouble(PressaoRuaAguaFriaTextBox?.Text ?? "15,0", out double pr) && pr >= 0 ? pr : 15.0;
+                var importData = await _revitBridge.ImportNetworkAutomaticallyFromRevit(subIdx, pressaoRua);
                 CarregarRedeImportadaNaTela(importData);
                 if (!string.IsNullOrWhiteSpace(importData.Summary))
                     MessageBox.Show(importData.Summary, "Bahr Hidro - Detecção Automática 3D", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -829,6 +835,22 @@ namespace BahrHidro.UI
 
                     if (!string.IsNullOrWhiteSpace(importData.Summary))
                         ResumoTrocasTubosText.Text = importData.Summary;
+
+                    if (SubRedeComboBox != null && importData.SubNetworkOptions != null && importData.SubNetworkOptions.Count > 0)
+                    {
+                        _ignorandoTrocaSubRede = true;
+                        try
+                        {
+                            SubRedeComboBox.ItemsSource = importData.SubNetworkOptions;
+                            SubRedeComboBox.SelectedIndex = Math.Clamp(importData.SelectedSubNetworkIndex, 0, importData.SubNetworkOptions.Count - 1);
+                        }
+                        finally { _ignorandoTrocaSubRede = false; }
+                    }
+
+                    if (importData.IsStreetFeedNetwork && PressaoRuaAguaFriaTextBox != null && importData.SuggestedInletPressureMca > 0)
+                    {
+                        PressaoRuaAguaFriaTextBox.Text = importData.SuggestedInletPressureMca.ToString("F1");
+                    }
 
                     if (MemStatusRedeText != null)
                     {
@@ -2478,6 +2500,101 @@ namespace BahrHidro.UI
                 SeptumSubmersionCm = septoCg,
                 OutletDiameterMm = saidaCg
             };
+        }
+
+        private async void DetectarReservatoriosRevit_Click(object sender, RoutedEventArgs e)
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                _ultimoScanReservatorios = await _revitBridge.ScanReservoirsAndStreetFeed();
+
+                var upperTank = _ultimoScanReservatorios.Reservoirs
+                    .Where(r => !r.IsLowerCistern)
+                    .OrderByDescending(r => r.ElevationMeters)
+                    .FirstOrDefault();
+
+                if (upperTank != null && CaixaCotaSuperiorTextBox != null)
+                    CaixaCotaSuperiorTextBox.Text = upperTank.ElevationMeters.ToString("F2");
+
+                if (CaixaDiagnostico3DText != null)
+                    CaixaDiagnostico3DText.Text = _ultimoScanReservatorios.Summary;
+
+                MessageBox.Show(_ultimoScanReservatorios.Summary, "Bahr Hidro — Reservatórios & Entrada da Rua (3D)", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro ao ler reservatórios do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        private void AtualizarDiagnosticoReservatorioERua(double volumeExigidoTotalLiters, int comercialSuperiorSugerido)
+        {
+            double pressaoRua = TryParsePtBrDouble(CaixaPressaoRuaTextBox?.Text ?? "15,0", out double pr) ? pr : 15.0;
+            double cotaSup = TryParsePtBrDouble(CaixaCotaSuperiorTextBox?.Text ?? "4,20", out double csVal) ? csVal : 4.20;
+            if (PressaoRuaAguaFriaTextBox != null)
+                PressaoRuaAguaFriaTextBox.Text = pressaoRua.ToString("F1");
+
+            // Perda estimada no cavalete/hidrômetro + tubulação de subida (~2,5 m.c.a.) + 1,0 m.c.a. residual na boia
+            double perdaEstimadaRamal = 2.50;
+            double pressaoChegadaBoia = pressaoRua - cotaSup - perdaEstimadaRamal;
+
+            var sb = new System.Text.StringBuilder();
+            if (_ultimoScanReservatorios != null && _ultimoScanReservatorios.Reservoirs.Count > 0)
+            {
+                double volumeModeladoTotal = _ultimoScanReservatorios.Reservoirs.Sum(r => r.ModeledVolumeLiters);
+                if (volumeModeladoTotal > 0)
+                {
+                    if (volumeModeladoTotal >= volumeExigidoTotalLiters)
+                        sb.AppendLine($"✓ RESERVATÓRIO EXISTENTE NO 3D APROVADO: Volume modelado ({volumeModeladoTotal:F0} L) atende ao exigido pela NBR 5626 ({volumeExigidoTotalLiters:F0} L).");
+                    else
+                        sb.AppendLine($"⚠ AMPLIAÇÃO NECESSÁRIA: O reservatório modelado no 3D ({volumeModeladoTotal:F0} L) é menor que o mínimo normativo ({volumeExigidoTotalLiters:F0} L). Substitua por reservatório comercial de {comercialSuperiorSugerido} L.");
+                }
+                else
+                {
+                    sb.AppendLine($"✓ Reservatório 3D identificado na cota Z = {cotaSup:F2} m (adote capacidade comercial de {comercialSuperiorSugerido} L).");
+                }
+            }
+
+            if (pressaoChegadaBoia >= 1.0)
+            {
+                sb.Append($"✓ ABASTECIMENTO DIRETO PELA RUA VIÁVEL: Com pressão de {pressaoRua:F1} m.c.a. na rua, a água chega na boia do reservatório (cota {cotaSup:F2} m) com ~{pressaoChegadaBoia:F2} m.c.a. disponíveis (dispensa bomba de recalque).");
+            }
+            else
+            {
+                sb.Append($"⚠ PRESSÃO DA RUA INSUFICIENTE PARA ALIMENTAÇÃO DIRETA: Pressão residual estimada na cota {cotaSup:F2} m seria de {pressaoChegadaBoia:F2} m.c.a. (< 1,0 m.c.a.). Recomenda-se cisterna inferior + motobomba de recalque.");
+            }
+
+            if (CaixaDiagnostico3DText != null)
+                CaixaDiagnostico3DText.Text = sb.ToString();
+        }
+
+        private async void SubRedeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_ignorandoTrocaSubRede || _revitBridge == null || SubRedeComboBox == null || SubRedeComboBox.SelectedIndex < 0)
+                return;
+            await RecarregarSubRedeInternoAsync();
+        }
+
+        private async void RecarregarSubRede_Click(object sender, RoutedEventArgs e)
+        {
+            await RecarregarSubRedeInternoAsync();
+        }
+
+        private async Task RecarregarSubRedeInternoAsync()
+        {
+            if (_revitBridge == null) return;
+            try
+            {
+                int subIdx = SubRedeComboBox != null ? SubRedeComboBox.SelectedIndex : -1;
+                double pressaoRua = TryParsePtBrDouble(PressaoRuaAguaFriaTextBox?.Text ?? "15,0", out double pr) && pr >= 0 ? pr : 15.0;
+                var importData = await _revitBridge.ImportNetworkAutomaticallyFromRevit(subIdx, pressaoRua);
+                CarregarRedeImportadaNaTela(importData);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Aviso ao carregar sub-rede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 }
 }

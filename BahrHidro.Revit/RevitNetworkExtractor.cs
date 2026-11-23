@@ -15,13 +15,118 @@ namespace BahrHidro.Revit
         public Dictionary<Guid, List<Pipe>> PipesBySegmentId { get; } = new();
         public Dictionary<Guid, double> OriginalDiametersMmBySegmentId { get; } = new();
         public string DetectionSummary { get; set; } = "";
+        public List<string> SubNetworkOptions { get; set; } = new();
+        public int SelectedSubNetworkIndex { get; set; }
+        public bool IsStreetFeedNetwork { get; set; }
+        public double SuggestedInletPressureMca { get; set; }
     }
 
     public static class RevitNetworkExtractor
     {
         private const int MaxElementsLimit = 2500;
 
-        public static RevitNetworkExtractionResult ExtractAutomaticFromDocument(Document doc)
+                public static BahrHidro.UI.RevitReservoirScanResult ScanReservoirsInDocument(Document doc)
+        {
+            var found = new List<BahrHidro.UI.RevitReservoirElementInfo>();
+            var instances = new FilteredElementCollector(doc)
+                .OfClass(typeof(FamilyInstance))
+                .WhereElementIsNotElementType()
+                .Cast<FamilyInstance>();
+
+            foreach (var fi in instances)
+            {
+                string fullName = RemoverAcentos($"{fi.Symbol?.FamilyName} {fi.Name}").ToLowerInvariant();
+                if (!(fullName.Contains("reservat") || fullName.Contains("caixa d") ||
+                      fullName.Contains("caixa_d") || fullName.Contains("caixad") ||
+                      fullName.Contains("tank") || fullName.Contains("cisterna")))
+                    continue;
+
+                var conns = GetConnectors(fi);
+                double elevM = conns != null && !conns.IsEmpty
+                    ? GetElevationMeters(fi, conns)
+                    : (fi.Location is LocationPoint lp
+                        ? UnitUtils.ConvertFromInternalUnits(lp.Point.Z, UnitTypeId.Meters)
+                        : 0.0);
+
+                double modeledLiters = TryExtractTankVolumeLiters(fi, fullName);
+                bool isCistern = fullName.Contains("cisterna") || fullName.Contains("inferior") || elevM < 1.0;
+
+                found.Add(new BahrHidro.UI.RevitReservoirElementInfo(
+                    fi.Id.Value,
+                    $"{fi.Symbol?.FamilyName ?? "Reservatório"} ({fi.Name})",
+                    Math.Round(elevM, 2),
+                    Math.Round(modeledLiters, 0),
+                    isCistern));
+            }
+
+            // Verifica se há tubos de entrada pela rua (cota baixa < 1.50m)
+            var allPipes = new FilteredElementCollector(doc)
+                .OfClass(typeof(Pipe))
+                .WhereElementIsNotElementType()
+                .Cast<Pipe>()
+                .Where(IsColdWaterPipe)
+                .ToList();
+
+            bool hasStreetPipe = false;
+            double lowestStreetZ = 0.0;
+            foreach (var p in allPipes)
+            {
+                var c = GetConnectors(p);
+                if (c == null) continue;
+                double z = GetElevationMeters(p, c);
+                if (z <= 1.50)
+                {
+                    if (!hasStreetPipe || z < lowestStreetZ)
+                        lowestStreetZ = z;
+                    hasStreetPipe = true;
+                }
+            }
+
+            string summary;
+            if (found.Count == 0)
+            {
+                summary = "Nenhum reservatório 3D encontrado no modelo (será usado o dimensionamento normativo manual/ambientes).";
+            }
+            else
+            {
+                var parts = found.Select(r =>
+                    $"• {r.Name}: Cota Z = {r.ElevationMeters:F2} m" +
+                    (r.ModeledVolumeLiters > 0 ? $" | Volume modelado = {r.ModeledVolumeLiters:F0} L" : " | Volume não paramétrico"));
+                summary = $"Reservatório(s) detectado(s) no Revit 3D ({found.Count}):\n" + string.Join("\n", parts);
+                if (hasStreetPipe)
+                    summary += $"\n• Tubulação de alimentação vinda da rua detectada na cota {lowestStreetZ:F2} m.";
+            }
+
+            return new BahrHidro.UI.RevitReservoirScanResult(found, hasStreetPipe, Math.Round(lowestStreetZ, 2), summary);
+        }
+
+        private static double TryExtractTankVolumeLiters(FamilyInstance fi, string normalizedName)
+        {
+            string[] paramNames = { "Volume", "Capacidade", "Capacity", "Litros", "Liters", "Vol" };
+            foreach (string pName in paramNames)
+            {
+                Parameter? p = fi.LookupParameter(pName) ?? fi.Symbol?.LookupParameter(pName);
+                if (p != null && p.HasValue && p.StorageType == StorageType.Double)
+                {
+                    double val = p.AsDouble();
+                    if (val > 0)
+                    {
+                        // Se estiver em m³ (padrão Revit Volume), converte para litros
+                        if (val < 50.0) return val * 1000.0;
+                        return val;
+                    }
+                }
+            }
+
+            // Tenta extrair do nome da família/tipo (ex: "1000L", "500 L", "1500 litros")
+            var m = System.Text.RegularExpressions.Regex.Match(normalizedName, @"(\d{3,5})\s*(l|litros)?\b");
+            if (m.Success && double.TryParse(m.Groups[1].Value, out double parsed) && parsed >= 100 && parsed <= 100000)
+                return parsed;
+
+            return 0.0;
+        }
+
+        public static RevitNetworkExtractionResult ExtractAutomaticFromDocument(Document doc, int subNetworkIndex = -1, double streetPressureMca = 15.0)
         {
             var allPipes = new FilteredElementCollector(doc)
                 .OfClass(typeof(Pipe))
@@ -53,14 +158,50 @@ namespace BahrHidro.Revit
             if (components.Count == 0)
                 throw new InvalidOperationException("Não foi possível identificar conexões hidráulicas válidas nas tubulações do modelo.");
 
-            // Seleciona a maior rede conectada de água fria do projeto
-            var mainComponent = components
+            // Ordena componentes por relevância (quantidade de tubos) e gera rótulos legíveis
+            var orderedComponents = components
                 .OrderByDescending(c => c.OfType<Pipe>().Count())
                 .ThenByDescending(c => c.Count)
-                .First();
+                .ToList();
 
-            Element startElement = FindBestSupplySource(mainComponent);
-            var result = ExtractFromStartElementInternal(doc, startElement, mainComponent);
+            var subOptions = new List<string>();
+            int defaultDistributionIdx = 0;
+
+            for (int i = 0; i < orderedComponents.Count; i++)
+            {
+                var comp = orderedComponents[i];
+                int pCount = comp.OfType<Pipe>().Count();
+                int fixCount = comp.OfType<FamilyInstance>().Count(fi => fi.Category != null && fi.Category.Id.Value == (long)BuiltInCategory.OST_PlumbingFixtures);
+                bool hasTank = comp.OfType<FamilyInstance>().Any(IsReservoirFamily);
+                bool isStreet = IsStreetFeedComponent(comp);
+
+                string label = isStreet
+                    ? $"Sub-rede {i + 1}: Alimentação da Rua → Reservatório ({pCount} tubos)"
+                    : hasTank
+                        ? $"Sub-rede {i + 1}: Distribuição Principal c/ Reservatório ({pCount} tubos, {fixCount} pts)"
+                        : $"Sub-rede {i + 1}: Ramal / Trecho ({pCount} tubos, {fixCount} pts)";
+
+                subOptions.Add(label);
+                if (!isStreet && hasTank && defaultDistributionIdx == 0)
+                    defaultDistributionIdx = i;
+            }
+
+            int chosenIdx = (subNetworkIndex >= 0 && subNetworkIndex < orderedComponents.Count)
+                ? subNetworkIndex
+                : defaultDistributionIdx;
+
+            var mainComponent = orderedComponents[chosenIdx];
+            bool isStreetFeed = IsStreetFeedComponent(mainComponent);
+
+            Element startElement = isStreetFeed
+                ? FindStreetInletSource(mainComponent)
+                : FindBestSupplySource(mainComponent);
+
+            var result = ExtractFromStartElementInternal(doc, startElement, mainComponent, isStreetFeed, streetPressureMca);
+            result.SubNetworkOptions = subOptions;
+            result.SelectedSubNetworkIndex = chosenIdx;
+            result.IsStreetFeedNetwork = isStreetFeed;
+            result.SuggestedInletPressureMca = isStreetFeed ? streetPressureMca : 0.0;
 
             int totalPipesCount = result.PipesBySegmentId.Values.Sum(list => list.Count);
             int totalFixtures = result.Network.Nodes.Count(n => n.Type == HydraulicNodeType.ConsumptionPoint);
@@ -222,10 +363,60 @@ namespace BahrHidro.Revit
                 .First();
         }
 
+        private static bool IsReservoirFamily(FamilyInstance fi)
+        {
+            string fullName = RemoverAcentos($"{fi.Symbol?.FamilyName} {fi.Name}").ToLowerInvariant();
+            return fullName.Contains("reservat") || fullName.Contains("caixa") ||
+                   fullName.Contains("tank") || fullName.Contains("cisterna");
+        }
+
+        private static bool IsStreetFeedComponent(List<Element> comp)
+        {
+            int fixtures = comp.OfType<FamilyInstance>().Count(fi => fi.Category != null && fi.Category.Id.Value == (long)BuiltInCategory.OST_PlumbingFixtures);
+            if (fixtures > 0) return false;
+
+            bool hasTank = comp.OfType<FamilyInstance>().Any(IsReservoirFamily);
+            double minZ = double.MaxValue;
+            double maxZ = double.MinValue;
+            foreach (var e in comp)
+            {
+                var c = GetConnectors(e);
+                if (c == null) continue;
+                double z = GetElevationMeters(e, c);
+                if (z < minZ) minZ = z;
+                if (z > maxZ) maxZ = z;
+            }
+            return hasTank || (minZ <= 1.20 && maxZ >= 2.20);
+        }
+
+        private static Element FindStreetInletSource(List<Element> component)
+        {
+            foreach (Element elem in component)
+            {
+                if (elem is FamilyInstance fi)
+                {
+                    string fullName = RemoverAcentos($"{fi.Symbol?.FamilyName} {fi.Name}").ToLowerInvariant();
+                    if (fullName.Contains("hidrometro") || fullName.Contains("meter") || fullName.Contains("cavalete"))
+                        return fi;
+                }
+            }
+
+            // Ponta mais baixa (entrada da rua)
+            return component
+                .OrderBy(e =>
+                {
+                    var c = GetConnectors(e);
+                    return c != null ? GetElevationMeters(e, c) : double.MaxValue;
+                })
+                .First();
+        }
+
         private static RevitNetworkExtractionResult ExtractFromStartElementInternal(
             Document doc,
             Element startElement,
-            List<Element>? allowedElements)
+            List<Element>? allowedElements,
+            bool isStreetFeed = false,
+            double streetPressureMca = 15.0)
         {
             var result = new RevitNetworkExtractionResult();
             ConnectorSet? startConnectors = GetConnectors(startElement);
@@ -244,12 +435,16 @@ namespace BahrHidro.Revit
             if (startElement is Pipe)
                 reservoirElevationM += 0.50;
 
+            double effectiveHeadElevation = isStreetFeed
+                ? reservoirElevationM + Math.Max(0, streetPressureMca)
+                : reservoirElevationM;
+
             var reservoirNode = new HydraulicNode
             {
                 Id = Guid.NewGuid(),
-                Name = startElement is Pipe ? $"ALIM-{startElement.Id.Value}" : $"RES-{startElement.Id.Value}",
+                Name = isStreetFeed ? $"RUA-{startElement.Id.Value} (+{streetPressureMca:F1}mca)" : (startElement is Pipe ? $"ALIM-{startElement.Id.Value}" : $"RES-{startElement.Id.Value}"),
                 Type = HydraulicNodeType.Reservoir,
-                ElevationMeters = Math.Round(reservoirElevationM, 3),
+                ElevationMeters = Math.Round(effectiveHeadElevation, 3),
                 DemandLitersPerSecond = 0,
                 RelativeWeight = 0
             };
@@ -378,11 +573,12 @@ namespace BahrHidro.Revit
                 }
                 else if (element is FamilyInstance fi)
                 {
-                    bool isFixture = fi.Category != null && fi.Category.Id.Value == (long)BuiltInCategory.OST_PlumbingFixtures;
+                    bool isTankTarget = IsReservoirFamily(fi);
+                    bool isFixture = isTankTarget || (fi.Category != null && fi.Category.Id.Value == (long)BuiltInCategory.OST_PlumbingFixtures);
 
                     if (outgoingConnectors.Count == 0 || isFixture)
                     {
-                        double peso = ReadFixtureWeight(fi);
+                        double peso = isTankTarget ? 1.0 : ReadFixtureWeight(fi);
                         var consumptionNode = new HydraulicNode
                         {
                             Id = Guid.NewGuid(),
