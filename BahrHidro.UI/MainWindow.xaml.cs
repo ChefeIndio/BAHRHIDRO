@@ -2721,6 +2721,154 @@ VerificarPressaoEstaticaMaximaVrp();
             return await _revitBridge.ExtractBomFromRevit(_snapshot.ProjectName ?? "Projeto Hidrossanitário BIM", 10.0);
         }
 
+        private sealed class EditableSinapiBudgetRow : System.ComponentModel.INotifyPropertyChanged
+        {
+            private readonly Action _onValueChanged;
+            private string _commercialRef;
+            private string _sinapiCode;
+            private decimal _unitPriceBrl;
+            private string _unitPriceText;
+
+            public EditableSinapiBudgetRow(BahrHidro.Core.Reporting.SinapiBudgetLine src, Action onValueChanged)
+            {
+                _onValueChanged = onValueChanged;
+                ItemNumber = src.ItemNumber;
+                SystemName = src.SystemName;
+                Description = src.Description;
+                DiameterDisplay = src.DiameterDisplay;
+                _commercialRef = src.CommercialRef;
+                _sinapiCode = src.SinapiCode;
+                Unit = src.Unit;
+                Quantity = src.Quantity;
+                _unitPriceBrl = src.UnitPriceBrl;
+                _unitPriceText = src.UnitPriceBrl.ToString("N2", new System.Globalization.CultureInfo("pt-BR"));
+            }
+
+            public int ItemNumber { get; }
+            public string SystemName { get; }
+            public string Description { get; }
+            public string DiameterDisplay { get; }
+            public string Unit { get; }
+            public double Quantity { get; }
+
+            public string CommercialRef
+            {
+                get => _commercialRef;
+                set
+                {
+                    if (_commercialRef != value)
+                    {
+                        _commercialRef = value ?? "";
+                        OnPropertyChanged(nameof(CommercialRef));
+                    }
+                }
+            }
+
+            public string SinapiCode
+            {
+                get => _sinapiCode;
+                set
+                {
+                    if (_sinapiCode != value)
+                    {
+                        _sinapiCode = value ?? "";
+                        OnPropertyChanged(nameof(SinapiCode));
+                    }
+                }
+            }
+
+            public decimal UnitPriceBrl => _unitPriceBrl;
+
+            public string UnitPriceText
+            {
+                get => _unitPriceText;
+                set
+                {
+                    _unitPriceText = value ?? "";
+                    OnPropertyChanged(nameof(UnitPriceText));
+                    if (TryParseFlexibleDecimal(_unitPriceText, out decimal parsed) && parsed >= 0m)
+                    {
+                        _unitPriceBrl = Math.Round(parsed, 2);
+                        OnPropertyChanged(nameof(UnitPriceBrl));
+                        OnPropertyChanged(nameof(TotalPriceBrl));
+                        _onValueChanged();
+                    }
+                }
+            }
+
+            public decimal TotalPriceBrl => Math.Round((decimal)Quantity * _unitPriceBrl, 2);
+
+            public BahrHidro.Core.Reporting.SinapiBudgetLine ToBudgetLine()
+            {
+                return new BahrHidro.Core.Reporting.SinapiBudgetLine(
+                    ItemNumber,
+                    SystemName,
+                    Description,
+                    DiameterDisplay,
+                    CommercialRef,
+                    SinapiCode,
+                    Unit,
+                    Quantity,
+                    UnitPriceBrl,
+                    TotalPriceBrl);
+            }
+
+            private static bool TryParseFlexibleDecimal(string raw, out decimal result)
+            {
+                result = 0m;
+                if (string.IsNullOrWhiteSpace(raw)) return false;
+                string cleaned = raw.Replace("R$", "", StringComparison.OrdinalIgnoreCase).Trim();
+                if (cleaned.Contains(',') && cleaned.Contains('.'))
+                    cleaned = cleaned.Replace(".", "").Replace(',', '.');
+                else if (cleaned.Contains(','))
+                    cleaned = cleaned.Replace(',', '.');
+
+                return decimal.TryParse(cleaned, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out result);
+            }
+
+            public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+            private void OnPropertyChanged(string propName) => PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propName));
+        }
+
+        private readonly System.Collections.ObjectModel.ObservableCollection<EditableSinapiBudgetRow> _sinapiBudgetRows = new();
+
+        private double ObterBdiPercentual()
+        {
+            if (SinapiBdiTextBox == null || string.IsNullOrWhiteSpace(SinapiBdiTextBox.Text))
+                return 0.0;
+            string raw = SinapiBdiTextBox.Text.Replace("%", "").Trim().Replace(',', '.');
+            return double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double bdi) && bdi >= 0
+                ? bdi
+                : 0.0;
+        }
+
+        private void AtualizarTotaisSinapi()
+        {
+            if (SinapiPreviewText == null) return;
+            if (_sinapiBudgetRows.Count == 0)
+            {
+                SinapiPreviewText.Text = "Clique em 'Carregar Itens do 3D (SINAPI)' para preencher a tabela editável, ajustar preços unitários e configurar o BDI (%).";
+                return;
+            }
+
+            var ptBr = new System.Globalization.CultureInfo("pt-BR");
+            decimal directTotal = _sinapiBudgetRows.Sum(r => r.TotalPriceBrl);
+            double bdiPct = ObterBdiPercentual();
+            decimal bdiVal = Math.Round(directTotal * ((decimal)bdiPct / 100m), 2);
+            decimal grandTotal = directTotal + bdiVal;
+
+            SinapiPreviewText.Text =
+                $"Itens orçados: {_sinapiBudgetRows.Count}  |  " +
+                $"Custo Direto: {directTotal.ToString("C2", ptBr)}  |  " +
+                $"BDI ({bdiPct:F2}%): {bdiVal.ToString("C2", ptBr)}  |  " +
+                $"TOTAL COM BDI: {grandTotal.ToString("C2", ptBr)}";
+        }
+
+        private void SinapiBdiTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            AtualizarTotaisSinapi();
+        }
+
         private async void CalcularOrcamentoSinapi_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -2733,20 +2881,22 @@ VerificarPressaoEstaticaMaximaVrp();
                 }
 
                 var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
-                decimal total = lines.Sum(l => l.TotalPriceBrl);
-                var previewLines = lines.Take(8).Select(l =>
-                    $"• [{l.SinapiCode}] {l.Description} ({l.DiameterDisplay}) — {l.CommercialRef} | {l.Quantity:F2} {l.Unit} = R$ {l.TotalPriceBrl:N2}");
-
-                string extra = lines.Count > 8 ? $"\n... e mais {lines.Count - 8} item(ns) na planilha Excel." : "";
-                if (SinapiPreviewText != null)
+                _sinapiBudgetRows.Clear();
+                foreach (var line in lines)
                 {
-                    SinapiPreviewText.Text = $"TOTAL ESTIMADO DE MATERIAIS (SINAPI): R$ {total:N2} ({lines.Count} itens)\n" +
-                                             string.Join("\n", previewLines) + extra;
+                    _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(line, AtualizarTotaisSinapi));
                 }
+
+                if (SinapiBudgetDataGrid != null)
+                {
+                    SinapiBudgetDataGrid.ItemsSource = _sinapiBudgetRows;
+                }
+
+                AtualizarTotaisSinapi();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao calcular orçamento SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao carregar orçamento SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -2754,27 +2904,57 @@ VerificarPressaoEstaticaMaximaVrp();
         {
             try
             {
-                var takeoff = await ObterTakeoffParaSinapiAsync();
-                if (takeoff == null || (takeoff.Pipes.Count == 0 && takeoff.Fittings.Count == 0 && takeoff.Kits.Count == 0))
+                BahrHidro.Core.Reporting.BimMaterialTakeoff? takeoff = null;
+                if (_sinapiBudgetRows.Count == 0)
                 {
-                    MessageBox.Show("Modele ou extraia as tubulações no 3D antes de exportar a planilha SINAPI.", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    return;
+                    takeoff = await ObterTakeoffParaSinapiAsync();
+                    if (takeoff == null || (takeoff.Pipes.Count == 0 && takeoff.Fittings.Count == 0 && takeoff.Kits.Count == 0))
+                    {
+                        MessageBox.Show("Modele ou extraia as tubulações no 3D antes de exportar a planilha SINAPI.", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
+                    foreach (var line in lines)
+                        _sinapiBudgetRows.Add(new EditableSinapiBudgetRow(line, AtualizarTotaisSinapi));
+
+                    if (SinapiBudgetDataGrid != null)
+                        SinapiBudgetDataGrid.ItemsSource = _sinapiBudgetRows;
+
+                    AtualizarTotaisSinapi();
                 }
 
                 var dlg = new Microsoft.Win32.SaveFileDialog
                 {
-                    Title = "Salvar Orçamento SINAPI & Catálogo Tigre/Amanco",
+                    Title = "Salvar Orçamento Editado — SINAPI & Catálogo Tigre/Amanco",
                     Filter = "Planilha Excel (*.xlsx)|*.xlsx",
-                    FileName = "Orcamento_SINAPI_TigreAmanco_BahrHidro.xlsx"
+                    FileName = "Orcamento_SINAPI_Editado_BahrHidro.xlsx"
                 };
 
                 if (dlg.ShowDialog() == true)
                 {
-                    BahrHidro.Core.Reporting.ExcelReportGenerator.GenerateProjectReportWithBom(_snapshot.ColdWaterNetwork, takeoff, dlg.FileName);
-                    var lines = BahrHidro.Core.Reporting.SinapiCommercialMapper.BuildBudgetLines(takeoff);
-                    decimal total = lines.Sum(l => l.TotalPriceBrl);
+                    var editedLines = _sinapiBudgetRows.Select(r => r.ToBudgetLine()).ToList();
+                    double bdiPct = ObterBdiPercentual();
+
+                    BahrHidro.Core.Reporting.ExcelReportGenerator.GenerateProjectReportWithBom(
+                        _snapshot.ColdWaterNetwork,
+                        takeoff,
+                        dlg.FileName,
+                        editedLines,
+                        bdiPct);
+
+                    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+                    decimal directTotal = editedLines.Sum(l => l.TotalPriceBrl);
+                    decimal bdiVal = Math.Round(directTotal * ((decimal)bdiPct / 100m), 2);
+                    decimal grandTotal = directTotal + bdiVal;
+
                     MessageBox.Show(
-                        $"Planilha SINAPI exportada com sucesso!\n\nArquivo: {dlg.FileName}\nAba: 'Orçamento SINAPI & Fabricante'\nTotal Estimado: R$ {total:N2}",
+                        $"Planilha SINAPI exportada com os valores editados!\n\n" +
+                        $"Arquivo: {dlg.FileName}\n" +
+                        $"Aba: 'Orçamento SINAPI & Fabricante'\n" +
+                        $"Custo Direto: {directTotal.ToString("C2", ptBr)}\n" +
+                        $"BDI ({bdiPct:F2}%): {bdiVal.ToString("C2", ptBr)}\n" +
+                        $"Total Geral: {grandTotal.ToString("C2", ptBr)}",
                         "Bahr Hidro — Orçamento SINAPI",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
