@@ -207,24 +207,31 @@
                     <TextBlock Text="ETAPAS DO PROJETO" FontSize="10.5" FontWeight="Bold" Foreground="#64748B"/>
                 </Border>
 
-                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="8,2" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
-                    <TreeViewItem x:Name="NavInicio" Header="🏠  Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="SemiBold" Foreground="#0F172A" Margin="0,0,0,6"/>
+                                <TreeView x:Name="NavegadorTree" BorderThickness="0" Background="Transparent" Padding="10,4" SelectedItemChanged="NavegadorTree_SelectedItemChanged">
+                    <TreeView.Resources>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#E2E8F0"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#0F172A"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#E2E8F0"/>
+                        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#0F172A"/>
+                    </TreeView.Resources>
 
-                    <TreeViewItem Header="DIMENSIONAMENTO ABNT" IsExpanded="True" FontSize="11" FontWeight="Bold" Foreground="#64748B">
-                        <TreeViewItem x:Name="NavReservatorios" Header="1. Reservatórios" Tag="Reservatorios" FontWeight="SemiBold" Foreground="#1E3A8A"/>
-                        <TreeViewItem x:Name="NavAguaFria" Header="2. Água Fria" Tag="AguaFria" FontWeight="SemiBold" Foreground="#0284C7"/>
+                    <TreeViewItem x:Name="NavInicio" Header="Início / Visão Geral" Tag="Inicio" IsSelected="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,8"/>
+
+                    <TreeViewItem Header="DIMENSIONAMENTO ABNT" IsExpanded="True" FontSize="10.5" FontWeight="Bold" Foreground="#64748B">
+                        <TreeViewItem x:Name="NavReservatorios" Header="1. Reservatórios" Tag="Reservatorios" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavAguaFria" Header="2. Água Fria" Tag="AguaFria" FontWeight="SemiBold" Foreground="#1E293B"/>
                         <TreeViewItem x:Name="NavBomba" Header="    ↳ Pressurização / Bomba" Tag="Bomba" FontWeight="Normal" Foreground="#475569"/>
-                        <TreeViewItem x:Name="NavAguaQuente" Header="3. Água Quente (Boiler)" Tag="AguaQuente" FontWeight="SemiBold" Foreground="#DC2626"/>
-                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto Sanitário" Tag="Esgoto" FontWeight="SemiBold" Foreground="#92400E"/>
-                        <TreeViewItem x:Name="NavPluvial" Header="5. Calhas &amp; Pluvial" Tag="Pluvial" FontWeight="SemiBold" Foreground="#0F766E"/>
-                        <TreeViewItem x:Name="NavCaixaGordura" Header="6. Caixa de Gordura" Tag="CaixaGordura" FontWeight="SemiBold" Foreground="#B45309"/>
+                        <TreeViewItem x:Name="NavAguaQuente" Header="3. Água Quente (Boiler)" Tag="AguaQuente" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavEsgoto" Header="4. Esgoto Sanitário" Tag="Esgoto" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavPluvial" Header="5. Calhas &amp; Pluvial" Tag="Pluvial" FontWeight="SemiBold" Foreground="#1E293B"/>
+                        <TreeViewItem x:Name="NavCaixaGordura" Header="6. Caixa de Gordura" Tag="CaixaGordura" FontWeight="SemiBold" Foreground="#1E293B"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="0,8,0,0">
-                        <TreeViewItem x:Name="NavMemorial" Header="📄  Gerar Memoriais" Tag="Memorial" FontWeight="SemiBold" Foreground="#166534"/>
+                    <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="10.5" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
+                        <TreeViewItem x:Name="NavMemorial" Header="Gerar Memoriais" Tag="Memorial" FontWeight="SemiBold" Foreground="#1E293B"/>
                     </TreeViewItem>
 
-                    <TreeViewItem Header="FERRAMENTAS 3D (FUTURO)" IsExpanded="False" FontSize="11" FontWeight="Bold" Foreground="#94A3B8" Margin="0,8,0,0">
+                    <TreeViewItem Header="FERRAMENTAS 3D (FUTURO)" IsExpanded="False" FontSize="10.5" FontWeight="Bold" Foreground="#94A3B8" Margin="0,10,0,0">
                         <TreeViewItem x:Name="NavTracado3D" Header="Traçado Automático (Beta)" Tag="Tracado3D" FontWeight="Normal" Foreground="#64748B"/>
                         <TreeViewItem x:Name="NavVistas3DVivas" Header="Vistas 3D &amp; Cortes" Tag="Vistas3DVivas" FontWeight="Normal" Foreground="#64748B"/>
                     </TreeViewItem>
@@ -268,8 +275,7 @@
                             <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#DBEAFE" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 1" FontSize="10.5" FontWeight="Bold" Foreground="#1E40AF"/>
+                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"><TextBlock Text="ETAPA 1" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
                                         <TextBlock Text="Reservatórios" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -281,8 +287,7 @@
                             <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#E0F2FE" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 2" FontSize="10.5" FontWeight="Bold" Foreground="#0369A1"/>
+                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"><TextBlock Text="ETAPA 2" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
                                         <TextBlock Text="Água Fria &amp; Bomba" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -301,8 +306,7 @@
                             <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#FEE2E2" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 3" FontSize="10.5" FontWeight="Bold" Foreground="#B91C1C"/>
+                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"><TextBlock Text="ETAPA 3" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
                                         <TextBlock Text="Água Quente &amp; Boiler" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -325,8 +329,7 @@
                             <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#FEF3C7" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 4" FontSize="10.5" FontWeight="Bold" Foreground="#92400E"/>
+                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"><TextBlock Text="ETAPA 4" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
                                         <TextBlock Text="Esgoto Sanitário" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -338,8 +341,7 @@
                             <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#CCFBF1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 5" FontSize="10.5" FontWeight="Bold" Foreground="#0F766E"/>
+                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"><TextBlock Text="ETAPA 5" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
                                         <TextBlock Text="Calhas &amp; Pluvial" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
@@ -351,8 +353,7 @@
                             <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#FFEDD5" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 6" FontSize="10.5" FontWeight="Bold" Foreground="#C2410C"/>
+                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0"><TextBlock Text="ETAPA 6" FontSize="10.5" FontWeight="Bold" Foreground="#334155"/>
                                         </Border>
                                         <TextBlock Text="Caixa de Gordura" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                                     </StackPanel>
