@@ -225,7 +225,7 @@
                     </TreeViewItem>
 
                     <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="10.5" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
-                        <TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Isométricos 2D/3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B" />
+                        <TreeViewItem x:Name="NavClash3D" Header="Compatibilização 3D (Clash)" Selected="NavClash3D_Selected" FontWeight="SemiBold" Foreground="#1E293B" /><TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Isométricos 2D/3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B" />
                         <TreeViewItem x:Name="NavMemorial" Header="Gerar Memoriais &amp; SINAPI" Tag="Memorial" FontWeight="SemiBold" Foreground="#1E293B" />
                     </TreeViewItem>
 
@@ -438,42 +438,7 @@
                                     </StackPanel>
                                 </Border>
 
-                            <Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,18,0,0">
-                                <StackPanel>
-                                    <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
-                                    <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
-
-                                    <WrapPanel Margin="0,0,0,12">
-                                        <Button Content="Auditar Clash 3D (Estrutura &amp; LSF)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExecutarClash3D_Click" />
-                                        <Button Content="Exportar Relatório de Furos (.csv)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="ExportarRelatorioFurosCsv_Click" />
-                                        <Button Content="Gerar Mapa Visual 3D (Pressão &amp; Velocidade)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="GerarMapaDiagnostico3D_Click" />
-                                    </WrapPanel>
-
-                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
-                                        <TextBlock x:Name="ClashAndDiagStatusText" Text="Execute a auditoria 3D para detectar conflitos estruturais/LSF ou gerar a vista 3D colorida de diagnóstico hidráulico." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap" />
-                                    </Border>
-
-                                    <DataGrid x:Name="ClashResultsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="210" FontSize="11.5">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="34" />
-                                            <DataGridTextColumn Header="Sistema" Binding="{Binding PipeSystem}" Width="110" />
-                                            <DataGridTextColumn Header="DN (mm)" Binding="{Binding DiameterMm}" Width="66" />
-                                            <DataGridTextColumn Header="Elemento Estrutural / LSF" Binding="{Binding StructuralCategory}" Width="145" />
-                                            <DataGridTextColumn Header="Modelo" Binding="{Binding SourceModel}" Width="110" />
-                                            <DataGridTextColumn Header="Cota Z (m)" Binding="{Binding ElevationMeters, StringFormat=N2}" Width="74" />
-                                            <DataGridTextColumn Header="Furo Sugerido" Binding="{Binding RecommendedSleeve}" Width="*" />
-                                            <DataGridTemplateColumn Header="Ação 3D" Width="92">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <Button Content="Ver no 3D" Padding="6,2" FontSize="11" Tag="{Binding PipeElementId}" Click="ZoomClashElemento3D_Click" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel></ScrollViewer><Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" VerticalAlignment="Top">
+                            </StackPanel></ScrollViewer><Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" VerticalAlignment="Top">
                                 <StackPanel>
                                     <TextBlock Text="O QUE É CRIADO AUTOMATICAMENTE NO REVIT" FontSize="11.5" FontWeight="Bold" Foreground="#334155" Margin="0,0,0,8" />
                                     <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#334155" LineHeight="19" Text="1. Vistas Isométricas 3D por Ambiente: Detecta banheiros, cozinhas e áreas de serviço, aplica Section Box ajustado, bloqueia a orientação 3D e insere etiquetas de diâmetro.&#10;2. Esquema Vertical de Prumadas: Diagrama esquemático pavimento a pavimento com bitolas de AF, AQ, TQ e CV (Escala 1:50).&#10;3. Prancha Executiva (HID-01): Agrupa planta baixa, isométricos 3D e esquema vertical prontos para plotagem." />
@@ -2067,7 +2032,42 @@
                     <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </ScrollViewer>
-            </StackPanel></Grid>
+            <Grid x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,14"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><StackPanel Grid.Row="0" Margin="0,0,0,14"><TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" /><TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" /></StackPanel><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16"><Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
+                                <StackPanel>
+                                    <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
+                                    <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                                    <WrapPanel Margin="0,0,0,12">
+                                        <Button Content="Auditar Clash 3D (Estrutura &amp; LSF)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExecutarClash3D_Click" />
+                                        <Button Content="Exportar Relatório de Furos (.csv)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="ExportarRelatorioFurosCsv_Click" />
+                                        <Button Content="Gerar Mapa Visual 3D (Pressão &amp; Velocidade)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="GerarMapaDiagnostico3D_Click" />
+                                    </WrapPanel>
+
+                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                        <TextBlock x:Name="ClashAndDiagStatusText" Text="Execute a auditoria 3D para detectar conflitos estruturais/LSF ou gerar a vista 3D colorida de diagnóstico hidráulico." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap" />
+                                    </Border>
+
+                                    <DataGrid x:Name="ClashResultsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="320" FontSize="11.5" VerticalScrollBarVisibility="Auto">
+                                        <DataGrid.Columns>
+                                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="34" />
+                                            <DataGridTextColumn Header="Sistema" Binding="{Binding PipeSystem}" Width="110" />
+                                            <DataGridTextColumn Header="DN (mm)" Binding="{Binding DiameterMm}" Width="66" />
+                                            <DataGridTextColumn Header="Elemento Estrutural / LSF" Binding="{Binding StructuralCategory}" Width="145" />
+                                            <DataGridTextColumn Header="Modelo" Binding="{Binding SourceModel}" Width="110" />
+                                            <DataGridTextColumn Header="Cota Z (m)" Binding="{Binding ElevationMeters, StringFormat=N2}" Width="74" />
+                                            <DataGridTextColumn Header="Furo Sugerido" Binding="{Binding RecommendedSleeve}" Width="*" />
+                                            <DataGridTemplateColumn Header="Ação 3D" Width="92">
+                                                <DataGridTemplateColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="Ver no 3D" Padding="6,2" FontSize="11" Tag="{Binding PipeElementId}" Click="ZoomClashElemento3D_Click" />
+                                                    </DataTemplate>
+                                                </DataGridTemplateColumn.CellTemplate>
+                                            </DataGridTemplateColumn>
+                                        </DataGrid.Columns>
+                                    </DataGrid>
+                                </StackPanel>
+                            </Border>
+                        </ScrollViewer><Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,10"><TextBlock Text="Compatibilização BIM 3D • Detecção de Furos em Vigas, Lajes e Perfis LSF" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" /></Border></Grid></StackPanel></Grid>
         </Border>
     </DockPanel>
     </DockPanel>

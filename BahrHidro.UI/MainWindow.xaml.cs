@@ -40,6 +40,20 @@ namespace BahrHidro.UI
         public MainWindow()
         {
             try { try { InitializeComponent();
+            if (PageClash3D?.Parent is System.Windows.Controls.Panel navHost)
+            {
+                foreach (UIElement child in navHost.Children)
+                {
+                    if (child != PageClash3D && child is FrameworkElement fe)
+                    {
+                        fe.IsVisibleChanged += (s, args) =>
+                        {
+                            if (fe.Visibility == Visibility.Visible && PageClash3D != null)
+                                PageClash3D.Visibility = Visibility.Collapsed;
+                        };
+                    }
+                }
+            }
             UiNavigationController.Initialize(); } catch (Exception ex) { System.Windows.MessageBox.Show(ex.InnerException?.ToString() ?? ex.ToString(), "Bahr Hidro BIM - Erro de Interface"); throw; } } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Bahr Hidro BIM - Debug"); throw; }
             InitializeKeyboardShortcuts();
             LoadOfficeProfileToUi();
@@ -3884,6 +3898,18 @@ VerificarPressaoEstaticaMaximaVrp();
                 if (BtnGerarIsometricosSomente != null) BtnGerarIsometricosSomente.IsEnabled = true;
                 if (BtnGerarPranchaAbnt != null) BtnGerarPranchaAbnt.IsEnabled = true;
             }
+        }
+
+        private void NavClash3D_Selected(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (PageClash3D?.Parent is System.Windows.Controls.Panel host)
+            {
+                foreach (UIElement child in host.Children)
+                    child.Visibility = Visibility.Collapsed;
+            }
+            if (PageClash3D != null)
+                PageClash3D.Visibility = Visibility.Visible;
         }
 }
 }
