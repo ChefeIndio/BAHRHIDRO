@@ -19,8 +19,8 @@
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Border Background="#FFFFFF" CornerRadius="4" Padding="4,1" Margin="0,0,8,0" VerticalAlignment="Center">
-                                    <Image Source="/BahrHidro.UI;component/LogoSmart.png" Height="22" Stretch="Uniform" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                                <Border Background="#FFFFFF" CornerRadius="4" Padding="3,1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Image Source="/BahrHidro.UI;component/LogoSmart.png" Height="24" Stretch="Uniform" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                                 </Border>
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </StackPanel>
@@ -158,8 +158,8 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border CornerRadius="8" Height="44" MinWidth="92" Margin="0,0,12,0" VerticalAlignment="Center" Background="#FFFFFF" BorderBrush="#F28C38" BorderThickness="1.5" Padding="6,3">
-                        <Image Source="/BahrHidro.UI;component/LogoSmart.png" Height="34" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <Border CornerRadius="8" Height="46" MinWidth="126" Margin="0,0,14,0" VerticalAlignment="Center" Background="#FFFFFF" BorderBrush="#F28C38" BorderThickness="1.5" Padding="3">
+                        <Image Source="/BahrHidro.UI;component/LogoSmart.png" Height="38" Stretch="Uniform" VerticalAlignment="Center" HorizontalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -168,7 +168,7 @@
                                 <TextBlock x:Name="ActiveStepBadgeText" Text="Visão Geral do Fluxo" FontSize="11" FontWeight="SemiBold" Foreground="#D97724" />
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="Copiloto de Engenharia •  Hidrossanitária • ABNT NBR 5626 / 7198 / 8160 / 10844" FontSize="11" Foreground="#64748B" />
+                        <TextBlock Text="Copiloto de Engenharia Hidrossanitária • ABNT NBR 5626 / 7198 / 8160 / 10844 • By Frederico Bahr" FontSize="11" Foreground="#64748B" />
                     </StackPanel>
                 </StackPanel>
 
@@ -236,155 +236,194 @@
             <Grid VerticalAlignment="Stretch">
                 
                 <ScrollViewer x:Name="MainPagesScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Padding="0,0,10,24"><StackPanel VerticalAlignment="Top"><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelInicio}" VerticalAlignment="Top" Margin="0,0,0,28"><ScrollViewer x:Name="PanelInicio" Visibility="Visible" VerticalScrollBarVisibility="Auto" Padding="24" Margin="0,0,0,24" HorizontalScrollBarVisibility="Disabled" VerticalAlignment="Stretch">
-                    <StackPanel MaxWidth="1060" HorizontalAlignment="Left">
-                        <Border Background="#0F172A" CornerRadius="10" Padding="22" Margin="0,0,0,18">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="FLUXO GUIADO DE PROJETO COMPLEMENTAR" Foreground="#F28C38" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
-                                    <TextBlock Text="Dimensionamento, Auditoria Normativa e Memoriais" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,6" />
-                                    <TextBlock x:Name="InicioProjetoStatusText" Text="Modele o traçado básico no Revit e avance pelas 5 etapas abaixo. Os dados calculados em uma etapa alimentam automaticamente as seguintes." Foreground="#CBD5E1" FontSize="12.5" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="20,0,0,0">
-                                    <Button Content="Iniciar pela Etapa 1 →" Style="{StaticResource PrimaryButton}" Height="38" Padding="18,0" Click="BtnIrReservatorios_Click" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
+                                <StackPanel MaxWidth="1100" HorizontalAlignment="Left">
+                                    <!-- HERO BANNER COM AUTORIA -->
+                                    <Border Background="#0F172A" BorderBrush="#1E293B" BorderThickness="1" CornerRadius="12" Padding="24" Margin="0,0,0,18">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0">
+                                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                                    <Border Background="#F28C38" CornerRadius="4" Padding="8,3" Margin="0,0,10,0">
+                                                        <TextBlock Text="FLUXO GUIADO DE PROJETO BIM" Foreground="#FFFFFF" FontSize="10.5" FontWeight="Bold" />
+                                                    </Border>
+                                                    <Border Background="#1E293B" BorderBrush="#F28C38" BorderThickness="1" CornerRadius="4" Padding="8,2">
+                                                        <TextBlock Text="PRODUCED BY FREDERICO BAHR" Foreground="#FDBA74" FontSize="10.5" FontWeight="SemiBold" />
+                                                    </Border>
+                                                </StackPanel>
 
-                                                
-                        <Grid Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Smart Hidro — Dimensionamento &amp; Auditoria Normativa" Foreground="#FFFFFF" FontSize="21" FontWeight="Bold" Margin="0,0,0,8" />
 
-                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 1" FontSize="10.5" FontWeight="Bold" Foreground="#334155" />
-                                        </Border>
-                                        <TextBlock Text="Reservatórios" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <TextBlock Text="Detecta caixas no 3D, verifica pressão da rua e calcula volumes comerciais (Superior e Cisterna)." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48" />
-                                    <Button Content="Abrir Reservatórios" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrReservatorios_Click" />
-                                </StackPanel>
-                            </Border>
+                                                <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="6" Padding="10,7" Margin="0,0,12,0">
+                                                    <TextBlock x:Name="InicioProjetoStatusText" Text="Modele o traçado básico no Revit e avance pelas 5 etapas abaixo. Os dados calculados em uma etapa alimentam automaticamente as seguintes." Foreground="#E2E8F0" FontSize="12.5" TextWrapping="Wrap" />
+                                                </Border>
+                                            </StackPanel>
 
-                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 2" FontSize="10.5" FontWeight="Bold" Foreground="#334155" />
-                                        </Border>
-                                        <TextBlock Text="Água Fria &amp; Bomba" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <TextBlock x:Name="InicioRedeStatusText" Text="Audita o traçado do Revit, dimensiona bitolas por ΣP, verifica pressões/velocidades e pressurizador." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48" />
-                                    <Grid>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="16,0,0,0">
+                                                <Button Content="Iniciar pela Etapa 1 →" Style="{StaticResource PrimaryButton}" Height="42" Padding="20,0" Click="BtnIrReservatorios_Click" />
+                                                <TextBlock Text="Engineered by Frederico Bahr" Foreground="#94A3B8" FontSize="11" FontStyle="Italic" HorizontalAlignment="Center" Margin="0,8,0,0" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+
+                                    <!-- LINHA 1: ETAPAS 1 A 3 -->
+                                    <Grid Margin="0,0,0,14">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Content="Abrir Água Fria" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click" />
-                                        <Button x:Name="BtnImportarInicioRevit" Grid.Column="1" Content="Ler 3D" Style="{StaticResource PrimaryButton}" Visibility="Collapsed" Margin="8,0,0,0" Click="DetectarRedeAutoRevit_Click" />
+
+                                        <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="10" Padding="18">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="NBR 5626" FontSize="10.5" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="ETAPA 01" FontSize="10.5" FontWeight="Bold" Foreground="#C26619" />
+                                                        </Border>
+                                                        <TextBlock Text="Reservatórios" FontSize="14.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <TextBlock Text="Detecta caixas no 3D, verifica pressão da rua e calcula volumes comerciais (Superior e Cisterna)." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="46" Margin="0,0,0,6" />
+                                                <Button Content="Abrir Reservatórios" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrReservatorios_Click" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="10" Padding="18">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="NBR 5626" FontSize="10.5" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="ETAPA 02" FontSize="10.5" FontWeight="Bold" Foreground="#C26619" />
+                                                        </Border>
+                                                        <TextBlock Text="Água Fria &amp; Bomba" FontSize="14.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <TextBlock x:Name="InicioRedeStatusText" Text="Audita o traçado do Revit, dimensiona bitolas por ΣP, verifica pressões/velocidades e pressurizador." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="46" Margin="0,0,0,6" />
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Grid.Column="0" Content="Abrir Água Fria" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaFria_Click" />
+                                                    <Button x:Name="BtnImportarInicioRevit" Grid.Column="1" Content="Ler 3D" Style="{StaticResource PrimaryButton}" Visibility="Collapsed" Margin="8,0,0,0" Click="DetectarRedeAutoRevit_Click" />
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="10" Padding="18">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="NBR 7198" FontSize="10.5" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="ETAPA 03" FontSize="10.5" FontWeight="Bold" Foreground="#C26619" />
+                                                        </Border>
+                                                        <TextBlock Text="Água Quente &amp; Boiler" FontSize="14.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <TextBlock Text="Dimensiona o volume do Boiler, regime de trabalho (Alta/Baixa Pressão) e potência térmica." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="46" Margin="0,0,0,6" />
+                                                <Button Content="Abrir Água Quente" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaQuente_Click" />
+                                            </StackPanel>
+                                        </Border>
                                     </Grid>
-                                </StackPanel>
-                            </Border>
 
-                            <Border Grid.Column="4" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 3" FontSize="10.5" FontWeight="Bold" Foreground="#334155" />
+                                    <!-- LINHA 2: ETAPAS 4, 5 E ENTREGA -->
+                                    <Grid Margin="0,0,0,16">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="14" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="10" Padding="18">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="NBR 8160" FontSize="10.5" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="ETAPA 04" FontSize="10.5" FontWeight="Bold" Foreground="#C26619" />
+                                                        </Border>
+                                                        <TextBlock Text="Esgoto Sanitário" FontSize="14.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <TextBlock Text="Contagem de aparelhos por UHC, diâmetro mínimo do coletor e declividades normativas (NBR 8160)." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="46" Margin="0,0,0,6" />
+                                                <Button Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click" />
+                                            </StackPanel>
                                         </Border>
-                                        <TextBlock Text="Água Quente &amp; Boiler" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <TextBlock Text="Dimensiona o volume do Boiler, regime de trabalho (Alta/Baixa Pressão) e potência térmica." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48" />
-                                    <Button Content="Abrir Água Quente" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrAguaQuente_Click" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
 
-                        
-                        <Grid Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="14" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 4" FontSize="10.5" FontWeight="Bold" Foreground="#334155" />
+                                        <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="10" Padding="18">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="NBR 10844" FontSize="10.5" FontWeight="SemiBold" Foreground="#94A3B8" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="ETAPA 05" FontSize="10.5" FontWeight="Bold" Foreground="#C26619" />
+                                                        </Border>
+                                                        <TextBlock Text="Calhas &amp; Pluvial" FontSize="14.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <TextBlock Text="Lê coberturas do Revit, aplica chuva regional e dimensiona calhas e condutores verticais." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="46" Margin="0,0,0,6" />
+                                                <Button Content="Abrir Calhas &amp; Pluvial" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrPluvial_Click" />
+                                            </StackPanel>
                                         </Border>
-                                        <TextBlock Text="Esgoto Sanitário" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <TextBlock Text="Contagem de aparelhos por UHC, diâmetro mínimo do coletor e declividades normativas (NBR 8160)." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48" />
-                                    <Button Content="Abrir Esgoto Sanitário" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrEsgoto_Click" />
-                                </StackPanel>
-                            </Border>
 
-                            <Border Grid.Column="2" Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ETAPA 5" FontSize="10.5" FontWeight="Bold" Foreground="#334155" />
+                                        <Border Grid.Column="4" Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1.5" CornerRadius="10" Padding="18">
+                                            <StackPanel>
+                                                <DockPanel Margin="0,0,0,8">
+                                                    <TextBlock DockPanel.Dock="Right" Text="FINAL" FontSize="10.5" FontWeight="Bold" Foreground="#15803D" VerticalAlignment="Center" />
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4" Padding="7,2" Margin="0,0,8,0">
+                                                            <TextBlock Text="ENTREGA" FontSize="10.5" FontWeight="Bold" Foreground="#166534" />
+                                                        </Border>
+                                                        <TextBlock Text="Memoriais &amp; BOM" FontSize="14.5" FontWeight="Bold" Foreground="#14532D" VerticalAlignment="Center" />
+                                                    </StackPanel>
+                                                </DockPanel>
+                                                <TextBlock x:Name="InicioCatalogoStatusText" Text="Gera planilha Excel + BOM, Memorial Descritivo, Cálculo Analítico e PDF Unificado." FontSize="12" Foreground="#166534" TextWrapping="Wrap" Height="46" Margin="0,0,0,6" />
+                                                <Button Content="Gerar Todos os Memoriais →" Style="{StaticResource RevitApplyButton}" HorizontalAlignment="Stretch" Click="BtnIrMemorial_Click" />
+                                            </StackPanel>
                                         </Border>
-                                        <TextBlock Text="Calhas &amp; Pluvial" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <TextBlock Text="Lê coberturas do Revit, aplica chuva regional e dimensiona calhas e condutores verticais." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Height="48" />
-                                    <Button Content="Abrir Calhas &amp; Pluvial" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Stretch" Click="BtnIrPluvial_Click" />
+                                    </Grid>
+
+                                    <!-- FERRAMENTAS RÁPIDAS BIM 3D -->
+                                    <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,0,0,14">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Left" Text="Ferramentas BIM 3D:" FontSize="12" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                            <WrapPanel VerticalAlignment="Center">
+                                                <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonCache_Click">
+                                                    <TextBlock Text="⚡ Atualizar Cache LSF [F5]" />
+                                                </Button>
+                                                <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonAudit_Click">
+                                                    <TextBlock Text="🎨 Auditoria Visual 3D [Ctrl+Shift+A]" />
+                                                </Button>
+                                                <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonLsf_Click">
+                                                    <TextBlock Text="🔩 Validar Furos LSF [Ctrl+Shift+L]" />
+                                                </Button>
+                                                <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
+                                                    <TextBlock Text="📐 Gerar Pranchas [Ctrl+Shift+P]" />
+                                                </Button>
+                                                <Button x:Name="NavConfiguracoesBtn" Visibility="Collapsed" Click="NavConfiguracoes_Click" />
+                                            </WrapPanel>
+                                        </DockPanel>
+                                    </Border>
+
+                                    <!-- RODAPÉ DE AUTORIA -->
+                                    <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14,9">
+                                        <DockPanel>
+                                            <TextBlock DockPanel.Dock="Left" Text="Smart Hidro BIM • Engenharia Hidrossanitária &amp; Light Steel Framing" FontSize="11.5" Foreground="#64748B" VerticalAlignment="Center" />
+                                            <TextBlock DockPanel.Dock="Right" Text="Desenvolvido por Frederico Bahr • Produced by Frederico Bahr" FontSize="11.5" FontWeight="SemiBold" Foreground="#C26619" VerticalAlignment="Center" />
+                                        </DockPanel>
+                                    </Border>
                                 </StackPanel>
-                            </Border>
-
-                            <Border Grid.Column="4" Background="#F0FDF4" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="8" Padding="16">
-                                <StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                        <Border Background="#DCFCE7" BorderBrush="#86EFAC" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,8,0">
-                                            <TextBlock Text="ENTREGA" FontSize="10.5" FontWeight="Bold" Foreground="#166534" />
-                                        </Border>
-                                        <TextBlock Text="Memoriais &amp; BOM" FontSize="14" FontWeight="Bold" Foreground="#14532D" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                    <TextBlock x:Name="InicioCatalogoStatusText" Text="Gera planilha Excel + BOM, Memorial Descritivo, Cálculo Analítico e PDF Unificado." FontSize="12" Foreground="#166534" TextWrapping="Wrap" Height="48" />
-                                    <Button Content="Gerar Todos os Memoriais →" Style="{StaticResource RevitApplyButton}" HorizontalAlignment="Stretch" Click="BtnIrMemorial_Click" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-
-
-
-                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="12,10">
-                            <DockPanel>
-                                <TextBlock DockPanel.Dock="Left" Text="Ferramentas BIM 3D:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                <WrapPanel VerticalAlignment="Center">
-                                    <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonCache_Click">
-                                        <TextBlock Text="⚡ Atualizar Cache LSF [F5]" />
-                                    </Button>
-                                    <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonAudit_Click">
-                                        <TextBlock Text="🎨 Auditoria Visual 3D [Ctrl+Shift+A]" />
-                                    </Button>
-                                    <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonLsf_Click">
-                                        <TextBlock Text="🔩 Validar Furos LSF [Ctrl+Shift+L]" />
-                                    </Button>
-                                    <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
-                                        <TextBlock Text="📐 Gerar Pranchas [Ctrl+Shift+P]" />
-                                    </Button>
-                                    <Button x:Name="NavConfiguracoesBtn" Visibility="Collapsed" Click="NavConfiguracoes_Click" />
-                                </WrapPanel>
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            </ScrollViewer>
 
                 
                 </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PanelVistas3DVivas}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PanelVistas3DVivas" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
