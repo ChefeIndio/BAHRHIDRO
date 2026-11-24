@@ -4348,5 +4348,29 @@ VerificarPressaoEstaticaMaximaVrp();
             }
         }
 
+    
+        private void GerarIsometricosPorAmbiente_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var statusTxt = FindName("Doc3DStatusText") as System.Windows.Controls.TextBlock;
+                var callback = BahrHidro.Core.Detailing.IsometricoAmbientePlanner.GerarIsometricosPorAmbienteCallback;
+                if (callback == null)
+                {
+                    string erroCb = "O conector Revit 2026 ainda não foi inicializado. Abra o Smart Hidro pela aba do Revit.";
+                    if (statusTxt != null) statusTxt.Text = erroCb;
+                    System.Windows.MessageBox.Show(erroCb, "Smart Hidro — Isométricos por Ambiente", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    return;
+                }
+
+                string msg = callback();
+                if (statusTxt != null) statusTxt.Text = msg;
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erro ao gerar isométricos por ambiente: {ex.Message}", "Smart Hidro BIM");
+            }
+        }
+
     }
 }

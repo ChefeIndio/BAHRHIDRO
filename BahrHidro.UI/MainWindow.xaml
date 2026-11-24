@@ -416,6 +416,9 @@
                                                 <Button Style="{StaticResource QuickChipButton}" Click="ExecutarProdutividadeBim_Click">
                                                     <TextBlock Text="⚡ Produtividade BIM" />
                                                 </Button>
+                                                <Button Style="{StaticResource QuickChipButton}" Click="GerarIsometricosPorAmbiente_Click">
+                                                    <TextBlock Text="📐 Isométricos por Ambiente" />
+                                                </Button>
                                                 <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
                                                     <TextBlock Text="📐 Gerar Pranchas [Ctrl+Shift+P]" />
                                                 </Button>
@@ -491,8 +494,11 @@
                                             <Button x:Name="BtnGerarIsometricosSomente" Content="Gerar Vistas Isométricas (2D / 3D)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="GerarIsometricosSomente_Click" />
                                             <Button x:Name="BtnGerarPranchaAbnt" Content="Gerar Prancha Executiva ABNT (HID-01)" Style="{StaticResource PrimaryButton}" Margin="0,0,0,4" Click="GerarIsometricosEPranchaAbnt_Click" />
                                         </WrapPanel>
-<Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,10,0,0">
-  <TextBlock x:Name="Doc3DStatusText" Text="Selecione Isométrica 2D, Isométrica 3D ou ambos e clique para gerar." FontSize="11.5" Foreground="#9A3412" TextWrapping="Wrap" />
+<WrapPanel Margin="0,0,0,8">
+                                                            <Button x:Name="BtnGerarIsometricosPorAmbiente" Content="Gerar Isométricos 3D Separados por Ambiente" Style="{StaticResource PrimaryButton}" Click="GerarIsometricosPorAmbiente_Click" />
+                                                        </WrapPanel>
+                                                        <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="10">
+                                                        <TextBlock x:Name="Doc3DStatusText" Text="Selecione Isométrica 2D, Isométrica 3D ou ambos e clique para gerar." FontSize="11.5" Foreground="#9A3412" TextWrapping="Wrap" />
 </Border>
                                     </StackPanel>
                                 </Border>
