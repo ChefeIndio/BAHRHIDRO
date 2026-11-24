@@ -10,12 +10,12 @@ namespace BahrHidro.Revit
     {
         public static ElementId GetOrCreateColdWaterSystemTypeId(Document doc)
         {
-            return GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticColdWater, "Água Fria - Bahr Hidro");
+            return GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticColdWater, "Água Fria - Smart Hidro");
         }
 
         public static ElementId GetOrCreateHotWaterSystemTypeId(Document doc)
         {
-            return GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticHotWater, "Água Quente - Bahr Hidro");
+            return GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticHotWater, "Água Quente - Smart Hidro");
         }
 
         public static ElementId GetOrCreateSystemTypeId(Document doc, MEPSystemClassification classification, string defaultName)
@@ -61,8 +61,8 @@ namespace BahrHidro.Revit
 
             ElementId cwSysId = GetOrCreateColdWaterSystemTypeId(doc);
             ElementId hwSysId = GetOrCreateHotWaterSystemTypeId(doc);
-            ElementId sanSysId = GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Bahr Hidro");
-            ElementId ventSysId = GetOrCreateSystemTypeId(doc, MEPSystemClassification.Vent, "Ventilação Sanitária - Bahr Hidro");
+            ElementId sanSysId = GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Smart Hidro");
+            ElementId ventSysId = GetOrCreateSystemTypeId(doc, MEPSystemClassification.Vent, "Ventilação Sanitária - Smart Hidro");
 
             foreach (var pipe in pipes)
             {

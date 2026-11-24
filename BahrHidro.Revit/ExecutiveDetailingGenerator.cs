@@ -117,8 +117,8 @@ namespace BahrHidro.Revit
         {
             if (doc == null) return;
 
-            const string pipeScheduleName = "Bahr Hidro - Quantitativo de Tubulações (NBR 5626 / 8160)";
-            const string fittingScheduleName = "Bahr Hidro - Quantitativo de Conexões e Registros";
+            const string pipeScheduleName = "Smart Hidro - Quantitativo de Tubulações (NBR 5626 / 8160)";
+            const string fittingScheduleName = "Smart Hidro - Quantitativo de Conexões e Registros";
 
             var existingNames = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSchedule))

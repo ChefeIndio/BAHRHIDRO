@@ -232,7 +232,7 @@ namespace BahrHidro.Revit
 
             // Aplica os diâmetros calculados diretamente nos tubos 3D do Revit
             int pipesUpdated = 0;
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Dimensionar Esgoto 3D (NBR 8160)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Dimensionar Esgoto 3D (NBR 8160)"))
             {
                 tx.Start();
                 foreach (var info in nodesById.Values)
@@ -405,10 +405,10 @@ namespace BahrHidro.Revit
                 groupedRisers.Add(("CV-1 (Ref.)", "CV", minLvl, maxLvl + 0.3, new List<(double, int)> { ((minLvl + maxLvl) * 0.5, 50) }));
             }
 
-            const string viewName = "Bahr Hidro - Esquema Vertical de Prumadas (ABNT)";
+            const string viewName = "Smart Hidro - Esquema Vertical de Prumadas (ABNT)";
             ViewDrafting? schematicView = null;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Esquema Vertical de Prumadas"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Gerar Esquema Vertical de Prumadas"))
             {
                 tx.Start();
 

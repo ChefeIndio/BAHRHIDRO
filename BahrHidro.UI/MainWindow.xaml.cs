@@ -88,7 +88,7 @@ namespace BahrHidro.UI
                     }
                 }
             }
-            UiNavigationController.Initialize(); } catch (Exception ex) { System.Windows.MessageBox.Show(ex.InnerException?.ToString() ?? ex.ToString(), "Bahr Hidro BIM - Erro de Interface"); throw; } } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Bahr Hidro BIM - Debug"); throw; }
+            UiNavigationController.Initialize(); } catch (Exception ex) { System.Windows.MessageBox.Show(ex.InnerException?.ToString() ?? ex.ToString(), "Smart Hidro BIM - Erro de Interface"); throw; } } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Smart Hidro BIM - Debug"); throw; }
             InitializeKeyboardShortcuts();
             LoadOfficeProfileToUi();
 
@@ -222,7 +222,7 @@ namespace BahrHidro.UI
                     "CaixaGordura" => "Etapa 4 de 5 • Esgoto Sanitário (NBR 8160)",
                     "Memorial" => "Entrega Final • Todos os Memoriais",
                     "Configuracoes" => "Parâmetros Técnicos do Escritório",
-                    _ => "Bahr Hidro BIM"
+                    _ => "Smart Hidro BIM"
                 };
             }
 
@@ -304,7 +304,7 @@ namespace BahrHidro.UI
         {
             await GarantirCatalogoPadraoNbrAsync();
             await AtualizarStatusCatalogoInicioAsync();
-            MessageBox.Show("Catálogo padrão ABNT NBR 5648 (PVC Soldável DN 20 a DN 110) carregado com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Catálogo padrão ABNT NBR 5648 (PVC Soldável DN 20 a DN 110) carregado com sucesso!", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private void CarregarPerfisEdificacao()
@@ -395,7 +395,7 @@ namespace BahrHidro.UI
             {
                 if (_network.Segments.Count == 0)
                 {
-                    MessageBox.Show("Importe uma rede do modelo 3D do Revit antes de calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Importe uma rede do modelo 3D do Revit antes de calcular.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -559,7 +559,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro no dimensionamento:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -567,7 +567,7 @@ namespace BahrHidro.UI
         {
             if (_ultimoResultadoDaRede == null)
             {
-                MessageBox.Show("Calcule primeiro a rede na aba 'Água Fria (Rede BIM 3D)'.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Calcule primeiro a rede na aba 'Água Fria (Rede BIM 3D)'.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
             AtualizarPainelBomba();
@@ -611,7 +611,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao verificar pressurização:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao verificar pressurização:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -621,12 +621,12 @@ namespace BahrHidro.UI
             {
                 if (!int.TryParse(BoilerOcupantesTextBox.Text, out int ocupantes) || ocupantes <= 0)
                 {
-                    MessageBox.Show("Informe um número válido de ocupantes.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe um número válido de ocupantes.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (!TryParsePtBrDouble(BoilerPressaoTextBox.Text, out double pressao) || pressao <= 0)
                 {
-                    MessageBox.Show("Informe uma pressão de trabalho válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe uma pressão de trabalho válida.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (BoilerPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingProfile perfil))
@@ -663,7 +663,7 @@ namespace BahrHidro.UI
                     PressureClassification = resultado.RecommendedPressureType
                 };
             }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private static int SugerirCapacidadeComercialBoiler(double litros)
@@ -685,22 +685,22 @@ namespace BahrHidro.UI
             {
                 if (!int.TryParse(CaixaPopulacaoTextBox.Text, out int populacao) || populacao <= 0)
                 {
-                    MessageBox.Show("Informe uma população válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe uma população válida.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (!int.TryParse(CaixaDiasTextBox.Text, out int dias) || dias <= 0)
                 {
-                    MessageBox.Show("Informe uma autonomia (dias) válida.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe uma autonomia (dias) válida.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (!TryParsePtBrDouble(CaixaIncendioTextBox.Text, out double incendio) || incendio < 0)
                 {
-                    MessageBox.Show("Informe um valor válido para reserva de incêndio.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe um valor válido para reserva de incêndio.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (!TryParsePtBrDouble(CaixaCisternaTextBox.Text, out double percentagem) || percentagem < 0 || percentagem > 100)
                 {
-                    MessageBox.Show("Informe um percentual entre 0 e 100 para a cisterna.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe um percentual entre 0 e 100 para a cisterna.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (CaixaPerfilComboBox.SelectedItem is not ComboBoxItem itemSelecionado || itemSelecionado.Tag is not string tagString || !Enum.TryParse(tagString, out BuildingCategory perfil))
@@ -739,7 +739,7 @@ namespace BahrHidro.UI
 
                 AtualizarDiagnosticoReservatorioERua(resultado.TotalRequiredVolumeLiters, comSup);
             }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private void CalcularEsgoto_Click(object sender, RoutedEventArgs e)
@@ -764,7 +764,7 @@ namespace BahrHidro.UI
 
                 if (totalUhc == 0)
                 {
-                    MessageBox.Show("Adicione ou importe pelo menos uma peça de esgoto (UHC) para calcular.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Adicione ou importe pelo menos uma peça de esgoto (UHC) para calcular.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -799,7 +799,7 @@ namespace BahrHidro.UI
                     MandatoryRecommendations = itensObrigatorios
                 };
             }
-            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
+            catch (Exception ex) { MessageBox.Show($"Ocorreu um erro ao dimensionar o esgoto:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error); }
         }
 
         private void AtualizarResumoPluvialNoMemorial()
@@ -825,11 +825,11 @@ namespace BahrHidro.UI
                 var importData = await _revitBridge.ImportNetworkAutomaticallyFromRevit(subIdx, pressaoRua);
                 CarregarRedeImportadaNaTela(importData);
                 if (!string.IsNullOrWhiteSpace(importData.Summary))
-                    MessageBox.Show(importData.Summary, "Bahr Hidro - Detecção Automática 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show(importData.Summary, "Smart Hidro - Detecção Automática 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso na detecção automática:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso na detecção automática:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -845,7 +845,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao importar rede do Revit:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -905,18 +905,18 @@ namespace BahrHidro.UI
             if (_revitBridge == null) return;
             if (_ultimoResultadoDaRede == null)
             {
-                MessageBox.Show("Calcule a rede hidráulica antes de aplicar os diâmetros no Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Calcule a rede hidráulica antes de aplicar os diâmetros no Revit.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
             try
             {
                 int atualizados = await _revitBridge.ApplyDiametersToRevit(_ultimoResultadoDaRede);
-                MessageBox.Show($"{atualizados} tubo(s) atualizado(s) com sucesso no modelo 3D do Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{atualizados} tubo(s) atualizado(s) com sucesso no modelo 3D do Revit!", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao aplicar diâmetros no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao aplicar diâmetros no Revit:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -928,11 +928,11 @@ namespace BahrHidro.UI
                 var est = await _revitBridge.EstimateBuildingPopulation();
                 CaixaPopulacaoTextBox.Text = est.EstimatedPeople.ToString();
                 BoilerOcupantesTextBox.Text = est.EstimatedPeople.ToString();
-                MessageBox.Show(est.Summary, "Bahr Hidro BIM - Ambientes Revit", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(est.Summary, "Smart Hidro BIM - Ambientes Revit", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao ler ambientes do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao ler ambientes do Revit:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -946,7 +946,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao ler aparelhos do projeto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao ler aparelhos do projeto:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -960,7 +960,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao selecionar aparelhos no 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao selecionar aparelhos no 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -968,7 +968,7 @@ namespace BahrHidro.UI
         {
             if (mapeados.Count == 0)
             {
-                MessageBox.Show("Nenhum aparelho sanitário compatível encontrado no modelo.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Nenhum aparelho sanitário compatível encontrado no modelo.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -982,7 +982,7 @@ namespace BahrHidro.UI
             CalcularEsgoto_Click(sender, e);
 
             int totalPecas = mapeados.Values.Sum();
-            MessageBox.Show($"{totalPecas} aparelho(s) sanitário(s) lido(s) do Revit e dimensionados!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show($"{totalPecas} aparelho(s) sanitário(s) lido(s) do Revit e dimensionados!", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private async void ImportarPluvialAutoRevit_Click(object sender, RoutedEventArgs e)
@@ -993,15 +993,15 @@ namespace BahrHidro.UI
                 var roof = await _revitBridge.CaptureAllRoofsFromRevit();
                 if (roof == null)
                 {
-                    MessageBox.Show("Nenhum telhado (Roof) encontrado no modelo Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Nenhum telhado (Roof) encontrado no modelo Revit.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
                 RainwaterViewControl.AplicarDadosTelhadoRevit(roof);
-                MessageBox.Show($"Cobertura '{roof.RoofName}' lida automaticamente!\nÁrea total: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Cobertura '{roof.RoofName}' lida automaticamente!\nÁrea total: {roof.AreaM2:F2} m²", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao ler telhados do projeto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao ler telhados do projeto:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1013,11 +1013,11 @@ namespace BahrHidro.UI
                 var roof = await _revitBridge.CaptureRoofFromRevit(this);
                 if (roof == null) return;
                 RainwaterViewControl.AplicarDadosTelhadoRevit(roof);
-                MessageBox.Show($"Telhado '{roof.RoofName}' capturado!\nÁrea medida: {roof.AreaM2:F2} m²", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Telhado '{roof.RoofName}' capturado!\nÁrea medida: {roof.AreaM2:F2} m²", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao capturar telhado no 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao capturar telhado no 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1036,11 +1036,11 @@ namespace BahrHidro.UI
                     MemEnderecoTextBox.Text.Trim(),
                     autorCompleto);
 
-                MessageBox.Show("Dados salvos com sucesso nas propriedades do projeto Revit!", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Dados salvos com sucesso nas propriedades do projeto Revit!", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao salvar dados no Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao salvar dados no Revit:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1057,11 +1057,11 @@ namespace BahrHidro.UI
                 int totalPecas = _ultimoBomExtraido.Fittings.Sum(f => f.Quantity);
 
                 MemBomPreviewText.Text = $"Extraído do 3D: {_ultimoBomExtraido.Pipes.Count} linha(s) de tubo ({totalMetros:F2} m c/ perda = {totalVaras} varas de 6m) e {totalPecas} conexão(ões)/acessório(s).";
-                MessageBox.Show(MemBomPreviewText.Text, "Bahr Hidro - Quantitativo BIM 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(MemBomPreviewText.Text, "Smart Hidro - Quantitativo BIM 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao extrair lista de materiais:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao extrair lista de materiais:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1079,7 +1079,7 @@ namespace BahrHidro.UI
 
             if (_ultimoResultadoDaRede == null && (_ultimoBomExtraido == null || (_ultimoBomExtraido.Pipes.Count == 0 && _ultimoBomExtraido.Fittings.Count == 0)))
             {
-                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria' ou gere o traçado 3D antes de exportar o memorial.", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Calcule a rede hidráulica em 'Água Fria' ou gere o traçado 3D antes de exportar o memorial.", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1099,12 +1099,12 @@ namespace BahrHidro.UI
                     else
                         ExcelReportGenerator.GenerateProjectReportWithBom(_ultimoResultadoDaRede, _ultimoBomExtraido, dialog.FileName);
 
-                    MessageBox.Show("Memorial de cálculo e Lista de Materiais exportados com sucesso!", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Memorial de cálculo e Lista de Materiais exportados com sucesso!", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
                     var detalhe = ex.InnerException?.Message ?? ex.Message;
-                    MessageBox.Show($"Ocorreu um erro ao gerar o Excel:\n{detalhe}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Ocorreu um erro ao gerar o Excel:\n{detalhe}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -1471,7 +1471,7 @@ namespace BahrHidro.UI
         {
             if (_revitBridge == null)
             {
-                MessageBox.Show("Esta função requer o Bahr Hidro aberto dentro do Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Esta função requer o Smart Hidro aberto dentro do Revit.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1488,7 +1488,7 @@ namespace BahrHidro.UI
                 {
                     MessageBox.Show(
                         "Nenhum bloco sanitário identificado automaticamente no IFC/DWG.\n\nUse o painel '3. Marcação Rápida no DWG / 3D' à esquerda para clicar nos locais das peças sobre a planta.",
-                        "Bahr Hidro BIM - Leitura IFC/DWG",
+                        "Smart Hidro BIM - Leitura IFC/DWG",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
@@ -1500,7 +1500,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao detectar pontos:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao detectar pontos:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1524,7 +1524,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao marcar ponto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao marcar ponto:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1545,7 +1545,7 @@ namespace BahrHidro.UI
         {
             if (_revitBridge == null)
             {
-                MessageBox.Show("Esta função requer o Bahr Hidro aberto dentro do Revit.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Esta função requer o Smart Hidro aberto dentro do Revit.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -1559,17 +1559,17 @@ namespace BahrHidro.UI
 
                 if (TracadoPipeTypeComboBox.SelectedValue is not long pipeTypeId)
                 {
-                    MessageBox.Show("Selecione um Tipo de Tubo do template.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Selecione um Tipo de Tubo do template.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (TracadoSystemTypeComboBox.SelectedValue is not long systemTypeId)
                 {
-                    MessageBox.Show("Selecione um Sistema de Tubulação do template.", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Selecione um Sistema de Tubulação do template.", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 if (!TryParsePtBrDouble(TracadoOffsetTextBox.Text, out double offsetM))
                 {
-                    MessageBox.Show("Informe um valor numérico válido para a cota relativa (m).", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Informe um valor numérico válido para a cota relativa (m).", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -1607,11 +1607,11 @@ namespace BahrHidro.UI
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Logs);
 
                 InicioProjetoStatusText.Text = await _revitBridge.GetModelOverviewSummary();
-                MessageBox.Show(res.Summary, "Bahr Hidro - Traçado Automático 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Traçado Automático 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar traçado 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao gerar traçado 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     
@@ -1622,11 +1622,11 @@ namespace BahrHidro.UI
             {
                 var res = await _revitBridge.GenerateWetZoneIsometricViews();
                 TracadoResumoGeracaoText.Text = res.Summary;
-                MessageBox.Show(res.Summary, "Bahr Hidro - Vistas Isométricas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Vistas Isométricas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao gerar vistas isométricas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao gerar vistas isométricas:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1636,11 +1636,11 @@ namespace BahrHidro.UI
             try
             {
                 var res = await _revitBridge.TagPipesInActiveView();
-                MessageBox.Show(res.Message, "Bahr Hidro - Identificação de Tubulações", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Message, "Smart Hidro - Identificação de Tubulações", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao identificar tubos:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao identificar tubos:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1655,13 +1655,13 @@ namespace BahrHidro.UI
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.ClashDetails);
                 MessageBox.Show(
                     res.Summary,
-                    "Bahr Hidro - Verificação de Interferências 3D",
+                    "Smart Hidro - Verificação de Interferências 3D",
                     MessageBoxButton.OK,
                     res.ClashesFound == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro na verificação de colisões:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro na verificação de colisões:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1672,11 +1672,11 @@ namespace BahrHidro.UI
             {
                 var res = await _revitBridge.GenerateHydraulicSheets();
                 TracadoResumoGeracaoText.Text = res.Summary;
-                MessageBox.Show(res.Summary, "Bahr Hidro - Pranchas de Plotagem", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Pranchas de Plotagem", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao gerar pranchas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao gerar pranchas:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1690,8 +1690,8 @@ namespace BahrHidro.UI
                 string discLabel = (TracadoDisciplinaComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? discipline;
 
                 var confirm = MessageBox.Show(
-                    $"Deseja remover todos os tubos e conexões gerados automaticamente pelo Bahr Hidro para:\n{discLabel}?",
-                    "Bahr Hidro - Limpar Traçado da Disciplina",
+                    $"Deseja remover todos os tubos e conexões gerados automaticamente pelo Smart Hidro para:\n{discLabel}?",
+                    "Smart Hidro - Limpar Traçado da Disciplina",
                     MessageBoxButton.YesNo,
                     MessageBoxImage.Question);
 
@@ -1700,11 +1700,11 @@ namespace BahrHidro.UI
                 var res = await _revitBridge.ClearGeneratedRouting(discipline);
                 TracadoResumoGeracaoText.Text = res.Summary;
                 InicioProjetoStatusText.Text = await _revitBridge.GetModelOverviewSummary();
-                MessageBox.Show(res.Summary, "Bahr Hidro - Limpeza Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Limpeza Concluída", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao limpar traçado:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao limpar traçado:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1715,11 +1715,11 @@ namespace BahrHidro.UI
             {
                 var res = await _revitBridge.GenerateHydraulicWallElevations();
                 TracadoResumoGeracaoText.Text = res.Summary;
-                MessageBox.Show(res.Summary, "Bahr Hidro - Elevações de Parede (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Elevações de Parede (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao gerar elevações de parede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao gerar elevações de parede:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1729,7 +1729,7 @@ namespace BahrHidro.UI
             if (_revitBridge == null) return;
             if (_ultimoResultadoDaRede == null)
             {
-                MessageBox.Show("Clique em 'Calcular Rede Hidráulica' antes de aplicar a pintura de auditoria no 3D.", "Bahr Hidro - Auditoria NBR 5626", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Clique em 'Calcular Rede Hidráulica' antes de aplicar a pintura de auditoria no 3D.", "Smart Hidro - Auditoria NBR 5626", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
@@ -1738,13 +1738,13 @@ namespace BahrHidro.UI
                 var res = await _revitBridge.ApplyHydraulicVisualAudit(_ultimoResultadoDaRede);
                 MessageBox.Show(
                     $"{res.Summary}\n\nLegenda aplicada na vista:\n• Verde: Pressão >= 1,0 m.c.a. e Velocidade <= 3,0 m/s\n• Laranja: Velocidade > 3,0 m/s\n• Vermelho: Pressão < 1,0 m.c.a. (10 kPa)",
-                    "Bahr Hidro - Auditoria Visual 3D",
+                    "Smart Hidro - Auditoria Visual 3D",
                     MessageBoxButton.OK,
                     res.LowPressureCount > 0 || res.HighVelocityCount > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao pintar rede 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao pintar rede 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1754,11 +1754,11 @@ namespace BahrHidro.UI
             try
             {
                 var res = await _revitBridge.ClearHydraulicVisualAudit();
-                MessageBox.Show(res.Summary, "Bahr Hidro - Cores Restauradas", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Cores Restauradas", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao limpar cores:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao limpar cores:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1773,13 +1773,13 @@ namespace BahrHidro.UI
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.HoleDetails);
                 MessageBox.Show(
                     res.Summary,
-                    "Bahr Hidro - Validação de Furação em Montantes LSF",
+                    "Smart Hidro - Validação de Furação em Montantes LSF",
                     MessageBoxButton.OK,
                     res.WarningHoles > 0 ? MessageBoxImage.Warning : MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao auditar furação LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao auditar furação LSF:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -1790,11 +1790,11 @@ namespace BahrHidro.UI
             {
                 var res = await _revitBridge.ApplyFabricationCoordinatesToElevations();
                 TracadoResumoGeracaoText.Text = res.Summary;
-                MessageBox.Show(res.Summary, "Bahr Hidro - Cotas de Fabricação X e H (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Cotas de Fabricação X e H (1:20)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao aplicar cotas X e H:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao aplicar cotas X e H:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1808,11 +1808,11 @@ namespace BahrHidro.UI
                 TracadoResumoGeracaoText.Text = res.Summary;
                 TracadoLogTextBox.Text = string.Join(Environment.NewLine, res.Details);
                 InicioProjetoStatusText.Text = await _revitBridge.GetModelOverviewSummary();
-                MessageBox.Show(res.Summary, "Bahr Hidro - Prumadas Multinível (AF / AQ / TQ / CV)", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro - Prumadas Multinível (AF / AQ / TQ / CV)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao gerar prumadas multinível:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao gerar prumadas multinível:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -1828,7 +1828,7 @@ namespace BahrHidro.UI
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1895,11 +1895,11 @@ namespace BahrHidro.UI
             var cfg = ReadOfficeProfileFromUi();
             OfficeProfileService.SaveCurrent(cfg);
             CfgStatusText.Text = $"Configurações salvas com sucesso às {DateTime.Now:HH:mm:ss} em {OfficeProfileService.DefaultProfilePath}";
-            MessageBox.Show("Padrão técnico do escritório salvo com sucesso!", "Bahr Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Padrão técnico do escritório salvo com sucesso!", "Smart Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao salvar configurações:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro ao salvar configurações:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1910,7 +1910,7 @@ namespace BahrHidro.UI
             var cfg = ReadOfficeProfileFromUi();
             var dlg = new Microsoft.Win32.SaveFileDialog
             {
-                Filter = "Perfil Bahr Hidro (*.json)|*.json",
+                Filter = "Perfil Smart Hidro (*.json)|*.json",
                 FileName = "BahrHidro_PerfilEscritorio.json",
                 Title = "Exportar Perfil Técnico do Escritório"
             };
@@ -1918,12 +1918,12 @@ namespace BahrHidro.UI
             {
                 OfficeProfileService.ExportToFile(cfg, dlg.FileName);
                 CfgStatusText.Text = $"Perfil exportado para: {dlg.FileName}";
-                MessageBox.Show($"Perfil exportado com sucesso!\n{dlg.FileName}", "Bahr Hidro - Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Perfil exportado com sucesso!\n{dlg.FileName}", "Smart Hidro - Exportar JSON", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao exportar perfil:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro ao exportar perfil:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1933,19 +1933,19 @@ namespace BahrHidro.UI
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Perfil Bahr Hidro (*.json)|*.json",
+                Filter = "Perfil Smart Hidro (*.json)|*.json",
                 Title = "Importar Perfil Técnico do Escritório"
             };
             if (dlg.ShowDialog() == true)
             {
                 var loaded = OfficeProfileService.ImportFromFile(dlg.FileName);
                 LoadOfficeProfileToUi(loaded);
-                MessageBox.Show($"Perfil '{loaded.ProfileName}' importado e definido como padrão!", "Bahr Hidro - Importar JSON", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Perfil '{loaded.ProfileName}' importado e definido como padrão!", "Smart Hidro - Importar JSON", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao importar perfil:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro ao importar perfil:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1954,7 +1954,7 @@ namespace BahrHidro.UI
         var def = new OfficeProfileConfig();
         OfficeProfileService.SaveCurrent(def);
         LoadOfficeProfileToUi(def);
-        MessageBox.Show("Valores padrão ABNT NBR 5626 / 8160 e Steel Frame restaurados.", "Bahr Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show("Valores padrão ABNT NBR 5626 / 8160 e Steel Frame restaurados.", "Smart Hidro - Configurações", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
 
@@ -1978,11 +1978,11 @@ namespace BahrHidro.UI
         {
             string msg = GitHubUpdateService.TriggerWindowsUpdater();
             UpdateStatusText.Text = msg;
-            MessageBox.Show(msg, "Bahr Hidro - Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(msg, "Smart Hidro - Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Aviso ao iniciar atualizador:\n{ex.Message}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Aviso ao iniciar atualizador:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -1991,8 +1991,8 @@ namespace BahrHidro.UI
     {
         if (_revitBridge == null) return;
         var confirm = MessageBox.Show(
-            "Deseja remover todos os tubos, conexões e vistas gerados pelo Bahr Hidro neste modelo?",
-            "Bahr Hidro - Limpar Rede Gerada",
+            "Deseja remover todos os tubos, conexões e vistas gerados pelo Smart Hidro neste modelo?",
+            "Smart Hidro - Limpar Rede Gerada",
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
         if (confirm != MessageBoxResult.Yes) return;
@@ -2005,7 +2005,7 @@ namespace BahrHidro.UI
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao limpar rede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro ao limpar rede:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -2123,7 +2123,7 @@ namespace BahrHidro.UI
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Aviso ao atualizar cache LSF:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -2132,11 +2132,11 @@ namespace BahrHidro.UI
         if (_revitBridge == null) return;
         try
         {
-            var res = await _revitBridge.ApplyHydraulicVisualAudit(default!); MessageBox.Show(res.Summary, "Bahr Hidro - Auditoria 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+            var res = await _revitBridge.ApplyHydraulicVisualAudit(default!); MessageBox.Show(res.Summary, "Smart Hidro - Auditoria 3D", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro na Auditoria 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro na Auditoria 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -2145,11 +2145,11 @@ namespace BahrHidro.UI
         if (_revitBridge == null) return;
         try
         {
-            var res = await _revitBridge.AuditLsfStudPunching(); MessageBox.Show(res.Summary, "Bahr Hidro - Furação LSF", MessageBoxButton.OK, MessageBoxImage.Information);
+            var res = await _revitBridge.AuditLsfStudPunching(); MessageBox.Show(res.Summary, "Smart Hidro - Furação LSF", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro na Validação LSF:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro na Validação LSF:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
@@ -2158,18 +2158,18 @@ namespace BahrHidro.UI
         if (_revitBridge == null) return;
         try
         {
-            var res = await _revitBridge.GenerateHydraulicSheets(); MessageBox.Show(res.Summary, "Bahr Hidro - Pranchas Executivas", MessageBoxButton.OK, MessageBoxImage.Information);
+            var res = await _revitBridge.GenerateHydraulicSheets(); MessageBox.Show(res.Summary, "Smart Hidro - Pranchas Executivas", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Erro ao Gerar Pranchas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show($"Erro ao Gerar Pranchas:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 
     private void MostrarGuiaAtalhos_Click(object sender, RoutedEventArgs e)
     {
         string guia =
-            "ATALHOS DE TECLADO — BAHR HIDRO BIM (REVIT 2026)\n" +
+            "ATALHOS DE TECLADO — SMART HIDRO BIM (REVIT 2026)\n" +
             "──────────────────────────────────────────────────\n" +
             "• Ctrl + 1 a Ctrl + 6  →  Alternar rapidamente entre as abas\n" +
             "• F5                   →  Atualizar Cache Espacial LSF (2D)\n" +
@@ -2179,7 +2179,7 @@ namespace BahrHidro.UI
             "• Ctrl + S             →  Salvar Perfil do Escritório (.json)\n" +
             "• F1                   →  Exibir este guia de atalhos";
 
-        MessageBox.Show(guia, "Bahr Hidro — Atalhos Rápidos", MessageBoxButton.OK, MessageBoxImage.Information);
+        MessageBox.Show(guia, "Smart Hidro — Atalhos Rápidos", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
 
@@ -2211,11 +2211,11 @@ namespace BahrHidro.UI
                 Doc3DStatusText.Text = "Executando sequência: 1º Água Fria → 2º Água Quente → 3º Esgoto e gerando as 4 vistas 3D...";
                 string msg = await _revitBridge.RunOrderedFullAutomationAsync();
                 Doc3DStatusText.Text = msg;
-                MessageBox.Show(msg, "Bahr Hidro — Sequência Completa & 4 Vistas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(msg, "Smart Hidro — Sequência Completa & 4 Vistas 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao executar sequência completa:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao executar sequência completa:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -2226,11 +2226,11 @@ namespace BahrHidro.UI
             {
                 string msg = await _revitBridge.RunColdWaterOnlyAsync();
                 Doc3DStatusText.Text = msg;
-                MessageBox.Show(msg, "Bahr Hidro — 1º Água Fria", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(msg, "Smart Hidro — 1º Água Fria", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro na Água Fria:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro na Água Fria:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -2241,11 +2241,11 @@ namespace BahrHidro.UI
             {
                 string msg = await _revitBridge.RunHotWaterOnlyAsync();
                 Doc3DStatusText.Text = msg;
-                MessageBox.Show(msg, "Bahr Hidro — 2º Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(msg, "Smart Hidro — 2º Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro na Água Quente:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro na Água Quente:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -2256,19 +2256,19 @@ namespace BahrHidro.UI
             {
                 string msg = await _revitBridge.RunSanitaryOnlyAsync();
                 Doc3DStatusText.Text = msg;
-                MessageBox.Show(msg, "Bahr Hidro — 3º Esgoto & Ventilação", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(msg, "Smart Hidro — 3º Esgoto & Ventilação", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro no Esgoto:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro no Esgoto:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        private async void AbrirVista3DAguaFria_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Água Fria");
-        private async void AbrirVista3DAguaQuente_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Água Quente");
-        private async void AbrirVista3DEsgoto_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Esgoto");
-        private async void AbrirVista3DCompleta_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - 3D Completo (AF + AQ + Esgoto)");
-        private async void AbrirSecaoGeral_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Bahr Hidro - Seção Geral da Rede");
+        private async void AbrirVista3DAguaFria_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Smart Hidro - 3D Água Fria");
+        private async void AbrirVista3DAguaQuente_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Smart Hidro - 3D Água Quente");
+        private async void AbrirVista3DEsgoto_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Smart Hidro - 3D Esgoto");
+        private async void AbrirVista3DCompleta_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Smart Hidro - 3D Completo (AF + AQ + Esgoto)");
+        private async void AbrirSecaoGeral_Click(object sender, RoutedEventArgs e) => await AbrirVistaLiveAsync("Smart Hidro - Seção Geral da Rede");
 
         private async Task AbrirVistaLiveAsync(string viewName)
         {
@@ -2280,7 +2280,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao abrir vista:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao abrir vista:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2294,7 +2294,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao abrir pasta de memoriais:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao abrir pasta de memoriais:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2427,12 +2427,12 @@ VerificarPressaoEstaticaMaximaVrp();
                     }
 
                     string lista = string.Join("\n• ", files.Select(Path.GetFileName));
-                    MessageBox.Show($"Memoriais gerados com sucesso!\n\nArquivos salvos:\n• {lista}", "Bahr Hidro — Entrega Técnica Completa", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show($"Memoriais gerados com sucesso!\n\nArquivos salvos:\n• {lista}", "Smart Hidro — Entrega Técnica Completa", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 catch (Exception ex)
                 {
                     var detalhe = ex.InnerException?.Message ?? ex.Message;
-                    MessageBox.Show($"Erro ao gerar memoriais:\n{detalhe}", "Bahr Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"Erro ao gerar memoriais:\n{detalhe}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }
@@ -2559,11 +2559,11 @@ VerificarPressaoEstaticaMaximaVrp();
                 if (CaixaDiagnostico3DText != null)
                     CaixaDiagnostico3DText.Text = _ultimoScanReservatorios.Summary;
 
-                MessageBox.Show(_ultimoScanReservatorios.Summary, "Bahr Hidro — Reservatórios & Entrada da Rua (3D)", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(_ultimoScanReservatorios.Summary, "Smart Hidro — Reservatórios & Entrada da Rua (3D)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao ler reservatórios do Revit:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao ler reservatórios do Revit:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2632,7 +2632,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Aviso ao carregar sub-rede:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Aviso ao carregar sub-rede:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2684,11 +2684,11 @@ VerificarPressaoEstaticaMaximaVrp();
                 if (MemStatusEsgotoText != null)
                     MemStatusEsgotoText.Text = $"Rede 3D: {res.TotalUhc} UHC | Coletor: DN {res.MainCollectorDiameterMm} mm (i = {res.MainCollectorSlopePercent:F1}%).";
 
-                MessageBox.Show(res.Summary, "Bahr Hidro — Esgoto 3D (ABNT NBR 8160)", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro — Esgoto 3D (ABNT NBR 8160)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao dimensionar rede de esgoto 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao dimensionar rede de esgoto 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2739,11 +2739,11 @@ VerificarPressaoEstaticaMaximaVrp();
                 bool sheet = ChkMontarPranchaAbnt?.IsChecked == true;
                 var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos, sheet, schedules, isos2d);
                 if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
-                MessageBox.Show(res.Summary, "Bahr Hidro — Documentação 3D ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro — Documentação 3D ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar documentação 3D ABNT:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao gerar documentação 3D ABNT:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2755,13 +2755,13 @@ VerificarPressaoEstaticaMaximaVrp();
                 var res = await _revitBridge.GenerateVerticalRiserSchematic();
                 MessageBox.Show(
                     $"{res.Summary}\n\nA vista '{res.ViewName}' foi criada no Navegador de Projetos (Vistas de Detalhe) e aberta na tela do Revit.",
-                    "Bahr Hidro — Esquema Vertical de Prumadas",
+                    "Smart Hidro — Esquema Vertical de Prumadas",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar esquema vertical de prumadas:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao gerar esquema vertical de prumadas:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -2986,13 +2986,13 @@ VerificarPressaoEstaticaMaximaVrp();
                     $"Estado (UF) detectado: {importRes.StateUf}\n" +
                     $"Códigos lidos na planilha: {importRes.TotalCodesLoaded}\n" +
                     $"Itens atualizados automaticamente na tabela: {updatedCount} de {_sinapiBudgetRows.Count}",
-                    "Bahr Hidro — Importação SINAPI",
+                    "Smart Hidro — Importação SINAPI",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao importar planilha SINAPI:\n{ex.Message}", "Bahr Hidro — Importação SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao importar planilha SINAPI:\n{ex.Message}", "Smart Hidro — Importação SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3003,7 +3003,7 @@ VerificarPressaoEstaticaMaximaVrp();
                 var takeoff = await ObterTakeoffParaSinapiAsync();
                 if (takeoff == null || (takeoff.Pipes.Count == 0 && takeoff.Fittings.Count == 0 && takeoff.Kits.Count == 0))
                 {
-                    MessageBox.Show("Nenhum tubo ou conexão foi encontrado no modelo 3D para orçar no SINAPI.", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Nenhum tubo ou conexão foi encontrado no modelo 3D para orçar no SINAPI.", "Smart Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -3034,7 +3034,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao carregar orçamento SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao carregar orçamento SINAPI:\n{ex.Message}", "Smart Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3048,7 +3048,7 @@ VerificarPressaoEstaticaMaximaVrp();
                     takeoff = await ObterTakeoffParaSinapiAsync();
                     if (takeoff == null || (takeoff.Pipes.Count == 0 && takeoff.Fittings.Count == 0 && takeoff.Kits.Count == 0))
                     {
-                        MessageBox.Show("Modele ou extraia as tubulações no 3D antes de exportar a planilha SINAPI.", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        MessageBox.Show("Modele ou extraia as tubulações no 3D antes de exportar a planilha SINAPI.", "Smart Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Warning);
                         return;
                     }
 
@@ -3105,14 +3105,14 @@ VerificarPressaoEstaticaMaximaVrp();
                         $"Custo Direto: {directTotal.ToString("C2", ptBr)}\n" +
                         $"BDI ({bdiPct:F2}%): {bdiVal.ToString("C2", ptBr)}\n" +
                         $"Total Geral: {grandTotal.ToString("C2", ptBr)}",
-                        "Bahr Hidro — Orçamento SINAPI",
+                        "Smart Hidro — Orçamento SINAPI",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao exportar planilha SINAPI:\n{ex.Message}", "Bahr Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao exportar planilha SINAPI:\n{ex.Message}", "Smart Hidro — SINAPI", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     
@@ -3135,12 +3135,12 @@ VerificarPressaoEstaticaMaximaVrp();
                 if (ClashAndDiagStatusText != null)
                     ClashAndDiagStatusText.Text = res.Summary;
 
-                MessageBox.Show(res.Summary, "Bahr Hidro — Compatibilização 3D (Estrutura & LSF)", MessageBoxButton.OK,
+                MessageBox.Show(res.Summary, "Smart Hidro — Compatibilização 3D (Estrutura & LSF)", MessageBoxButton.OK,
                     res.ClashesFound == 0 ? MessageBoxImage.Information : MessageBoxImage.Warning);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro na auditoria de Clash 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro na auditoria de Clash 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3155,7 +3155,7 @@ VerificarPressaoEstaticaMaximaVrp();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Não foi possível focar o elemento no 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show($"Não foi possível focar o elemento no 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Warning);
                 }
             }
         }
@@ -3164,7 +3164,7 @@ VerificarPressaoEstaticaMaximaVrp();
         {
             if (_lastClashItems.Count == 0)
             {
-                MessageBox.Show("Execute primeiro a auditoria 'Auditar Clash 3D (Estrutura & LSF)' para listar as passagens.", "Bahr Hidro — Furos & Passagens", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Execute primeiro a auditoria 'Auditar Clash 3D (Estrutura & LSF)' para listar as passagens.", "Smart Hidro — Furos & Passagens", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -3184,7 +3184,7 @@ VerificarPressaoEstaticaMaximaVrp();
                     sb.AppendLine($"{c.Index};{c.PipeElementId};{c.PipeSystem};{c.DiameterMm};{c.StructuralCategory};{c.StructuralElementName};{c.SourceModel};{c.LevelName};{c.ElevationMeters:F2};{c.RecommendedSleeve}");
                 }
                 System.IO.File.WriteAllText(dlg.FileName, sb.ToString(), System.Text.Encoding.UTF8);
-                MessageBox.Show($"Relatório de furos exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Furos & Passagens", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Relatório de furos exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Smart Hidro — Furos & Passagens", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -3196,11 +3196,11 @@ VerificarPressaoEstaticaMaximaVrp();
                 var res = await _revitBridge.ApplyHydraulicDiagnosticColorMap(_snapshot.ColdWaterNetwork);
                 if (ClashAndDiagStatusText != null)
                     ClashAndDiagStatusText.Text = res.Summary;
-                MessageBox.Show(res.Summary, "Bahr Hidro — Mapa Visual 3D Hidráulico", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro — Mapa Visual 3D Hidráulico", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar Mapa Visual 3D:\n{ex.Message}", "Bahr Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao gerar Mapa Visual 3D:\n{ex.Message}", "Smart Hidro BIM", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3220,7 +3220,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao extrair contexto espacial 3D:\n{ex.Message}", "Bahr Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao extrair contexto espacial 3D:\n{ex.Message}", "Smart Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3231,7 +3231,7 @@ VerificarPressaoEstaticaMaximaVrp();
                 string src = !string.IsNullOrWhiteSpace(_lastSpatialContextJson) ? _lastSpatialContextJson : (SpatialContextJsonTextBox?.Text ?? "");
                 if (string.IsNullOrWhiteSpace(src))
                 {
-                    MessageBox.Show("Clique primeiro em 'Extrair Contexto Espacial 3D (JSON)'.", "Bahr Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Clique primeiro em 'Extrair Contexto Espacial 3D (JSON)'.", "Smart Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
@@ -3248,7 +3248,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar plano de traçado JSON:\n{ex.Message}", "Bahr Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Erro ao gerar plano de traçado JSON:\n{ex.Message}", "Smart Hidro — Ponte Espacial 3D", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
@@ -3261,11 +3261,11 @@ VerificarPressaoEstaticaMaximaVrp();
                 int count = await _revitBridge.ExecuteAutoRoutingPlanJson(planJson);
                 if (SpatialBridgeStatusText != null)
                     SpatialBridgeStatusText.Text = $"Execução concluída: {count} trecho(s) de tubulação criados fisicamente no Revit 3D.";
-                MessageBox.Show($"{count} trecho(s) de tubulação foram criados no modelo 3D a partir do plano JSON!", "Bahr Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{count} trecho(s) de tubulação foram criados no modelo 3D a partir do plano JSON!", "Smart Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao executar plano JSON no Revit 3D:\n{ex.Message}", "Bahr Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao executar plano JSON no Revit 3D:\n{ex.Message}", "Smart Hidro — Executor 3D", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3337,7 +3337,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao calcular dimensionamento térmico:\n{ex.Message}", "Bahr Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao calcular dimensionamento térmico:\n{ex.Message}", "Smart Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3359,7 +3359,7 @@ VerificarPressaoEstaticaMaximaVrp();
             if (dlg.ShowDialog() == true)
             {
                 System.IO.File.WriteAllText(dlg.FileName, _lastThermalMemorialText, System.Text.Encoding.UTF8);
-                MessageBox.Show($"Memorial Térmico exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Memorial Térmico exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Smart Hidro — Água Quente", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -3428,7 +3428,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao dimensionar reservatórios e bombas:\n{ex.Message}", "Bahr Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao dimensionar reservatórios e bombas:\n{ex.Message}", "Smart Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3450,7 +3450,7 @@ VerificarPressaoEstaticaMaximaVrp();
             if (dlg.ShowDialog() == true)
             {
                 System.IO.File.WriteAllText(dlg.FileName, _lastReservoirMemorialText, System.Text.Encoding.UTF8);
-                MessageBox.Show($"Memorial de Reservatórios e Bombas exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Memorial de Reservatórios e Bombas exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Smart Hidro — Reservatórios & Recalque", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -3529,7 +3529,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao calcular tratamento de esgoto e caixa de gordura:\n{ex.Message}", "Bahr Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao calcular tratamento de esgoto e caixa de gordura:\n{ex.Message}", "Smart Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3551,7 +3551,7 @@ VerificarPressaoEstaticaMaximaVrp();
             if (dlg.ShowDialog() == true)
             {
                 System.IO.File.WriteAllText(dlg.FileName, _lastSewageTreatmentMemorialText, System.Text.Encoding.UTF8);
-                MessageBox.Show($"Memorial de Tratamento de Esgoto exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Bahr Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"Memorial de Tratamento de Esgoto exportado com sucesso!\n\nArquivo: {dlg.FileName}", "Smart Hidro — Tratamento de Esgoto", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
@@ -3649,7 +3649,7 @@ VerificarPressaoEstaticaMaximaVrp();
 
                 var exportData = new BahrHidro.Core.Reporting.UnifiedMemorialExportData(
                     ProjectName: _snapshot?.ProjectName ?? "Projeto Hidrossanitário BIM",
-                    ClientOrAuthor: "Responsável Técnico — Bahr Hidro BIM (Revit 2026)",
+                    ClientOrAuthor: "Responsável Técnico — Smart Hidro BIM (Revit 2026)",
                     ColdWaterRows: coldRows,
                     ColdWaterAlerts: coldAlerts,
                     PumpingResult: _lastReservoirResult,
@@ -3672,14 +3672,14 @@ VerificarPressaoEstaticaMaximaVrp();
                         $"Memorial Descritivo Executivo Unificado (.docx) gerado com sucesso!\n\n" +
                         $"Arquivo: {dlg.FileName}\n" +
                         $"Capítulos incluídos: Água Fria, Reservatórios/Bombas, Água Quente (Boiler/Gás/Solar), Esgoto 3D, Tratamento Individual e Clash/SINAPI.",
-                        "Bahr Hidro — Memorial Executivo (.docx)",
+                        "Smart Hidro — Memorial Executivo (.docx)",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar Memorial Descritivo Único (.docx):\n{ex.Message}", "Bahr Hidro — Memorial (.docx)", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao gerar Memorial Descritivo Único (.docx):\n{ex.Message}", "Smart Hidro — Memorial (.docx)", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3721,7 +3721,7 @@ VerificarPressaoEstaticaMaximaVrp();
                 {
                     MessageBox.Show(
                         "Informe sua API Key da Anthropic (sk-ant-...) no campo correspondente antes de solicitar o traçado automático.",
-                        "Bahr Hidro — API Claude",
+                        "Smart Hidro — API Claude",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     return;
@@ -3743,7 +3743,7 @@ VerificarPressaoEstaticaMaximaVrp();
 
                 if (string.IsNullOrWhiteSpace(spatialJson))
                 {
-                    MessageBox.Show("Extraia primeiro o contexto espacial 3D do projeto.", "Bahr Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Extraia primeiro o contexto espacial 3D do projeto.", "Smart Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -3773,7 +3773,7 @@ VerificarPressaoEstaticaMaximaVrp();
                         $"• Ramais planejados: {genResult.Plan.Segments.Count}\n" +
                         $"• Trechos criados no 3D: {createdCount}\n" +
                         $"• Consumo API: {genResult.InputTokens} tokens entrada / {genResult.OutputTokens} tokens saída",
-                        "Bahr Hidro — Traçado Automático Claude 3D",
+                        "Smart Hidro — Traçado Automático Claude 3D",
                         MessageBoxButton.OK,
                         MessageBoxImage.Information);
                 }
@@ -3790,7 +3790,7 @@ VerificarPressaoEstaticaMaximaVrp();
             {
                 if (SpatialBridgeStatusText != null)
                     SpatialBridgeStatusText.Text = "Falha ao gerar traçado automático via API Claude.";
-                MessageBox.Show($"Erro na integração com a API do Claude:\n{ex.Message}", "Bahr Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro na integração com a API do Claude:\n{ex.Message}", "Smart Hidro — API Claude", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3805,11 +3805,11 @@ VerificarPressaoEstaticaMaximaVrp();
                     return;
 
                 var res = await _revitBridge.PlaceReservoirsIn3D(_lastReservoirResult);
-                MessageBox.Show(res.Summary, "Bahr Hidro — Reservatórios 3D (NBR 5626)", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro — Reservatórios 3D (NBR 5626)", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao inserir reservatórios no Revit 3D:\n{ex.Message}", "Bahr Hidro — Reservatórios 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao inserir reservatórios no Revit 3D:\n{ex.Message}", "Smart Hidro — Reservatórios 3D", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3824,11 +3824,11 @@ VerificarPressaoEstaticaMaximaVrp();
                     return;
 
                 var res = await _revitBridge.PlaceSewageTreatmentTrainIn3D(_lastSewageTreatmentResult);
-                MessageBox.Show(res.Summary, "Bahr Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Summary, "Smart Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao inserir unidades de tratamento no Revit 3D:\n{ex.Message}", "Bahr Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao inserir unidades de tratamento no Revit 3D:\n{ex.Message}", "Smart Hidro — Tratamento de Esgoto 3D", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3845,7 +3845,7 @@ VerificarPressaoEstaticaMaximaVrp();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao auditar template Revit:\n{ex.Message}", "Bahr Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao auditar template Revit:\n{ex.Message}", "Smart Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3861,11 +3861,11 @@ VerificarPressaoEstaticaMaximaVrp();
                 if (TemplateAuditStatusText != null)
                     TemplateAuditStatusText.Text = $"{msg}  |  {res.Summary}";
 
-                MessageBox.Show($"{msg}\n\n{res.Summary}", "Bahr Hidro — Auto-Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show($"{msg}\n\n{res.Summary}", "Smart Hidro — Auto-Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao auto-corrigir template:\n{ex.Message}", "Bahr Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao auto-corrigir template:\n{ex.Message}", "Smart Hidro — Calibração de Template", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
@@ -3884,17 +3884,17 @@ VerificarPressaoEstaticaMaximaVrp();
                 bool isos3d = ChkGerarIsometricos3D?.IsChecked == true;
                 if (!isos2d && !isos3d)
                 {
-                    MessageBox.Show("Marque ao menos 'Isométrica 2D' ou 'Isométrica 3D'.", "Bahr Hidro — Isométricos", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Marque ao menos 'Isométrica 2D' ou 'Isométrica 3D'.", "Smart Hidro — Isométricos", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos3d, createAbntSheet: false, createNativeSchedules: false, createIsometrics2D: isos2d);
                 if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
-                   MessageBox.Show(res.Summary, "Bahr Hidro — Vistas Isométricas 2D / 3D", MessageBoxButton.OK, MessageBoxImage.Information);
+                   MessageBox.Show(res.Summary, "Smart Hidro — Vistas Isométricas 2D / 3D", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar vistas isométricas:\n{ex.Message}", "Bahr Hidro — Isométricos", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao gerar vistas isométricas:\n{ex.Message}", "Smart Hidro — Isométricos", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -3920,11 +3920,11 @@ VerificarPressaoEstaticaMaximaVrp();
 
                 var res = await _revitBridge.GenerateIsometricsAndAbntSheet(isos3d, sheet, schedules, isos2d);
                 if (Doc3DStatusText != null) Doc3DStatusText.Text = res.Summary;
-                   MessageBox.Show(res.Summary, "Bahr Hidro — Prancha & Isométricos ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
+                   MessageBox.Show(res.Summary, "Smart Hidro — Prancha & Isométricos ABNT", MessageBoxButton.OK, MessageBoxImage.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Erro ao gerar prancha ABNT:\n{ex.Message}", "Bahr Hidro — Prancha ABNT", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Erro ao gerar prancha ABNT:\n{ex.Message}", "Smart Hidro — Prancha ABNT", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {

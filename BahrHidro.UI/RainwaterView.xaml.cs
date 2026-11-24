@@ -140,7 +140,7 @@ namespace BahrHidro.UI
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Verifique os dados informados:\n{ex.Message}", "Bahr Hidro - Águas Pluviais", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Verifique os dados informados:\n{ex.Message}", "Smart Hidro - Águas Pluviais", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

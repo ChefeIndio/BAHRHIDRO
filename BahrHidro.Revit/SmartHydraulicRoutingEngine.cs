@@ -108,10 +108,10 @@ namespace BahrHidro.Revit
             var zones = BuildHydraulicWallZonesPublic(doc, activeFixtures);
             if (zones.Count == 0) return allCreated;
 
-            ElementId cwSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticColdWater, "Água Fria - Bahr Hidro");
-            ElementId hwSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticHotWater, "Água Quente - Bahr Hidro");
-            ElementId sanSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Bahr Hidro");
-            ElementId ventSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Vent, "Ventilação Sanitária - Bahr Hidro");
+            ElementId cwSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticColdWater, "Água Fria - Smart Hidro");
+            ElementId hwSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.DomesticHotWater, "Água Quente - Smart Hidro");
+            ElementId sanSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Smart Hidro");
+            ElementId ventSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Vent, "Ventilação Sanitária - Smart Hidro");
             ElementId insulTypeId = GetStandardInsulationType(doc);
 
             ElementId cwPipeTypeId = ResolvePipeTypeId(doc, preferredPipeTypeId, isHotWater: false);
@@ -136,7 +136,7 @@ namespace BahrHidro.Revit
             {
                 if (ownTransaction)
                 {
-                    tx = new Transaction(doc, "Bahr Hidro - Traçado Inteligente Sprint 4 (Multi-Andar + 45° + Isolamento)");
+                    tx = new Transaction(doc, "Smart Hidro - Traçado Inteligente Sprint 4 (Multi-Andar + 45° + Isolamento)");
                     tx.Start();
                 }
 
@@ -765,7 +765,7 @@ namespace BahrHidro.Revit
                 Directory.CreateDirectory(logDir);
                 var sb = new StringBuilder();
                 sb.AppendLine("======================================================================");
-                sb.AppendLine($"BAHR HIDRO BIM — MEMORIAL DE TRAÇADO SPRINT 4 ({DateTime.Now:dd/MM/yyyy HH:mm:ss})");
+                sb.AppendLine($"SMART HIDRO BIM — MEMORIAL DE TRAÇADO SPRINT 4 ({DateTime.Now:dd/MM/yyyy HH:mm:ss})");
                 sb.AppendLine($"Projeto: {doc.Title}");
                 sb.AppendLine("======================================================================");
                 sb.AppendLine($"Prumadas/Zonas de Parede: {zonesCount}");

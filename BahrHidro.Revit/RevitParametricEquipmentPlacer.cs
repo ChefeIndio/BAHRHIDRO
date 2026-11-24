@@ -31,7 +31,7 @@ namespace BahrHidro.Revit
             var createdIds = new List<ElementId>();
             var pt = new CultureInfo("pt-BR");
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Inserir Reservatórios Dimensionados 3D (NBR 5626)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Inserir Reservatórios Dimensionados 3D (NBR 5626)"))
             {
                 tx.Start();
 
@@ -88,7 +88,7 @@ namespace BahrHidro.Revit
             var createdIds = new List<ElementId>();
             var pt = new CultureInfo("pt-BR");
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Inserir Caixa de Gordura, Fossa, Filtro e Sumidouro 3D"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Inserir Caixa de Gordura, Fossa, Filtro e Sumidouro 3D"))
             {
                 tx.Start();
 

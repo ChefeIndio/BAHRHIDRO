@@ -30,7 +30,7 @@ namespace BahrHidro.Revit
             catch (Exception ex)
             {
                 message = ex.Message;
-                TaskDialog.Show("Bahr Hidro — Memoriais", $"Pasta dos relatórios:\n{logDir}\n\nErro ao abrir: {ex.Message}");
+                TaskDialog.Show("Smart Hidro — Memoriais", $"Pasta dos relatórios:\n{logDir}\n\nErro ao abrir: {ex.Message}");
                 return Result.Failed;
             }
         }

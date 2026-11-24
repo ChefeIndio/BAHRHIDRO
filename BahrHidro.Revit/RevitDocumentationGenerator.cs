@@ -47,7 +47,7 @@ namespace BahrHidro.Revit
 
             int taggedCount = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Identificar Tubulações na Vista"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Identificar Tubulações na Vista"))
             {
                 tx.Start();
 
@@ -134,7 +134,7 @@ namespace BahrHidro.Revit
             int totalTagsPlaced = 0;
             View3D? firstCreatedView = null;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Vistas Isométricas 3D"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Gerar Vistas Isométricas 3D"))
             {
                 tx.Start();
 
@@ -169,7 +169,7 @@ namespace BahrHidro.Revit
 
                     View3D isoView = View3D.CreateIsometric(doc, viewFamilyType.Id);
 
-                    string baseName = $"BahrHidro - Isométrico {i + 1:D2}";
+                    string baseName = $"SmartHidro - Isométrico {i + 1:D2}";
                     string finalName = baseName;
                     int suffix = 1;
                     while (existingViewNames.Contains(finalName))
@@ -280,7 +280,7 @@ namespace BahrHidro.Revit
             int totalTagsPlaced = 0;
             ViewSection? firstElevation = null;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Elevações Frontais Paredes Hidráulicas (1:20)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Elevações Frontais Paredes Hidráulicas (1:20)"))
             {
                 tx.Start();
 
@@ -356,7 +356,7 @@ namespace BahrHidro.Revit
 
                     ViewSection elevView = ViewSection.CreateSection(doc, sectionVft.Id, sectionBox);
 
-                    string baseName = $"BahrHidro - Parede Hidráulica {i + 1:D2}";
+                    string baseName = $"SmartHidro - Parede Hidráulica {i + 1:D2}";
                     string finalName = baseName;
                     int suffix = 1;
                     while (existingViewNames.Contains(finalName))
@@ -450,11 +450,11 @@ namespace BahrHidro.Revit
 
             if (idsToDelete.Count == 0)
             {
-                return (0, $"Nenhum elemento gerado automaticamente pelo Bahr Hidro foi encontrado para a disciplina selecionada ({disciplineMode}).");
+                return (0, $"Nenhum elemento gerado automaticamente pelo Smart Hidro foi encontrado para a disciplina selecionada ({disciplineMode}).");
             }
 
             int deletedCount = 0;
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Limpar Traçado Gerado"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Limpar Traçado Gerado"))
             {
                 tx.Start();
                 foreach (var id in idsToDelete)

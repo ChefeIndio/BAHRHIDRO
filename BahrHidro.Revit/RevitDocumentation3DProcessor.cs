@@ -46,7 +46,7 @@ namespace BahrHidro.Revit
             int tagsPlaced = 0;
             ElementId activeTargetId = ElementId.InvalidElementId;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Isométricos 2D/3D e Prancha ABNT"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Gerar Isométricos 2D/3D e Prancha ABNT"))
             {
                 tx.Start();
 
@@ -100,7 +100,7 @@ namespace BahrHidro.Revit
                     {
                         foreach (var (zoneName, box, zonePipes, _) in zones.Take(4))
                         {
-                            string viewName = MakeUniqueViewName(doc, $"Bahr Hidro - Isométrico 3D - {zoneName}");
+                            string viewName = MakeUniqueViewName(doc, $"Smart Hidro - Isométrico 3D - {zoneName}");
                             View3D iso = View3D.CreateIsometric(doc, vft3d.Id);
                             iso.Name = viewName;
                             iso.Scale = 25;
@@ -282,7 +282,7 @@ namespace BahrHidro.Revit
             List<Element> zoneFixtures)
         {
             ViewDrafting view = ViewDrafting.Create(doc, draftingVftId);
-            view.Name = MakeUniqueViewName(doc, $"Bahr Hidro - Isométrico 2D - {zoneName}");
+            view.Name = MakeUniqueViewName(doc, $"Smart Hidro - Isométrico 2D - {zoneName}");
             view.Scale = 20;
 
             XYZ origin3D = zoneBox.Min;
@@ -567,7 +567,7 @@ namespace BahrHidro.Revit
             try
             {
                 ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PipeCurves));
-                sched.Name = MakeUniqueViewName(doc, "Bahr Hidro - Tabela de Tubulações");
+                sched.Name = MakeUniqueViewName(doc, "Smart Hidro - Tabela de Tubulações");
                 ScheduleDefinition def = sched.Definition;
                 def.IsItemized = false;
                 def.ShowGrandTotal = true;
@@ -592,7 +592,7 @@ namespace BahrHidro.Revit
             try
             {
                 ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PipeFitting));
-                sched.Name = MakeUniqueViewName(doc, "Bahr Hidro - Tabela de Conexões");
+                sched.Name = MakeUniqueViewName(doc, "Smart Hidro - Tabela de Conexões");
                 ScheduleDefinition def = sched.Definition;
                 def.IsItemized = false;
                 def.ShowGrandTotal = true;
@@ -617,7 +617,7 @@ namespace BahrHidro.Revit
             try
             {
                 ViewSchedule sched = ViewSchedule.CreateSchedule(doc, new ElementId(BuiltInCategory.OST_PlumbingFixtures));
-                sched.Name = MakeUniqueViewName(doc, "Bahr Hidro - Tabela de Aparelhos Sanitários");
+                sched.Name = MakeUniqueViewName(doc, "Smart Hidro - Tabela de Aparelhos Sanitários");
                 ScheduleDefinition def = sched.Definition;
                 def.IsItemized = false;
                 def.ShowGrandTotal = true;

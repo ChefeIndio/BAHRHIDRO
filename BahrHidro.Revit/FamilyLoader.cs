@@ -77,7 +77,7 @@ namespace BahrHidro.Revit
             }
             else
             {
-                using (Transaction t = new Transaction(doc, "Carregar Conexões Hidráulicas Bahr Hidro"))
+                using (Transaction t = new Transaction(doc, "Carregar Conexões Hidráulicas Smart Hidro"))
                 {
                     t.Start();
                     LoadAll();

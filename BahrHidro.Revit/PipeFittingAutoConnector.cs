@@ -92,7 +92,7 @@ namespace BahrHidro.Revit
                 doc.Regenerate();
             }
 
-            rpm.AddRule(groupType, new RoutingPreferenceRule(symbol.Id, $"Regra Automática Bahr Hidro ({groupType})"), 0);
+            rpm.AddRule(groupType, new RoutingPreferenceRule(symbol.Id, $"Regra Automática Smart Hidro ({groupType})"), 0);
             return true;
         }
 

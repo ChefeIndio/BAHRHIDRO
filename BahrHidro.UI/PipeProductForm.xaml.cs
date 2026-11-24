@@ -34,7 +34,7 @@ namespace BahrHidro.UI
         {
             _productBeingEdited = product;
 
-            Title = "Bahr Hidro | Editar Produto";
+            Title = "Smart Hidro | Editar Produto";
             SaveButton.Content = "ATUALIZAR PRODUTO";
 
             LoadProductData(product);
@@ -144,7 +144,7 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show(
                     "Informe valores numéricos válidos para os diâmetros e a espessura.",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
@@ -157,7 +157,7 @@ namespace BahrHidro.UI
                 MessageBox.Show(
                     "Verifique o diâmetro externo e a espessura. " +
                     "O diâmetro interno precisa ser maior que zero.",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
@@ -173,7 +173,7 @@ namespace BahrHidro.UI
                 {
                     MessageBox.Show(
                         "Informe uma pressão válida ou deixe o campo vazio.",
-                        "Bahr Hidro",
+                        "Smart Hidro",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     return;
@@ -191,7 +191,7 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show(
                     "Preencha todos os campos obrigatórios.",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Warning);
                 return;
@@ -220,7 +220,7 @@ namespace BahrHidro.UI
                 default:
                     MessageBox.Show(
                         "Selecione um material válido.",
-                        "Bahr Hidro",
+                        "Smart Hidro",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
                     return;
@@ -264,7 +264,7 @@ namespace BahrHidro.UI
                     IsEditMode
                         ? "Produto atualizado com sucesso!"
                         : "Produto cadastrado com sucesso!",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
 
@@ -275,7 +275,7 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show(
                     $"Não foi possível salvar o produto:\n{ex.Message}",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }

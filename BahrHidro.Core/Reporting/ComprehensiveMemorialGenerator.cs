@@ -168,7 +168,7 @@ namespace BahrHidro.Core.Reporting
                 ? wb.Worksheet("Resumo Executivo")
                 : wb.Worksheets.Add("Resumo Executivo", 1);
 
-            wsResumo.Cell("A1").Value = "BAHR HIDRO — MEMORIAL DE CÁLCULO UNIFICADO E PARECER NORMATIVO";
+            wsResumo.Cell("A1").Value = "SMART HIDRO — MEMORIAL DE CÁLCULO UNIFICADO E PARECER NORMATIVO";
             wsResumo.Range("A1:F1").Merge().Style
                 .Font.SetBold().Font.SetFontSize(14).Font.SetFontColor(XLColor.White)
                 .Fill.SetBackgroundColor(XLColor.FromHtml("#0F172A"));
@@ -366,7 +366,7 @@ namespace BahrHidro.Core.Reporting
             return $@"
 <div class='header-box'>
   <h1>{docTitle}</h1>
-  <p>Bahr Hidro BIM — Engenharia Hidrossanitária &amp; Compatibilização Normativa ({s.AppliedNorms})</p>
+  <p>Smart Hidro BIM — Engenharia Hidrossanitária &amp; Compatibilização Normativa ({s.AppliedNorms})</p>
 </div>
 <table>
   <tr><th>Empreendimento / Obra</th><td>{s.ProjectName}</td><th>Revisão / Data</th><td>{s.Revision} — {DateTime.Now:dd/MM/yyyy}</td></tr>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RevitAddIns>
   <AddIn Type="Application">
-    <Name>Bahr Hidro</Name>
+    <Name>Smart Hidro</Name>
     <Assembly>BahrHidro.Revit.dll</Assembly>
     <AddInId>8F4A9C21-3B7D-4E8A-9C12-5D6E7F8A9B01</AddInId>
     <FullClassName>BahrHidro.Revit.BahrHidroApp</FullClassName>

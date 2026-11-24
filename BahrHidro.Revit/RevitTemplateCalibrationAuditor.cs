@@ -207,13 +207,13 @@ namespace BahrHidro.Revit
 
             var requiredSystems = new[]
             {
-                (MEPSystemClassification.DomesticColdWater, "Água Fria - Bahr Hidro"),
-                (MEPSystemClassification.DomesticHotWater, "Água Quente - Bahr Hidro"),
-                (MEPSystemClassification.Sanitary, "Esgoto Sanitário - Bahr Hidro"),
-                (MEPSystemClassification.Vent, "Ventilação - Bahr Hidro")
+                (MEPSystemClassification.DomesticColdWater, "Água Fria - Smart Hidro"),
+                (MEPSystemClassification.DomesticHotWater, "Água Quente - Smart Hidro"),
+                (MEPSystemClassification.Sanitary, "Esgoto Sanitário - Smart Hidro"),
+                (MEPSystemClassification.Vent, "Ventilação - Smart Hidro")
             };
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Auto-Calibrar Sistemas Base do Template"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Auto-Calibrar Sistemas Base do Template"))
             {
                 tx.Start();
 

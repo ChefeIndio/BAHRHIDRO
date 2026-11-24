@@ -14,7 +14,7 @@ namespace BahrHidro.Core.Reporting
             using var workbook = new XLWorkbook();
             var ws = workbook.Worksheets.Add("Memorial Hidráulico");
 
-            ws.Cell("A1").Value = "BAHR HIDRO - MEMORIAL DE CÁLCULO DE REDE";
+            ws.Cell("A1").Value = "SMART HIDRO - MEMORIAL DE CÁLCULO DE REDE";
             var titleRange = ws.Range("A1:H1");
             titleRange.Merge();
             titleRange.Style.Font.SetBold().Font.FontSize = 14;

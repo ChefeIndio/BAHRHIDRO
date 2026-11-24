@@ -62,7 +62,7 @@ namespace BahrHidro.Revit
             int clashesAvoided = 0;
             var logs = new List<string>();
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Prumadas Multinível (AF / AQ / TQ / CV)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Prumadas Multinível (AF / AQ / TQ / CV)"))
             {
                 tx.Start();
 

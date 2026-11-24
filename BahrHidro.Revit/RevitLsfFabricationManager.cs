@@ -151,7 +151,7 @@ namespace BahrHidro.Revit
             var elevationViews = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSection))
                 .Cast<ViewSection>()
-                .Where(v => !v.IsTemplate && v.Name.StartsWith("BahrHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase))
+                .Where(v => !v.IsTemplate && v.Name.StartsWith("SmartHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(v => v.Name)
                 .ToList();
 
@@ -161,7 +161,7 @@ namespace BahrHidro.Revit
                 elevationViews = new FilteredElementCollector(doc)
                     .OfClass(typeof(ViewSection))
                     .Cast<ViewSection>()
-                    .Where(v => !v.IsTemplate && v.Name.StartsWith("BahrHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase))
+                    .Where(v => !v.IsTemplate && v.Name.StartsWith("SmartHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase))
                     .OrderBy(v => v.Name)
                     .ToList();
             }
@@ -191,7 +191,7 @@ namespace BahrHidro.Revit
             int viewsAnnotated = 0;
             int calloutsPlaced = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Cotas de Fabricação X e H (1:20)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Cotas de Fabricação X e H (1:20)"))
             {
                 tx.Start();
 

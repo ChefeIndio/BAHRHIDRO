@@ -128,7 +128,7 @@ namespace BahrHidro.Revit
             {
                 ownerWindow.Hide();
 
-                using (Transaction tx = new Transaction(doc, "Bahr Hidro - Plano de Trabalho"))
+                using (Transaction tx = new Transaction(doc, "Smart Hidro - Plano de Trabalho"))
                 {
                     tx.Start();
                     if (doc.ActiveView.SketchPlane == null)
@@ -268,7 +268,7 @@ namespace BahrHidro.Revit
             int clashesAvoided = 0;
             double totalLengthFeet = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Traçado Água Fria 3D (Paredes & LSF)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Traçado Água Fria 3D (Paredes & LSF)"))
             {
                 tx.Start();
 
@@ -528,7 +528,7 @@ namespace BahrHidro.Revit
 
             var greyClusters = ClusterPointsByDistance(bathroomGreyPoints, 3.0);
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Esgoto 3D (Caixa Sifonada + UHC NBR 8160)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Esgoto 3D (Caixa Sifonada + UHC NBR 8160)"))
             {
                 tx.Start();
 
@@ -930,7 +930,7 @@ namespace BahrHidro.Revit
             int clashesAvoided = 0;
             double totalLengthFeet = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Ventilação Sanitária 3D (NBR 8160)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Ventilação Sanitária 3D (NBR 8160)"))
             {
                 tx.Start();
 
@@ -1085,7 +1085,7 @@ namespace BahrHidro.Revit
             int clashesAvoided = 0;
             double totalLengthFeet = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Condutores Pluviais 3D (NBR 10844)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Condutores Pluviais 3D (NBR 10844)"))
             {
                 tx.Start();
 

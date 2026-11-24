@@ -82,10 +82,10 @@ namespace BahrHidro.Revit
 
             if (allIds.Count == 0)
             {
-                return new NetworkCleanupResult(0, 0, 0, "Nenhum elemento gerado pelo Bahr Hidro foi encontrado para limpeza.");
+                return new NetworkCleanupResult(0, 0, 0, "Nenhum elemento gerado pelo Smart Hidro foi encontrado para limpeza.");
             }
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Limpar Rede e Vistas Geradas"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Limpar Rede e Vistas Geradas"))
             {
                 tx.Start();
                 doc.Delete(allIds.ToList());

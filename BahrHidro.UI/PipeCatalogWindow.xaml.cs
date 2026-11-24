@@ -54,7 +54,7 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show(
                     $"Erro ao carregar catálogo:\n{ex.Message}",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
@@ -170,7 +170,7 @@ namespace BahrHidro.UI
 
                 MessageBox.Show(
                     "Produto excluído com sucesso.",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
@@ -178,7 +178,7 @@ namespace BahrHidro.UI
             {
                 MessageBox.Show(
                     $"Erro ao excluir produto:\n{ex.Message}",
-                    "Bahr Hidro",
+                    "Smart Hidro",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }

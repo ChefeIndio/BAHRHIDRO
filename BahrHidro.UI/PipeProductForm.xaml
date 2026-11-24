@@ -1,7 +1,7 @@
 ﻿<Window x:Class="BahrHidro.UI.PipeProductForm"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Bahr Hidro - Cadastro de Tubulação"
+        Title="Smart Hidro - Cadastro de Tubulação"
         Height="760"
         Width="850"
         MinHeight="650"
@@ -22,7 +22,7 @@
                 Padding="25">
 
             <StackPanel>
-                <TextBlock Text="BAHR HIDRO"
+                <TextBlock Text="SMART HIDRO"
                            FontSize="24"
                            FontWeight="Bold"
                            Foreground="White"/>

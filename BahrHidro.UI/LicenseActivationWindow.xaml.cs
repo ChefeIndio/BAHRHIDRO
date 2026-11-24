@@ -7,7 +7,7 @@ namespace BahrHidro.UI
         public LicenseActivationWindow()
         {
             try { InitializeComponent();
-            UiNavigationController.Initialize(); } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Bahr Hidro BIM - Debug"); throw; }
+            UiNavigationController.Initialize(); } catch (System.Windows.Markup.XamlParseException ex) { System.Windows.MessageBox.Show($"Erro de XAML na Interface:\n{ex.Message}\nDetalhe: {ex.InnerException?.Message}\nLinha: {ex.LineNumber}", "Smart Hidro BIM - Debug"); throw; }
             MachineIdTextBox.Text = LicenseService.GetMachineId();
 
             var current = LicenseService.ValidateStoredLicense();
@@ -32,7 +32,7 @@ namespace BahrHidro.UI
             {
                 ActivationStatusText.Text = res.Message;
                 ActivationStatusText.Foreground = System.Windows.Media.Brushes.DarkGreen;
-                MessageBox.Show(res.Message, "Bahr Hidro BIM — Licença Ativada", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(res.Message, "Smart Hidro BIM — Licença Ativada", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }

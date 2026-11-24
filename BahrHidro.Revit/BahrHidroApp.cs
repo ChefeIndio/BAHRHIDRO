@@ -12,26 +12,26 @@ namespace BahrHidro.Revit
 
             try
             {
-                const string tabName = "Bahr Hidro";
+                const string tabName = "Smart Hidro";
                 try { application.CreateRibbonTab(tabName); } catch { }
 
-                try { application.CreateRibbonTab("Bahr Hidro"); } catch { }
-                RibbonPanel panel = application.CreateRibbonPanel("Bahr Hidro", "Hidráulica & LSF • Licenciado");
+                try { application.CreateRibbonTab("Smart Hidro"); } catch { }
+                RibbonPanel panel = application.CreateRibbonPanel("Smart Hidro", "Hidráulica & LSF • Licenciado");
                 string asmPath = Assembly.GetExecutingAssembly().Location;
 
                 panel.AddItem(new PushButtonData(
                     "BahrHidro_Main",
-                    "Abrir\nBahr Hidro",
+                    "Abrir\nSmart Hidro",
                     asmPath,
                     "BahrHidro.Revit.MainCommand")
                 {
-                    ToolTip = "Abre a plataforma Bahr Hidro BIM (Água Fria, Água Quente, Esgoto NBR 8160, Pluvial, Vistas 3D ao Vivo e Steel Frame).",
+                    ToolTip = "Abre a plataforma Smart Hidro BIM (Água Fria, Água Quente, Esgoto NBR 8160, Pluvial, Vistas 3D ao Vivo e Steel Frame).",
                     LargeImage = RibbonIconFactory.CreateMainIcon()
                 });
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Bahr Hidro - Inicialização", ex.Message);
+                TaskDialog.Show("Smart Hidro - Inicialização", ex.Message);
             }
 
             return Result.Succeeded;

@@ -40,7 +40,7 @@ namespace BahrHidro.Revit
             int highVelCount = 0;
             int lowPressCount = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Auditoria Visual NBR 5626 (3D)"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Auditoria Visual NBR 5626 (3D)"))
             {
                 tx.Start();
 
@@ -108,7 +108,7 @@ namespace BahrHidro.Revit
             var emptyOgs = new OverrideGraphicSettings();
             int cleared = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Limpar Auditoria Visual 3D"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Limpar Auditoria Visual 3D"))
             {
                 tx.Start();
                 foreach (var id in pipes)

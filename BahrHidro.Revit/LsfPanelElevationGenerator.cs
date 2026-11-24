@@ -34,10 +34,10 @@ namespace BahrHidro.Revit
         private const double FeetPerMeter = 3.280839895013123;
         private const double MmToFeet = 1.0 / 304.8;
 
-        public const string View3DColdWaterName = "Bahr Hidro - 3D Água Fria";
-        public const string View3DHotWaterName = "Bahr Hidro - 3D Água Quente";
-        public const string View3DSanitaryName = "Bahr Hidro - 3D Esgoto";
-        public const string View3DCombinedName = "Bahr Hidro - 3D Completo (AF + AQ + Esgoto)";
+        public const string View3DColdWaterName = "Smart Hidro - 3D Água Fria";
+        public const string View3DHotWaterName = "Smart Hidro - 3D Água Quente";
+        public const string View3DSanitaryName = "Smart Hidro - 3D Esgoto";
+        public const string View3DCombinedName = "Smart Hidro - 3D Completo (AF + AQ + Esgoto)";
 
         public static void CreateLiveHydraulicViews(
             Document doc,
@@ -242,7 +242,7 @@ namespace BahrHidro.Revit
 
         private static ViewPlan? CreateOrUpdateHydraulicFloorPlan(Document doc, List<Pipe> pipes, double floorZ)
         {
-            const string planName = "Bahr Hidro - Planta Hidráulica Executiva";
+            const string planName = "Smart Hidro - Planta Hidráulica Executiva";
             var existing = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewPlan))
                 .Cast<ViewPlan>()
@@ -384,7 +384,7 @@ namespace BahrHidro.Revit
             int idx = 1;
             foreach (var panel in panels)
             {
-                string viewName = $"Bahr Hidro - Elevação {panel.Name}";
+                string viewName = $"Smart Hidro - Elevação {panel.Name}";
                 if (existingViewNames.Contains(viewName))
                     viewName = $"{viewName} ({DateTime.Now:HHmmss})";
 
@@ -430,7 +430,7 @@ namespace BahrHidro.Revit
             {
                 try
                 {
-                    string overallSecName = "Bahr Hidro - Seção Geral da Rede";
+                    string overallSecName = "Smart Hidro - Seção Geral da Rede";
                     if (existingViewNames.Contains(overallSecName))
                         overallSecName = $"{overallSecName} ({DateTime.Now:HHmmss})";
 
@@ -593,7 +593,7 @@ namespace BahrHidro.Revit
                     .FirstElementId();
 
                 var sheet = ViewSheet.Create(doc, tbId);
-                sheet.Name = "Bahr Hidro - Projeto Executivo & Seções";
+                sheet.Name = "Smart Hidro - Projeto Executivo & Seções";
                 double xC = 0.25 * FeetPerMeter, yC = 0.55 * FeetPerMeter;
                 foreach (var view in elevations.Take(3))
                 {

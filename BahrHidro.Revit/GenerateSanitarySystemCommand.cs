@@ -29,7 +29,7 @@ namespace BahrHidro.Revit
                     uidoc.ActiveView = combined3D;
 
                 TaskDialog.Show(
-                    "Bahr Hidro — 3º Esgoto Sanitário e Ventilação (NBR 8160)",
+                    "Smart Hidro — 3º Esgoto Sanitário e Ventilação (NBR 8160)",
                     pipes.Count > 0
                         ? $"Rede de Esgoto e Ventilação gerada com sucesso!\n\n" +
                           $"• Zonas molhadas: {report.ZonesCount} | Segmentos: {report.PipesCreated}\n" +
@@ -43,7 +43,7 @@ namespace BahrHidro.Revit
             catch (Exception ex)
             {
                 message = ex.Message;
-                TaskDialog.Show("Bahr Hidro — Erro", $"Falha ao gerar rede de esgoto: {ex.Message}");
+                TaskDialog.Show("Smart Hidro — Erro", $"Falha ao gerar rede de esgoto: {ex.Message}");
                 return Result.Failed;
             }
         }

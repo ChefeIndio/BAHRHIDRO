@@ -76,7 +76,7 @@ namespace BahrHidro.UI
         {
             string json = File.ReadAllText(filePath);
             var loaded = JsonSerializer.Deserialize<OfficeProfileConfig>(json, JsonOpts)
-                ?? throw new InvalidOperationException("O arquivo JSON selecionado não possui um perfil válido do Bahr Hidro.");
+                ?? throw new InvalidOperationException("O arquivo JSON selecionado não possui um perfil válido do Smart Hidro.");
             SaveCurrent(loaded);
             return loaded;
         }

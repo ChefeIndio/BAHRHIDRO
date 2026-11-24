@@ -313,7 +313,7 @@ using BahrHidro.Core.Hydraulic.Network;
     Console.WriteLine("====================================");
 
     var rede = new HydraulicNetwork(
-        "Rede Experimental Bahr Hidro");
+        "Rede Experimental Smart Hidro");
 
     var reservatorio = new HydraulicNode
     {
@@ -542,7 +542,7 @@ using BahrHidro.Core.Hydraulic.Network;
     Console.WriteLine("====================================");
 
     var redeRamificada = new HydraulicNetwork(
-        "Rede Ramificada Bahr Hidro");
+        "Rede Ramificada Smart Hidro");
 
     var reservatorioRamificado = new HydraulicNode
     {

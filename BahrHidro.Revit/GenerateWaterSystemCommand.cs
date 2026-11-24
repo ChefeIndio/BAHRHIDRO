@@ -29,7 +29,7 @@ namespace BahrHidro.Revit
                     uidoc.ActiveView = combined3D;
 
                 TaskDialog.Show(
-                    "Bahr Hidro — 1º Água Fria e 2º Água Quente",
+                    "Smart Hidro — 1º Água Fria e 2º Água Quente",
                     pipes.Count > 0
                         ? $"Sequência 1º Água Fria -> 2º Água Quente concluída!\n\n" +
                           $"• Trechos gerados (AF + AQ): {pipes.Count}\n" +
@@ -43,7 +43,7 @@ namespace BahrHidro.Revit
             catch (Exception ex)
             {
                 message = ex.Message;
-                TaskDialog.Show("Bahr Hidro — Erro", $"Falha ao gerar rede de água: {ex.Message}");
+                TaskDialog.Show("Smart Hidro — Erro", $"Falha ao gerar rede de água: {ex.Message}");
                 return Result.Failed;
             }
         }

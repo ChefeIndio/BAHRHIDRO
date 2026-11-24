@@ -123,13 +123,13 @@ namespace BahrHidro.Revit
         {
             Document doc = uidoc.Document;
 
-            // 1. Busca vistas isométricas e elevações de parede geradas pelo Bahr Hidro
+            // 1. Busca vistas isométricas e elevações de parede geradas pelo Smart Hidro
             var targetViews = new FilteredElementCollector(doc)
                 .OfClass(typeof(View))
                 .Cast<View>()
                 .Where(v => !v.IsTemplate &&
-                            (v.Name.StartsWith("BahrHidro - Isométrico", StringComparison.OrdinalIgnoreCase) ||
-                             v.Name.StartsWith("BahrHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase)))
+                            (v.Name.StartsWith("SmartHidro - Isométrico", StringComparison.OrdinalIgnoreCase) ||
+                             v.Name.StartsWith("SmartHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase)))
                 .OrderBy(v => v.Name)
                 .ToList();
 
@@ -141,8 +141,8 @@ namespace BahrHidro.Revit
                     .OfClass(typeof(View))
                     .Cast<View>()
                     .Where(v => !v.IsTemplate &&
-                                (v.Name.StartsWith("BahrHidro - Isométrico", StringComparison.OrdinalIgnoreCase) ||
-                                 v.Name.StartsWith("BahrHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase)))
+                                (v.Name.StartsWith("SmartHidro - Isométrico", StringComparison.OrdinalIgnoreCase) ||
+                                 v.Name.StartsWith("SmartHidro - Parede Hidráulica", StringComparison.OrdinalIgnoreCase)))
                     .OrderBy(v => v.Name)
                     .ToList();
             }
@@ -176,7 +176,7 @@ namespace BahrHidro.Revit
             const int viewsPerSheet = 4;
             int totalSheetsNeeded = (int)Math.Ceiling(targetViews.Count / (double)viewsPerSheet);
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Gerar Pranchas de Plotagem"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Gerar Pranchas de Plotagem"))
             {
                 tx.Start();
 
@@ -286,7 +286,7 @@ namespace BahrHidro.Revit
 
         private static ViewSchedule GetOrCreatePipeTakeoffSchedule(Document doc)
         {
-            const string schedName = "BahrHidro - Quantitativo de Tubulações";
+            const string schedName = "SmartHidro - Quantitativo de Tubulações";
             var existing = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSchedule))
                 .Cast<ViewSchedule>()
@@ -330,7 +330,7 @@ namespace BahrHidro.Revit
 
         private static ViewSchedule GetOrCreateFittingTakeoffSchedule(Document doc)
         {
-            const string schedName = "BahrHidro - Quantitativo de Conexões";
+            const string schedName = "SmartHidro - Quantitativo de Conexões";
             var existing = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewSchedule))
                 .Cast<ViewSchedule>()

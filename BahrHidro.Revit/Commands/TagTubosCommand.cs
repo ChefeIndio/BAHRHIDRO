@@ -19,7 +19,7 @@ namespace BahrHidro.Revit.Commands
 
             if (activeView is View3D && !((View3D)activeView).IsLocked)
             {
-                TaskDialog.Show("Bahr Hidro", "Para aplicar identificadores numa vista 3D, deve primeiro trancar a vista.");
+                TaskDialog.Show("Smart Hidro", "Para aplicar identificadores numa vista 3D, deve primeiro trancar a vista.");
                 return Result.Cancelled;
             }
 
@@ -39,7 +39,7 @@ namespace BahrHidro.Revit.Commands
                 return Result.Failed;
             }
 
-            using (Transaction t = new Transaction(doc, "Bahr Hidro: Identificar Tubos"))
+            using (Transaction t = new Transaction(doc, "Smart Hidro: Identificar Tubos"))
             {
                 t.Start();
                 if (!pipeTagSymbol.IsActive) { pipeTagSymbol.Activate(); doc.Regenerate(); }
@@ -83,7 +83,7 @@ namespace BahrHidro.Revit.Commands
                     }
                 }
                 t.Commit();
-                TaskDialog.Show("Bahr Hidro", $"{tagCount} identificadores inseridos com afastamento automático.");
+                TaskDialog.Show("Smart Hidro", $"{tagCount} identificadores inseridos com afastamento automático.");
             }
             return Result.Succeeded;
         }

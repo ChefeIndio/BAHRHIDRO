@@ -66,7 +66,7 @@ namespace BahrHidro.Revit
             {
                 _uidoc = uiApp.ActiveUIDocument ?? throw new InvalidOperationException("Nenhum projeto aberto no Revit.");
                 _doc = _uidoc.Document;
-            using (Transaction tx = new Transaction(_doc, "Bahr Hidro - Atualizar Dados do Projeto"))
+            using (Transaction tx = new Transaction(_doc, "Smart Hidro - Atualizar Dados do Projeto"))
             {
                 tx.Start();
                 var info = _doc.ProjectInformation;
@@ -178,7 +178,7 @@ namespace BahrHidro.Revit
                 throw new InvalidOperationException("Importe uma rede do modelo 3D do Revit antes de aplicar os diâmetros.");
 
             int tubosAtualizados = 0;
-            using (Transaction tx = new Transaction(_doc, "Bahr Hidro - Aplicar Diâmetros 3D"))
+            using (Transaction tx = new Transaction(_doc, "Smart Hidro - Aplicar Diâmetros 3D"))
             {
                 tx.Start();
 

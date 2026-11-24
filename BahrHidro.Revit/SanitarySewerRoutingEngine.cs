@@ -42,8 +42,8 @@ namespace BahrHidro.Revit
             var zones = SmartHydraulicRoutingEngine.BuildHydraulicWallZonesPublic(doc, sewerFixtures);
             if (zones.Count == 0) return allSanitaryPipes;
 
-            ElementId sanSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Bahr Hidro");
-            ElementId ventSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Vent, "Ventilação Sanitária - Bahr Hidro");
+            ElementId sanSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Sanitary, "Esgoto Sanitário - Smart Hidro");
+            ElementId ventSysTypeId = PipeNetworkHelper.GetOrCreateSystemTypeId(doc, MEPSystemClassification.Vent, "Ventilação Sanitária - Smart Hidro");
             ElementId sewerPipeTypeId = ResolveSewerPipeTypeId(doc, preferredSewerPipeTypeId);
             ElementId levelId = ResolveNearestLevelId(doc, globalFloorZ);
 
@@ -57,7 +57,7 @@ namespace BahrHidro.Revit
             {
                 if (ownTransaction)
                 {
-                    tx = new Transaction(doc, "Bahr Hidro - Rede de Esgoto Sanitário e Ventilação (NBR 8160)");
+                    tx = new Transaction(doc, "Smart Hidro - Rede de Esgoto Sanitário e Ventilação (NBR 8160)");
                     tx.Start();
                 }
 
@@ -359,7 +359,7 @@ namespace BahrHidro.Revit
                 PaintSanitary(doc.ActiveView);
 
             // 1. Planta Baixa de Esgoto e Ventilação (com faixa de vista estendida para baixo para mostrar sob o piso!)
-            const string sanPlanName = "Bahr Hidro - Planta de Esgoto e Ventilação";
+            const string sanPlanName = "Smart Hidro - Planta de Esgoto e Ventilação";
             var sanPlan = new FilteredElementCollector(doc)
                 .OfClass(typeof(ViewPlan))
                 .Cast<ViewPlan>()
@@ -409,7 +409,7 @@ namespace BahrHidro.Revit
 
             if (vft3D != null)
             {
-                const string isoName = "Bahr Hidro - Isométrico Esgoto 3D";
+                const string isoName = "Smart Hidro - Isométrico Esgoto 3D";
                 var isoView = new FilteredElementCollector(doc)
                     .OfClass(typeof(View3D))
                     .Cast<View3D>()
@@ -453,7 +453,7 @@ namespace BahrHidro.Revit
 
                 var sb = new StringBuilder();
                 sb.AppendLine("======================================================================");
-                sb.AppendLine($"BAHR HIDRO BIM — MEMORIAL DE ESGOTO SANITÁRIO E VENTILAÇÃO (NBR 8160)");
+                sb.AppendLine($"SMART HIDRO BIM — MEMORIAL DE ESGOTO SANITÁRIO E VENTILAÇÃO (NBR 8160)");
                 sb.AppendLine($"Projeto: {doc.Title} | Data: {DateTime.Now:dd/MM/yyyy HH:mm:ss}");
                 sb.AppendLine("======================================================================");
                 sb.AppendLine($"Zonas / Prumadas Sanitárias: {report.ZonesCount}");

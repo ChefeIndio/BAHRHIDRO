@@ -103,10 +103,10 @@ namespace BahrHidro.Revit
             }
 
             ElementId viewId = ElementId.InvalidElementId;
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Compatibilização 3D & Clash LSF"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Compatibilização 3D & Clash LSF"))
             {
                 tx.Start();
-                View3D? view = GetOrCreateDedicated3DView(doc, "Bahr Hidro - Compatibilização 3D & Clash");
+                View3D? view = GetOrCreateDedicated3DView(doc, "Smart Hidro - Compatibilização 3D & Clash");
                 if (view != null)
                 {
                     viewId = view.Id;
@@ -137,7 +137,7 @@ namespace BahrHidro.Revit
 
             string summary = clashes.Count == 0
                 ? $"Compatibilização 3D concluída: 0 interferências encontradas entre {pipes.Count} trechos e {structuralTargets.Count} elementos estruturais/LSF."
-                : $"Compatibilização 3D concluída: {clashes.Count} interferência(s) detectada(s) em {clashingPipeIds.Count} tubo(s) contra Estrutura/LSF. Vista 'Bahr Hidro - Compatibilização 3D & Clash' atualizada.";
+                : $"Compatibilização 3D concluída: {clashes.Count} interferência(s) detectada(s) em {clashingPipeIds.Count} tubo(s) contra Estrutura/LSF. Vista 'Smart Hidro - Compatibilização 3D & Clash' atualizada.";
 
             return (new ClashAudit3DResult(pipes.Count, structuralTargets.Count, clashes.Count, clashes, summary), viewId);
         }
@@ -159,10 +159,10 @@ namespace BahrHidro.Revit
             int velWarnCount = 0;
             int pressCritCount = 0;
 
-            using (Transaction tx = new Transaction(doc, "Bahr Hidro - Mapa Visual 3D Diagnóstico Hidráulico"))
+            using (Transaction tx = new Transaction(doc, "Smart Hidro - Mapa Visual 3D Diagnóstico Hidráulico"))
             {
                 tx.Start();
-                View3D? view = GetOrCreateDedicated3DView(doc, "Bahr Hidro - Diagnóstico Hidráulico 3D");
+                View3D? view = GetOrCreateDedicated3DView(doc, "Smart Hidro - Diagnóstico Hidráulico 3D");
                 if (view == null)
                     throw new InvalidOperationException("Não foi possível criar a Vista 3D de Diagnóstico Hidráulico.");
 
@@ -254,7 +254,7 @@ namespace BahrHidro.Revit
 
                 tx.Commit();
 
-                string summary = $"Mapa Visual 3D gerado na vista 'Bahr Hidro - Diagnóstico Hidráulico 3D': " +
+                string summary = $"Mapa Visual 3D gerado na vista 'Smart Hidro - Diagnóstico Hidráulico 3D': " +
                                  $"{okCount} trechos conformes (Verde), {velWarnCount} com velocidade > 3,0 m/s (Amarelo) e {pressCritCount} com pressão crítica/VRP (Vermelho).";
 
                 return (new HydraulicDiagnostic3DResult(okCount, velWarnCount, pressCritCount, summary), view.Id);
@@ -365,7 +365,7 @@ namespace BahrHidro.Revit
 
             int createdPipes = 0;
 
-            using (Transaction tx = new Transaction(doc, $"Bahr Hidro - Executar Traçado 3D ({plan.PlanName})"))
+            using (Transaction tx = new Transaction(doc, $"Smart Hidro - Executar Traçado 3D ({plan.PlanName})"))
             {
                 tx.Start();
 

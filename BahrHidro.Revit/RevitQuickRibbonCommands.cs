@@ -18,12 +18,12 @@ namespace BahrHidro.Revit
 
                 var bridge = new RevitBimBridge(commandData.Application);
                 var res = bridge.ExecuteVisualAuditSync();
-                TaskDialog.Show("Bahr Hidro - Auditoria Visual 3D", res.Summary);
+                TaskDialog.Show("Smart Hidro - Auditoria Visual 3D", res.Summary);
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Bahr Hidro - Auditoria Visual 3D", ex.Message);
+                TaskDialog.Show("Smart Hidro - Auditoria Visual 3D", ex.Message);
                 return Result.Failed;
             }
         }
@@ -41,12 +41,12 @@ namespace BahrHidro.Revit
                     ?? throw new InvalidOperationException("Abra um projeto no Revit antes de validar a furação LSF.");
 
                 var res = RevitLsfFabricationManager.RunLsfPunchingAudit(uidoc.Document);
-                TaskDialog.Show("Bahr Hidro - Validação de Furação LSF", res.Summary);
+                TaskDialog.Show("Smart Hidro - Validação de Furação LSF", res.Summary);
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Bahr Hidro - Validação de Furação LSF", ex.Message);
+                TaskDialog.Show("Smart Hidro - Validação de Furação LSF", ex.Message);
                 return Result.Failed;
             }
         }
@@ -65,12 +65,12 @@ namespace BahrHidro.Revit
 
                 var bridge = new RevitBimBridge(commandData.Application);
                 var res = bridge.ExecuteSheetGenerationSync();
-                TaskDialog.Show("Bahr Hidro - Pranchas Executivas LSF", res.Summary);
+                TaskDialog.Show("Smart Hidro - Pranchas Executivas LSF", res.Summary);
                 return Result.Succeeded;
             }
             catch (Exception ex)
             {
-                TaskDialog.Show("Bahr Hidro - Pranchas Executivas LSF", ex.Message);
+                TaskDialog.Show("Smart Hidro - Pranchas Executivas LSF", ex.Message);
                 return Result.Failed;
             }
         }

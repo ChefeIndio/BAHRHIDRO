@@ -130,13 +130,13 @@ namespace BahrHidro.Core.Reporting
                 $"Empreendimento / Modelo BIM: {projectTitle}  |  Emissão: {issueDate}"));
 
             bodyElements.Add(BuildParagraph(
-                "Este documento consolida o dimensionamento hidráulico, sanitário, térmico e de compatibilização BIM elaborado no Bahr Hidro (Autodesk Revit 2026), em conformidade com as normas técnicas vigentes da Associação Brasileira de Normas Técnicas (ABNT):",
+                "Este documento consolida o dimensionamento hidráulico, sanitário, térmico e de compatibilização BIM elaborado no Smart Hidro (Autodesk Revit 2026), em conformidade com as normas técnicas vigentes da Associação Brasileira de Normas Técnicas (ABNT):",
                 spaceAfter: 100));
 
             bodyElements.Add(BuildKeyValueTable("PREMISSAS NORMATIVAS E IDENTIFICAÇÃO TÉCNICA", new List<(string, string)>
             {
                 ("Empreendimento / Arquivo BIM", projectTitle),
-                ("Responsável / Origem", string.IsNullOrWhiteSpace(data.ClientOrAuthor) ? "Engenharia Hidrossanitária — Bahr Hidro BIM" : data.ClientOrAuthor),
+                ("Responsável / Origem", string.IsNullOrWhiteSpace(data.ClientOrAuthor) ? "Engenharia Hidrossanitária — Smart Hidro BIM" : data.ClientOrAuthor),
                 ("Data de Consolidação", issueDate),
                 ("Normas Aplicáveis", "ABNT NBR 5626 (Água Fria), NBR 7198 (Água Quente), NBR 15569 (Solar), NBR 8160 (Esgoto), NBR 10844 (Pluvial), NBR 7229 e NBR 13969 (Tratamento Individual)")
             }));
@@ -242,7 +242,7 @@ namespace BahrHidro.Core.Reporting
             bodyElements.Add(BuildParagraph("", spaceAfter: 240));
             bodyElements.Add(BuildParagraph("____________________________________________________________", alignCenter: true, spaceAfter: 40));
             bodyElements.Add(BuildParagraph("RESPONSÁVEL TÉCNICO PELO PROJETO HIDROSSANITÁRIO", bold: true, alignCenter: true, spaceAfter: 20));
-            bodyElements.Add(BuildParagraph("Engenharia Civil / Hidrossanitária — Documento gerado via Bahr Hidro BIM (Revit 2026)", colorHex: "64748B", alignCenter: true, spaceAfter: 0));
+            bodyElements.Add(BuildParagraph("Engenharia Civil / Hidrossanitária — Documento gerado via Smart Hidro BIM (Revit 2026)", colorHex: "64748B", alignCenter: true, spaceAfter: 0));
 
             // Configuração de página A4 com margens de 2,0 cm
             bodyElements.Add(new XElement(W + "sectPr",

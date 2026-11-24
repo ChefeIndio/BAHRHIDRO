@@ -56,7 +56,7 @@ namespace BahrHidro.Revit
             }
         }
 
-        public string GetName() => "Bahr Hidro - Executor Assíncrono BIM";
+        public string GetName() => "Smart Hidro - Executor Assíncrono BIM";
     
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(IntPtr hWnd);
