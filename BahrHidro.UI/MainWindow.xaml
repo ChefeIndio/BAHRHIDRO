@@ -2,11 +2,11 @@
 
     <Window.Resources>
         <SolidColorBrush x:Key="BhBgCanvas" Color="#F1F5F9" />
-        <SolidColorBrush x:Key="BhAccent" Color="#0284C7" />
+        <SolidColorBrush x:Key="BhAccent" Color="#F28C38" />
         <SolidColorBrush x:Key="BhBorderSubtle" Color="#CBD5E1" />
 
         <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#0284C7" />
+            <Setter Property="Background" Value="#F28C38" />
             <Setter Property="Foreground" Value="#FFFFFF" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="12.5" />
@@ -18,14 +18,17 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image Source="/BahrHidro.UI;component/LogoSmart.png" Width="15" Height="15" Margin="0,0,7,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#0369A1" />
+                                <Setter TargetName="bd" Property="Background" Value="#D97724" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#075985" />
+                                <Setter TargetName="bd" Property="Background" Value="#B85D14" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="bd" Property="Opacity" Value="0.45" />
@@ -50,12 +53,15 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image Source="/BahrHidro.UI;component/LogoSmart.png" Width="14" Height="14" Margin="0,0,7,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </StackPanel>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#F8FAFC" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#0284C7" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#F28C38" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
                                 <Setter TargetName="bd" Property="Background" Value="#E2E8F0" />
@@ -87,11 +93,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#E0F2FE" />
-                                <Setter TargetName="bd" Property="BorderBrush" Value="#0284C7" />
+                                <Setter TargetName="bd" Property="Background" Value="#FFF3E8" />
+                                <Setter TargetName="bd" Property="BorderBrush" Value="#F28C38" />
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#BAE6FD" />
+                                <Setter TargetName="bd" Property="Background" Value="#FFE2C7" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="bd" Property="Opacity" Value="0.45" />
@@ -153,24 +159,17 @@
                     <Border CornerRadius="8" Width="38" Height="36" Margin="0,0,11,0" VerticalAlignment="Center">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="#0284C7" Offset="0" />
-                                <GradientStop Color="#0369A1" Offset="1" />
+                                <GradientStop Color="#F28C38" Offset="0" />
+                                <GradientStop Color="#D97724" Offset="1" />
                             </LinearGradientBrush>
                         </Border.Background>
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="BH" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12" HorizontalAlignment="Center" />
-                            <Canvas Width="22" Height="10" HorizontalAlignment="Center">
-                                <Line X1="1" Y1="5" X2="6" Y2="5" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-                                <Line X1="16" Y1="5" X2="21" Y2="5" Stroke="#BAE6FD" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
-                                <Path Data="M 11,0.5 C 11,0.5 14.2,4.2 14.2,6.2 A 3.2,3.2 0 1 1 7.8,6.2 C 7.8,4.2 11,0.5 11,0.5 Z" Fill="#E0F2FE" />
-                            </Canvas>
-                        </StackPanel>
+                        <Image Source="/BahrHidro.UI;component/LogoSmart.png" Stretch="Uniform" Margin="4" VerticalAlignment="Center" HorizontalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="SMART HIDRO" FontWeight="Bold" FontSize="14" Foreground="#0F172A" />
-                            <Border Background="#E0F2FE" CornerRadius="4" Padding="7,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock x:Name="ActiveStepBadgeText" Text="Visão Geral do Fluxo" FontSize="11" FontWeight="SemiBold" Foreground="#0369A1" />
+                            <Border Background="#FFF3E8" CornerRadius="4" Padding="7,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBlock x:Name="ActiveStepBadgeText" Text="Visão Geral do Fluxo" FontSize="11" FontWeight="SemiBold" Foreground="#D97724" />
                             </Border>
                         </StackPanel>
                         <TextBlock Text="Copiloto de Engenharia •  Hidrossanitária • ABNT NBR 5626 / 7198 / 8160 / 10844" FontSize="11" Foreground="#64748B" />
@@ -185,7 +184,7 @@
                         <TextBlock Text="🏠 Início" Foreground="#0F172A" />
                     </Button>
                     <Button Style="{StaticResource QuickChipButton}" Click="AbrirCatalogo_Click">
-                        <TextBlock Text="📏 Catálogo de Tubos" Foreground="#0284C7" />
+                        <TextBlock Text="📏 Catálogo de Tubos" Foreground="#F28C38" />
                     </Button>
                     <Button Style="{StaticResource QuickChipButton}" Click="NavConfiguracoes_Click">
                         <TextBlock Text="⚙ Parâmetros" Foreground="#334155" />
@@ -225,7 +224,7 @@
                     </TreeViewItem>
 
                     <TreeViewItem Header="DOCUMENTAÇÃO FINAL" IsExpanded="True" FontSize="10.5" FontWeight="Bold" Foreground="#64748B" Margin="0,10,0,0">
-                        <TreeViewItem x:Name="NavClash3D" Header="Compatibilização 3D (Clash)" Selected="NavClash3D_Selected" FontWeight="SemiBold" Foreground="#1E293B" /><TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Isométricos 2D/3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B" />
+                        <TreeViewItem x:Name="NavClash3D" Header="Compatibilização 3D (Clash)" Tag="Clash3D" FontWeight="SemiBold" Foreground="#1E293B" /><TreeViewItem x:Name="NavVistas3DVivas" Header="Pranchas &amp; Isométricos 2D/3D ABNT" Tag="Vistas3DVivas" FontWeight="SemiBold" Foreground="#1E293B" />
                         <TreeViewItem x:Name="NavMemorial" Header="Gerar Memoriais &amp; SINAPI" Tag="Memorial" FontWeight="SemiBold" Foreground="#1E293B" />
                     </TreeViewItem>
 
@@ -249,7 +248,7 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0">
-                                    <TextBlock Text="FLUXO GUIADO DE PROJETO COMPLEMENTAR" Foreground="#38BDF8" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
+                                    <TextBlock Text="FLUXO GUIADO DE PROJETO COMPLEMENTAR" Foreground="#F28C38" FontSize="11" FontWeight="Bold" Margin="0,0,0,4" />
                                     <TextBlock Text="Dimensionamento, Auditoria Normativa e Memoriais" Foreground="White" FontSize="20" FontWeight="Bold" Margin="0,0,0,6" />
                                     <TextBlock x:Name="InicioProjetoStatusText" Text="Modele o traçado básico no Revit e avance pelas 5 etapas abaixo. Os dados calculados em uma etapa alimentam automaticamente as seguintes." Foreground="#CBD5E1" FontSize="12.5" TextWrapping="Wrap" />
                                 </StackPanel>
@@ -416,7 +415,7 @@
                                 <ColumnDefinition Width="1*" />
                             </Grid.ColumnDefinitions>
 
-                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,12" VerticalAlignment="Stretch"><StackPanel Margin="0,0,0,16"><Border Background="#F8FAFC" BorderBrush="#93C5FD" BorderThickness="1.5" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,12" VerticalAlignment="Stretch"><StackPanel Margin="0,0,0,16"><Border Background="#F8FAFC" BorderBrush="#F28C38" BorderThickness="1.5" CornerRadius="8" Padding="14" Margin="0,0,0,14">
                                     <StackPanel>
                                         <TextBlock Text="GERAÇÃO DE VISTAS ISOMÉTRICAS (2D E 3D) &amp; PRANCHA EXECUTIVA ABNT (HID-01)" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,4" />
                                         <TextBlock Text="Escolha o formato das vistas isométricas (2D em projeção 30° ABNT, 3D BIM ou ambos) e gere apenas as vistas ou a prancha HID-01 completa." FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,10" />
@@ -432,8 +431,8 @@
                                             <Button x:Name="BtnGerarIsometricosSomente" Content="Gerar Vistas Isométricas (2D / 3D)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="GerarIsometricosSomente_Click" />
                                             <Button x:Name="BtnGerarPranchaAbnt" Content="Gerar Prancha Executiva ABNT (HID-01)" Style="{StaticResource PrimaryButton}" Margin="0,0,0,4" Click="GerarIsometricosEPranchaAbnt_Click" />
                                         </WrapPanel>
-<Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,10,0,0">
-  <TextBlock x:Name="Doc3DStatusText" Text="Selecione Isométrica 2D, Isométrica 3D ou ambos e clique para gerar." FontSize="11.5" Foreground="#1E3A8A" TextWrapping="Wrap" />
+<Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,10,0,0">
+  <TextBlock x:Name="Doc3DStatusText" Text="Selecione Isométrica 2D, Isométrica 3D ou ambos e clique para gerar." FontSize="11.5" Foreground="#9A3412" TextWrapping="Wrap" />
 </Border>
                                     </StackPanel>
                                 </Border>
@@ -510,7 +509,7 @@
                                         </Grid>
 
                                         <CheckBox x:Name="ChkDesviarSteelFrame" IsChecked="True" Margin="0,0,0,6" Content="Guiar pelas paredes + desviar de perfis Steel Frame e vãos de portas/janelas" FontSize="12" FontWeight="SemiBold" Foreground="#166534" />
-                                        <CheckBox x:Name="ChkInserirRegistrosAuto" IsChecked="True" Content="Inserir Registos de Pressão (chuveiros) e Gaveta (manutenção) automaticamente" FontSize="12" FontWeight="SemiBold" Foreground="#1E3A8A" />
+                                        <CheckBox x:Name="ChkInserirRegistrosAuto" IsChecked="True" Content="Inserir Registos de Pressão (chuveiros) e Gaveta (manutenção) automaticamente" FontSize="12" FontWeight="SemiBold" Foreground="#9A3412" />
                                     </StackPanel>
                                 </Border>
 
@@ -608,22 +607,22 @@
                                             <Button Content="Ir para Água Fria (Dimensionar)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,6" Click="BtnIrAguaFria_Click" />
                                         </WrapPanel>
 
-                                        <TextBlock x:Name="TracadoResumoGeracaoText" Text="Resultado: Aguardando geração do traçado." FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6" />
+                                        <TextBlock x:Name="TracadoResumoGeracaoText" Text="Resultado: Aguardando geração do traçado." FontSize="12" FontWeight="Bold" Foreground="#9A3412" Margin="0,0,0,6" />
                                         <TextBox x:Name="TracadoLogTextBox" Height="95" IsReadOnly="True" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" Background="#F8FAFC" FontSize="11" />
                                     </StackPanel>
                                 </Border>
-                                <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,14,0,0">
+                                <Border Background="#FFF7ED" BorderBrush="#F28C38" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,14,0,0">
                                     <StackPanel>
-                                        <TextBlock Text="PONTE ESPACIAL 3D — INFRAESTRUTURA PARA FUTURO TRAÇADO AUTOMÁTICO VIA API" FontSize="11.5" FontWeight="Bold" Foreground="#1E40AF" Margin="0,0,0,6" />
-                                        <TextBlock Text="Extrai coordenadas reais dos conectores dos aparelhos sanitários e prumadas em JSON e executa planos de traçado 3D no Revit 2026." FontSize="11.5" Foreground="#1D4ED8" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                        <TextBlock Text="PONTE ESPACIAL 3D — INFRAESTRUTURA PARA FUTURO TRAÇADO AUTOMÁTICO VIA API" FontSize="11.5" FontWeight="Bold" Foreground="#C26619" Margin="0,0,0,6" />
+                                        <TextBlock Text="Extrai coordenadas reais dos conectores dos aparelhos sanitários e prumadas em JSON e executa planos de traçado 3D no Revit 2026." FontSize="11.5" Foreground="#F28C38" TextWrapping="Wrap" Margin="0,0,0,10" />
                                         <WrapPanel Margin="0,0,0,8">
                                             <Button Content="Extrair Contexto Espacial 3D (JSON)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExtrairContextoEspacial3D_Click" />
                                             <Button Content="Gerar Plano de Teste Derivado" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="GerarPlanoRoteamentoTeste_Click" />
                                             <Button Content="Executar Plano JSON no Revit 3D" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExecutarPlanoRoteamento3D_Click" />
                                         </WrapPanel>
-                                        <Border Background="White" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                        <Border Background="White" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
                                             <StackPanel>
-                                                <TextBlock Text="CONEXÃO API CLAUDE (ANTHROPIC) — ROTEAMENTO AUTOMÁTICO NBR 5626 / 7198 / 8160" FontSize="11" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6" />
+                                                <TextBlock Text="CONEXÃO API CLAUDE (ANTHROPIC) — ROTEAMENTO AUTOMÁTICO NBR 5626 / 7198 / 8160" FontSize="11" FontWeight="Bold" Foreground="#9A3412" Margin="0,0,0,6" />
                                                 <Grid Margin="0,0,0,8">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="2*" />
@@ -656,15 +655,15 @@
                                             </StackPanel>
                                         </Border>
                                         <TextBlock x:Name="SpatialBridgeStatusText" Text="Pronto para mapear os aparelhos sanitários e prumadas do modelo aberto." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,8" />
-                                        <TextBox x:Name="SpatialContextJsonTextBox" Height="170" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11" Background="White" BorderBrush="#BFDBFE" Padding="8" />
+                                        <TextBox x:Name="SpatialContextJsonTextBox" Height="170" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11" Background="White" BorderBrush="#FDBA74" Padding="8" />
                                     </StackPanel>
                                 </Border>
 
                                 
-                                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="14">
+                                <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="14">
                                     <StackPanel>
-                                        <TextBlock Text="4. Documentação Automática, Clash Check 3D e Pranchas" FontSize="13" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,4" />
-                                        <TextBlock Text="Audita interferências contra o Steel Frame, gera vistas isométricas 3D (1:25 c/ Tags) e monta as pranchas de plotagem." FontSize="11" Foreground="#1E40AF" TextWrapping="Wrap" Margin="0,0,0,8" />
+                                        <TextBlock Text="4. Documentação Automática, Clash Check 3D e Pranchas" FontSize="13" FontWeight="Bold" Foreground="#9A3412" Margin="0,0,0,4" />
+                                        <TextBlock Text="Audita interferências contra o Steel Frame, gera vistas isométricas 3D (1:25 c/ Tags) e monta as pranchas de plotagem." FontSize="11" Foreground="#C26619" TextWrapping="Wrap" Margin="0,0,0,8" />
                                         <WrapPanel Orientation="Horizontal">
                                             <Button Content="1. Verificar Colisões (Steel Frame)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="VerificarColisoesSteelFrame_Click" />
                                             <Button Content="2. Gerar Isométricos 3D (c/ Tags)" Style="{StaticResource SecondaryButton}" Height="32" Padding="10,0" Margin="0,0,6,6" Click="GerarIsometricos3D_Click" />
@@ -735,7 +734,7 @@
                                 <Border Grid.Column="0" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
                                     <StackPanel>
                                         <DockPanel Margin="0,0,0,8">
-                                            <TextBlock x:Name="ResumoRedeText" DockPanel.Dock="Right" Text="0 elementos" FontSize="12" FontWeight="SemiBold" Foreground="#1D4ED8" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="ResumoRedeText" DockPanel.Dock="Right" Text="0 elementos" FontSize="12" FontWeight="SemiBold" Foreground="#F28C38" VerticalAlignment="Center" />
                                             <TextBlock Text="1. Nós e Reservatórios Lidos do Modelo 3D" FontSize="14" FontWeight="Bold" Foreground="#0F172A" />
                                         </DockPanel>
 
@@ -755,7 +754,7 @@
                                 <Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="14">
                                     <StackPanel>
                                         <DockPanel Margin="0,0,0,8">
-                                            <TextBlock x:Name="ResumoTrechosText" DockPanel.Dock="Right" Text="0 trecho(s)" FontSize="12" FontWeight="SemiBold" Foreground="#1D4ED8" VerticalAlignment="Center" />
+                                            <TextBlock x:Name="ResumoTrechosText" DockPanel.Dock="Right" Text="0 trecho(s)" FontSize="12" FontWeight="SemiBold" Foreground="#F28C38" VerticalAlignment="Center" />
                                             <TextBlock Text="2. Trechos de Tubulação Lidos do Modelo 3D" FontSize="14" FontWeight="Bold" Foreground="#0F172A" />
                                         </DockPanel>
 
@@ -773,21 +772,21 @@
                             </Grid>
 
                             
-                            <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,16">
+                            <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,16">
                                 <DockPanel>
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <TextBlock Text="Viscosidade Cinemática (m²/s):" FontWeight="SemiBold" Foreground="#1E3A8A" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBlock Text="Viscosidade Cinemática (m²/s):" FontWeight="SemiBold" Foreground="#9A3412" VerticalAlignment="Center" Margin="0,0,8,0" />
                                         <TextBox x:Name="RedeViscosidadeTextBox" Width="130" Text="0,000001003" Margin="0,0,16,0" />
                                         <Button Content="Calcular Rede Hidráulica" Style="{StaticResource PrimaryButton}" Click="CalcularRede_Click" />
                                     </StackPanel>
-                                    <TextBlock x:Name="StatusCalculoAguaFriaText" DockPanel.Dock="Right" Text="Importe a rede 3D do Revit e clique em Calcular." Foreground="#1E40AF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="StatusCalculoAguaFriaText" DockPanel.Dock="Right" Text="Importe a rede 3D do Revit e clique em Calcular." Foreground="#C26619" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
                                 </DockPanel>
                             </Border>
 
                             
                             <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,14">
                                 <DockPanel>
-                                    <CheckBox x:Name="ChkSomenteTrocados" DockPanel.Dock="Right" Content="Mostrar apenas tubos trocados" FontSize="12" FontWeight="SemiBold" Foreground="#1E3A8A" VerticalAlignment="Center" Checked="ChkSomenteTrocados_Changed" Unchecked="ChkSomenteTrocados_Changed" />
+                                    <CheckBox x:Name="ChkSomenteTrocados" DockPanel.Dock="Right" Content="Mostrar apenas tubos trocados" FontSize="12" FontWeight="SemiBold" Foreground="#9A3412" VerticalAlignment="Center" Checked="ChkSomenteTrocados_Changed" Unchecked="ChkSomenteTrocados_Changed" />
                                     <StackPanel>
                                         <TextBlock Text="RELATÓRIO DE SUBSTITUIÇÃO E DIMENSIONAMENTO DOS TUBOS" FontSize="11" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,2" />
                                         <Border Background="#FFFBEB" BorderBrush="#F59E0B" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10">
@@ -971,7 +970,7 @@
                                         <Button Content="Exportar Memorial Reservatórios &amp; Bombas (.txt)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="ExportarMemorialReservatorios_Click" />
                                     </WrapPanel>
 
-                                    <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="6" Padding="12">
+                                    <Border Background="#FFF7ED" BorderBrush="#F28C38" BorderThickness="1" CornerRadius="6" Padding="12">
                                         <TextBlock x:Name="ResSizingResultText" Text="Informe os dados acima e clique em 'Dimensionar Reservatórios, Recalque &amp; Bombas' para calcular volumes inferior/superior, bitolas, AMT, NPSH e potência comercial (CV)." FontFamily="Consolas" FontSize="11.5" Foreground="#1E293B" TextWrapping="Wrap" />
                                     </Border>
                                 </StackPanel>
@@ -1037,10 +1036,10 @@
                                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BombaVazaoText" Text="--" />
 
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Altura Manométrica (AMT):" FontWeight="Bold" />
-                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#1D4ED8" />
+                                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="BombaAmtText" Text="--" FontWeight="Bold" Foreground="#F28C38" />
 
                                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Potência Comercial Estimada:" FontWeight="Bold" />
-                                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#1D4ED8" />
+                                        <TextBlock Grid.Row="4" Grid.Column="1" x:Name="BombaPotenciaText" Text="--" FontWeight="Bold" Foreground="#F28C38" />
                                     </Grid>
 
                                     <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="5" Padding="10">
@@ -1139,7 +1138,7 @@
                                         <TextBlock Grid.Row="0" Grid.Column="1" x:Name="BoilerConsumoText" Text="--" />
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume de Acumulação:" FontWeight="SemiBold" />
-                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#1D4ED8" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="BoilerVolumeText" Text="--" FontWeight="Bold" Foreground="#F28C38" />
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Modelo Comercial Sugerido:" FontWeight="SemiBold" />
                                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="BoilerComercialText" Text="--" FontWeight="Bold" Foreground="#0F172A" />
@@ -1367,7 +1366,7 @@
                                         <TextBlock Grid.Row="0" Grid.Column="1" x:Name="CaixaConsumoText" Text="--" />
 
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Volume Total Necessário:" FontWeight="Bold" />
-                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CaixaVolumeTotalText" Text="--" FontWeight="Bold" Foreground="#1D4ED8" />
+                                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="CaixaVolumeTotalText" Text="--" FontWeight="Bold" Foreground="#F28C38" />
 
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Reservatório Superior:" FontWeight="SemiBold" />
                                         <TextBlock Grid.Row="2" Grid.Column="1" x:Name="CaixaSuperiorText" Text="--" />
@@ -1380,10 +1379,10 @@
 
                             
                             <StackPanel Grid.Column="2">
-                                <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,14">
+                                <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,14">
                                     <StackPanel>
-                                        <TextBlock Text="DIAGNÓSTICO DO RESERVATÓRIO 3D &amp; ALIMENTAÇÃO PELA RUA" FontSize="12" FontWeight="Bold" Foreground="#1E3A8A" Margin="0,0,0,6" />
-                                        <TextBlock x:Name="CaixaDiagnostico3DText" Text="Clique em 'Detectar Reservatório &amp; Rua (3D)' ou calcule para verificar se a pressão da rua abastece diretamente o reservatório superior." FontSize="12.5" Foreground="#1E40AF" TextWrapping="Wrap" />
+                                        <TextBlock Text="DIAGNÓSTICO DO RESERVATÓRIO 3D &amp; ALIMENTAÇÃO PELA RUA" FontSize="12" FontWeight="Bold" Foreground="#9A3412" Margin="0,0,0,6" />
+                                        <TextBlock x:Name="CaixaDiagnostico3DText" Text="Clique em 'Detectar Reservatório &amp; Rua (3D)' ou calcule para verificar se a pressão da rua abastece diretamente o reservatório superior." FontSize="12.5" Foreground="#C26619" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>
                                 <Border Background="#F0FDF4" BorderBrush="#BBF7D0" BorderThickness="1" CornerRadius="6" Padding="18">
@@ -1756,10 +1755,10 @@
                             
 
                                     
-                                    <Border Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,14,0,0">
+                                    <Border Background="#FFF7ED" BorderBrush="#F28C38" BorderThickness="1" CornerRadius="8" Padding="14" Margin="0,14,0,0">
                                         <StackPanel>
-                                            <TextBlock Text="MEMORIAL DESCRITIVO EXECUTIVO UNIFICADO (.DOCX — WORD)" FontSize="11.5" FontWeight="Bold" Foreground="#1E40AF" Margin="0,0,0,4" />
-                                            <TextBlock Text="Consolida em um único arquivo .docx formatado todos os capítulos calculados na sessão: Água Fria, Reservatórios/Bombas, Água Quente (Boiler/Gás/Solar), Esgoto 3D, Fossa/Filtro/Sumidouro, Clash 3D e Síntese SINAPI." FontSize="11.5" Foreground="#1D4ED8" TextWrapping="Wrap" Margin="0,0,0,10" />
+                                            <TextBlock Text="MEMORIAL DESCRITIVO EXECUTIVO UNIFICADO (.DOCX — WORD)" FontSize="11.5" FontWeight="Bold" Foreground="#C26619" Margin="0,0,0,4" />
+                                            <TextBlock Text="Consolida em um único arquivo .docx formatado todos os capítulos calculados na sessão: Água Fria, Reservatórios/Bombas, Água Quente (Boiler/Gás/Solar), Esgoto 3D, Fossa/Filtro/Sumidouro, Clash 3D e Síntese SINAPI." FontSize="11.5" Foreground="#F28C38" TextWrapping="Wrap" Margin="0,0,0,10" />
                                             <WrapPanel Margin="0,0,0,8">
                                                 <CheckBox x:Name="ChkDocxAutoCalcularPendentes" Content="Calcular automaticamente módulos pendentes com os parâmetros da tela" IsChecked="True" FontSize="11.5" Margin="0,0,14,4" />
                                             </WrapPanel>
@@ -1845,10 +1844,10 @@
                                 <StackPanel>
                                     <TextBlock Text="2. Resumo Consolidado dos Dimensionamentos" FontSize="14" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,12" />
 
-                                    <Border Background="#EFF6FF" BorderBrush="#BFDBFE" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
+                                    <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,0,0,8">
                                         <StackPanel>
-                                            <TextBlock Text="ÁGUA FRIA (NBR 5626)" FontSize="11" FontWeight="Bold" Foreground="#1E3A8A" />
-                                            <TextBlock x:Name="MemStatusRedeText" Text="Pendente: importe e calcule a rede na aba Água Fria." FontSize="12" Foreground="#1D4ED8" TextWrapping="Wrap" />
+                                            <TextBlock Text="ÁGUA FRIA (NBR 5626)" FontSize="11" FontWeight="Bold" Foreground="#9A3412" />
+                                            <TextBlock x:Name="MemStatusRedeText" Text="Pendente: importe e calcule a rede na aba Água Fria." FontSize="12" Foreground="#F28C38" TextWrapping="Wrap" />
                                         </StackPanel>
                                     </Border>
 
@@ -2032,42 +2031,60 @@
                     <TextBlock x:Name="CfgStatusText" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </ScrollViewer>
-            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PageClash3D}" VerticalAlignment="Top" Margin="0,0,0,28"><Grid x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions><StackPanel Grid.Row="0" Margin="0,0,0,14"><TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" /><TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" /></StackPanel><ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,6,16" VerticalAlignment="Stretch"><Border Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
-                                <StackPanel>
-                                    <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
-                                    <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
+            </ScrollViewer><ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,12,24" Visibility="{Binding Visibility, ElementName=PageClash3D}" VerticalAlignment="Top" Margin="0,0,0,28"><DockPanel x:Name="PageClash3D" Visibility="Collapsed" Margin="0,0,0,24" VerticalAlignment="Stretch">
+                                <Border DockPanel.Dock="Top" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="24,14">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="Compatibilização 3D (Clash LSF / Estrutura) &amp; Mapa Visual" FontSize="18" FontWeight="Bold" Foreground="#0F172A" />
+                                        <TextBlock Text="Auditoria real de interferências entre tubulações e estrutura/LSF e mapa colorido 3D de pressão e velocidade." FontSize="12" Foreground="#64748B" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
 
-                                    <WrapPanel Margin="0,0,0,12">
-                                        <Button Content="Auditar Clash 3D (Estrutura &amp; LSF)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExecutarClash3D_Click" />
-                                        <Button Content="Exportar Relatório de Furos (.csv)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="ExportarRelatorioFurosCsv_Click" />
-                                        <Button Content="Gerar Mapa Visual 3D (Pressão &amp; Velocidade)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="GerarMapaDiagnostico3D_Click" />
-                                    </WrapPanel>
+                                <Border DockPanel.Dock="Bottom" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="24,10">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Left" Content="← Etapa 5: Calhas &amp; Pluvial" Style="{StaticResource SecondaryButton}" Click="BtnIrPluvial_Click" />
+                                        <Button DockPanel.Dock="Right" Content="Avançar para Pranchas &amp; Isométricos →" Style="{StaticResource PrimaryButton}" Click="BtnIrMemorial_Click" />
+                                        <TextBlock Text="Compatibilização BIM 3D • Detecção de Furos em Vigas, Lajes e Perfis LSF" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
 
-                                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
-                                        <TextBlock x:Name="ClashAndDiagStatusText" Text="Execute a auditoria 3D para detectar conflitos estruturais/LSF ou gerar a vista 3D colorida de diagnóstico hidráulico." FontSize="11.5" FontWeight="SemiBold" Foreground="#1E293B" TextWrapping="Wrap" />
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24,18" VerticalAlignment="Stretch">
+                                    <Border MaxWidth="1080" HorizontalAlignment="Left" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,0,0,16" VerticalAlignment="Top">
+                                        <StackPanel>
+                                            <TextBlock Text="COMPATIBILIZAÇÃO 3D (CLASH LSF / ESTRUTURA) &amp; MAPA VISUAL HIDRÁULICO 3D" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,6" />
+                                            <TextBlock Text="Audita interferências reais entre tubulações e vigas, pilares, lajes ou perfis LSF (host e vínculos) e colore os tubos no 3D por faixa de pressão e velocidade." FontSize="11.5" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                                            <WrapPanel Margin="0,0,0,12">
+                                                <Button Content="Auditar Clash 3D (Estrutura &amp; LSF)" Style="{StaticResource PrimaryButton}" Margin="0,0,8,4" Click="ExecutarClash3D_Click" />
+                                                <Button Content="Exportar Relatório de Furos (.csv)" Style="{StaticResource SecondaryButton}" Margin="0,0,8,4" Click="ExportarRelatorioFurosCsv_Click" />
+                                                <Button Content="Gerar Mapa Visual 3D (Pressão &amp; Velocidade)" Style="{StaticResource SecondaryButton}" Margin="0,0,0,4" Click="GerarMapaDiagnostico3D_Click" />
+                                            </WrapPanel>
+
+                                            <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                                <TextBlock x:Name="ClashAndDiagStatusText" Text="Execute a auditoria 3D para detectar conflitos estruturais/LSF ou gerar a vista 3D colorida de diagnóstico hidráulico." FontSize="11.5" FontWeight="SemiBold" Foreground="#9A3412" TextWrapping="Wrap" />
+                                            </Border>
+
+                                            <DataGrid x:Name="ClashResultsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="230" FontSize="11.5" VerticalScrollBarVisibility="Auto">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="34" />
+                                                    <DataGridTextColumn Header="Sistema" Binding="{Binding PipeSystem}" Width="110" />
+                                                    <DataGridTextColumn Header="DN (mm)" Binding="{Binding DiameterMm}" Width="66" />
+                                                    <DataGridTextColumn Header="Elemento Estrutural / LSF" Binding="{Binding StructuralCategory}" Width="145" />
+                                                    <DataGridTextColumn Header="Modelo" Binding="{Binding SourceModel}" Width="110" />
+                                                    <DataGridTextColumn Header="Cota Z (m)" Binding="{Binding ElevationMeters, StringFormat=N2}" Width="74" />
+                                                    <DataGridTextColumn Header="Furo Sugerido" Binding="{Binding RecommendedSleeve}" Width="*" />
+                                                    <DataGridTemplateColumn Header="Ação 3D" Width="92">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                            <DataTemplate>
+                                                                <Button Content="Ver no 3D" Style="{StaticResource SecondaryButton}" Height="24" Padding="6,0" FontSize="11" Tag="{Binding PipeElementId}" Click="ZoomClashElemento3D_Click" />
+                                                            </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+                                                    </DataGridTemplateColumn>
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </StackPanel>
                                     </Border>
-
-                                    <DataGrid x:Name="ClashResultsDataGrid" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#E2E8F0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" RowHeight="28" MaxHeight="230" FontSize="11.5" VerticalScrollBarVisibility="Auto">
-                                        <DataGrid.Columns>
-                                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="34" />
-                                            <DataGridTextColumn Header="Sistema" Binding="{Binding PipeSystem}" Width="110" />
-                                            <DataGridTextColumn Header="DN (mm)" Binding="{Binding DiameterMm}" Width="66" />
-                                            <DataGridTextColumn Header="Elemento Estrutural / LSF" Binding="{Binding StructuralCategory}" Width="145" />
-                                            <DataGridTextColumn Header="Modelo" Binding="{Binding SourceModel}" Width="110" />
-                                            <DataGridTextColumn Header="Cota Z (m)" Binding="{Binding ElevationMeters, StringFormat=N2}" Width="74" />
-                                            <DataGridTextColumn Header="Furo Sugerido" Binding="{Binding RecommendedSleeve}" Width="*" />
-                                            <DataGridTemplateColumn Header="Ação 3D" Width="92">
-                                                <DataGridTemplateColumn.CellTemplate>
-                                                    <DataTemplate>
-                                                        <Button Content="Ver no 3D" Padding="6,2" FontSize="11" Tag="{Binding PipeElementId}" Click="ZoomClashElemento3D_Click" />
-                                                    </DataTemplate>
-                                                </DataGridTemplateColumn.CellTemplate>
-                                            </DataGridTemplateColumn>
-                                        </DataGrid.Columns>
-                                    </DataGrid>
-                                </StackPanel>
-                            </Border>
-                        </ScrollViewer><Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="12,10"><TextBlock Text="Compatibilização BIM 3D • Detecção de Furos em Vigas, Lajes e Perfis LSF" FontSize="11.5" Foreground="#64748B" HorizontalAlignment="Center" /></Border></Grid></ScrollViewer></StackPanel></ScrollViewer></Grid>
+                                </ScrollViewer>
+                            </DockPanel></ScrollViewer></StackPanel></ScrollViewer></Grid>
         </Border>
     </DockPanel>
     </DockPanel>

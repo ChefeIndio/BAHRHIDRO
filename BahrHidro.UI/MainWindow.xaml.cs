@@ -204,6 +204,8 @@ namespace BahrHidro.UI
             PanelMemorial.Visibility = tag == "Memorial" ? Visibility.Visible : Visibility.Collapsed;
             if (ConfiguracoesPanel != null)
                 ConfiguracoesPanel.Visibility = tag == "Configuracoes" ? Visibility.Visible : Visibility.Collapsed;
+            if (PageClash3D != null)
+                PageClash3D.Visibility = tag == "Clash3D" ? Visibility.Visible : Visibility.Collapsed;
 
             if (BtnVoltarAba != null)
                 BtnVoltarAba.IsEnabled = _tabHistory.Count > 0;
@@ -221,6 +223,7 @@ namespace BahrHidro.UI
                     "Pluvial" => "Etapa 5 de 5 • Calhas & Pluvial (NBR 10844)",
                     "CaixaGordura" => "Etapa 4 de 5 • Esgoto Sanitário (NBR 8160)",
                     "Memorial" => "Entrega Final • Todos os Memoriais",
+                    "Clash3D" => "Compatibilização 3D (Clash LSF / Estrutura)",
                     "Configuracoes" => "Parâmetros Técnicos do Escritório",
                     _ => "Smart Hidro BIM"
                 };
@@ -3937,13 +3940,7 @@ VerificarPressaoEstaticaMaximaVrp();
         private void NavClash3D_Selected(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            if (PageClash3D?.Parent is System.Windows.Controls.Panel host)
-            {
-                foreach (UIElement child in host.Children)
-                    child.Visibility = Visibility.Collapsed;
-            }
-            if (PageClash3D != null)
-                PageClash3D.Visibility = Visibility.Visible;
+            SelecionarPainel("Clash3D");
         }
 
         
