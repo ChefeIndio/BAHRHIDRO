@@ -1460,7 +1460,91 @@
                                 <Button Content="Esquema Vertical" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0" Click="GerarEsquemaVertical_Click" />
                                 <Button Content="Ler Aparelhos" Style="{StaticResource SecondaryButton}" Margin="0,0,6,0" Click="ImportarEsgotoAutoRevit_Click" />
                                 <Button Content="Selecionar no 3D" Style="{StaticResource SecondaryButton}" Click="ImportarEsgotoRevit_Click" />
-                            </StackPanel>
+                            
+                                    <!-- DIMENSIONAMENTO DE FOSSA SÉPTICA, FILTRO ANAERÓBIO E SUMIDOURO (NBR 7229 / NBR 13969) -->
+                                    <Border x:Name="CardTratamentoEsgotoNBR" Background="#FFFFFF" BorderBrush="#F28C38" BorderThickness="1.5" CornerRadius="10" Padding="18" Margin="0,14,0,16">
+                                        <StackPanel>
+                                            <DockPanel Margin="0,0,0,6">
+                                                <Border DockPanel.Dock="Right" Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="8,2">
+                                                    <TextBlock Text="ABNT NBR 7229 &amp; NBR 13969" FontSize="10.5" FontWeight="Bold" Foreground="#C26619" />
+                                                </Border>
+                                                <TextBlock Text="TRATAMENTO INDIVIDUAL: FOSSA SÉPTICA, FILTRO ANAERÓBIO &amp; SUMIDOURO" FontSize="13.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                            </DockPanel>
+                                            <TextBlock Text="Dimensiona o sistema completo de tratamento e disposição final de efluentes domésticos conforme o número de ocupantes, temperatura local e permeabilidade do solo." FontSize="12" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,12" />
+
+                                            <Grid Margin="0,0,0,12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="12" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="10" />
+                                                    <RowDefinition Height="Auto" />
+                                                </Grid.RowDefinitions>
+
+                                                <StackPanel Grid.Row="0" Grid.Column="0">
+                                                    <TextBlock Text="Nº de Contribuintes (Pessoas)" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4" />
+                                                    <TextBox x:Name="TxtEsgotoContribuintes" Text="5" Height="32" Padding="8,5" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Row="0" Grid.Column="2">
+                                                    <TextBlock Text="Padrão de Ocupação (Tabela 1)" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4" />
+                                                    <ComboBox x:Name="CmbEsgotoPadrao" Height="32" SelectedIndex="1">
+                                                        <ComboBoxItem Content="Residência — Padrão Alto (160 L/pessoa.dia)" />
+                                                        <ComboBoxItem Content="Residência — Padrão Médio (130 L/pessoa.dia)" />
+                                                        <ComboBoxItem Content="Residência — Padrão Baixo (100 L/pessoa.dia)" />
+                                                        <ComboBoxItem Content="Alojamento Provisório (80 L/pessoa.dia)" />
+                                                        <ComboBoxItem Content="Escritório / Comércio (50 L/pessoa.dia)" />
+                                                        <ComboBoxItem Content="Escola / Longa Permanência (50 L/pessoa.dia)" />
+                                                    </ComboBox>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Row="0" Grid.Column="4">
+                                                    <TextBlock Text="Intervalo de Limpeza (Anos)" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4" />
+                                                    <ComboBox x:Name="CmbEsgotoIntervaloLimpeza" Height="32" SelectedIndex="0">
+                                                        <ComboBoxItem Content="1 ano" />
+                                                        <ComboBoxItem Content="2 anos" />
+                                                        <ComboBoxItem Content="3 anos" />
+                                                        <ComboBoxItem Content="4 anos" />
+                                                        <ComboBoxItem Content="5 anos" />
+                                                    </ComboBox>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Row="2" Grid.Column="0">
+                                                    <TextBlock Text="Temp. Mês Mais Frio (°C)" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4" />
+                                                    <TextBox x:Name="TxtEsgotoTemperatura" Text="18" Height="32" Padding="8,5" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Row="2" Grid.Column="2">
+                                                    <TextBlock Text="Coef. Infiltração Solo (L/m².dia)" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4" />
+                                                    <ComboBox x:Name="CmbEsgotoSoloCi" Height="32" SelectedIndex="1">
+                                                        <ComboBoxItem Content="90 — Areia grossa / Pedregulho" />
+                                                        <ComboBoxItem Content="60 — Areia fina / Solo arenoso" />
+                                                        <ComboBoxItem Content="40 — Silte arenoso / Solo misto" />
+                                                        <ComboBoxItem Content="25 — Argila arenosa (baixa infiltração)" />
+                                                    </ComboBox>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Row="2" Grid.Column="4">
+                                                    <TextBlock Text="Diâmetro do Sumidouro (m)" FontSize="11.5" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,4" />
+                                                    <TextBox x:Name="TxtEsgotoDiametroSumidouro" Text="1.50" Height="32" Padding="8,5" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <WrapPanel Margin="0,0,0,10">
+                                                <Button x:Name="BtnCalcularTratamentoEsgoto" Content="Dimensionar Fossa, Filtro e Sumidouro" Style="{StaticResource PrimaryButton}" Click="CalcularTratamentoEsgoto_Click" />
+                                            </WrapPanel>
+
+                                            <Border Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="14">
+                                                <TextBlock x:Name="TratamentoEsgotoResultadoText" Text="Preencha os parâmetros acima e clique em 'Dimensionar Fossa, Filtro e Sumidouro' para obter os volumes e dimensões executivas." FontSize="12" Foreground="#1E293B" TextWrapping="Wrap" LineHeight="19" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+</StackPanel>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="4. Esgoto Sanitário (ABNT NBR 8160)" FontSize="17" FontWeight="Bold" Foreground="#0F172A" />
                                 <TextBlock Text="Contagem de aparelhos sanitários, somatório de UHC, diâmetro mínimo do coletor e declividade normativa." FontSize="12" Foreground="#64748B" />
