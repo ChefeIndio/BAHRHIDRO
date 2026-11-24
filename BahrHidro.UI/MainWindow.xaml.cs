@@ -4129,5 +4129,98 @@ VerificarPressaoEstaticaMaximaVrp();
                 curr = System.Windows.Media.VisualTreeHelper.GetParent(curr);
             }
         }
-}
+
+        private bool _atualizandoCheckboxesUnificados = false;
+
+        private void ChkUnifAmbas_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_atualizandoCheckboxesUnificados) return;
+            var chkAmbas = FindName("ChkUnifAmbas") as System.Windows.Controls.CheckBox;
+            var chkCotas = FindName("ChkUnifCotas") as System.Windows.Controls.CheckBox;
+            var chkNomes = FindName("ChkUnifNomes") as System.Windows.Controls.CheckBox;
+            var chkTextos = FindName("ChkUnifTextos") as System.Windows.Controls.CheckBox;
+            if (chkCotas == null || chkNomes == null || chkTextos == null) return;
+
+            _atualizandoCheckboxesUnificados = true;
+            try
+            {
+                bool marcar = chkAmbas?.IsChecked == true;
+                chkCotas.IsChecked = marcar;
+                chkNomes.IsChecked = marcar;
+                chkTextos.IsChecked = marcar;
+            }
+            finally
+            {
+                _atualizandoCheckboxesUnificados = false;
+            }
+        }
+
+        private void ExecutarAnotacaoUnificada_Click(object sender, RoutedEventArgs e)
+        {
+            var chkCotas = FindName("ChkUnifCotas") as System.Windows.Controls.CheckBox;
+            var chkNomes = FindName("ChkUnifNomes") as System.Windows.Controls.CheckBox;
+            var chkTextos = FindName("ChkUnifTextos") as System.Windows.Controls.CheckBox;
+            var statusTxt = FindName("UnifAnotacaoStatusText") as System.Windows.Controls.TextBlock;
+
+            bool fazerCotas = chkCotas?.IsChecked ?? true;
+            bool fazerNomes = chkNomes?.IsChecked ?? true;
+            bool fazerTextos = chkTextos?.IsChecked ?? true;
+
+            if (!fazerCotas && !fazerNomes && !fazerTextos)
+            {
+                string msgVazio = "Selecione pelo menos uma opção (Cotas, Nomes, Textos ou Ambas) antes de executar.";
+                if (statusTxt != null) statusTxt.Text = msgVazio;
+                System.Windows.MessageBox.Show(msgVazio, "Smart Hidro BIM", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
+
+            var executados = new System.Collections.Generic.List<string>();
+            var avisos = new System.Collections.Generic.List<string>();
+
+            void InvocarHandler(string methodName, string rotulo)
+            {
+                try
+                {
+                    var mi = GetType().GetMethod(methodName, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public);
+                    if (mi != null)
+                    {
+                        mi.Invoke(this, new object[] { sender, e });
+                        executados.Add(rotulo);
+                    }
+                    else
+                    {
+                        avisos.Add($"{rotulo} (rotina não localizada)");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    avisos.Add($"{rotulo}: {ex.InnerException?.Message ?? ex.Message}");
+                }
+            }
+
+            if (fazerNomes)
+            {
+                InvocarHandler("DetectarRedeAutoRevit_Click", "Nomes de Trechos/Nós");
+                InvocarHandler("GerarIsometricos3D_Click", "Nomes de Vistas Isométricas");
+            }
+
+            if (fazerCotas)
+            {
+                InvocarHandler("CotasFabricacaoElevacoes_Click", "Cotas X/H (1:20)");
+            }
+
+            if (fazerTextos)
+            {
+                InvocarHandler("TaggearTubosVistaAtual_Click", "Textos/Tags de Tubos");
+            }
+
+            string okTxt = executados.Count > 0 ? "Aplicado: " + string.Join(", ", executados) + "." : "";
+            string warnTxt = avisos.Count > 0 ? " Observações: " + string.Join(" | ", avisos) : "";
+            string resumo = (okTxt + warnTxt).Trim();
+
+            if (statusTxt != null) statusTxt.Text = resumo;
+            System.Windows.MessageBox.Show(resumo, "Smart Hidro BIM", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        }
+
+    }
 }

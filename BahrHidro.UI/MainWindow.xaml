@@ -407,7 +407,10 @@
                                                 <Button Style="{StaticResource QuickChipButton}" Click="QuickRibbonLsf_Click">
                                                     <TextBlock Text="🔩 Validar Furos LSF [Ctrl+Shift+L]" />
                                                 </Button>
-                                                <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
+                                                <Button Style="{StaticResource QuickChipButton}" Click="ExecutarAnotacaoUnificada_Click">
+                                                <TextBlock Text="🏷️ Anotar &amp; Nomear Tudo" />
+                                            </Button>
+                                            <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
                                                     <TextBlock Text="📐 Gerar Pranchas [Ctrl+Shift+P]" />
                                                 </Button>
                                                 <Button x:Name="NavConfiguracoesBtn" Visibility="Collapsed" Click="NavConfiguracoes_Click" />
