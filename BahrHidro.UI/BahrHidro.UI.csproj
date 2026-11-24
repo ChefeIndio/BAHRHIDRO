@@ -13,4 +13,7 @@
     <ProjectReference Include="..\BahrHidro.Core\BahrHidro.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="LogoSmart.png" />
+  </ItemGroup>
 </Project>
