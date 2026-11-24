@@ -15,12 +15,35 @@ namespace BahrHidro.Revit
                 var bmp = new BitmapImage();
                 bmp.BeginInit();
                 bmp.UriSource = uri;
-                bmp.DecodePixelWidth = 32;
-                bmp.DecodePixelHeight = 32;
                 bmp.CacheOption = BitmapCacheOption.OnLoad;
                 bmp.EndInit();
                 bmp.Freeze();
-                return bmp;
+
+                // Desenha o logo mantendo a proporção original centralizado em 32x32 com borda #F28C38
+                var visual = new DrawingVisual();
+                using (DrawingContext dc = visual.RenderOpen())
+                {
+                    var bg = Brushes.White;
+                    var border = new Pen((SolidColorBrush)new BrushConverter().ConvertFromString("#F28C38")!, 1.5);
+                    dc.DrawRoundedRectangle(bg, border, new Rect(1, 1, 30, 30), 5, 5);
+
+                    double ratio = (double)bmp.PixelWidth / Math.Max(1, bmp.PixelHeight);
+                    double drawW = 28.0;
+                    double drawH = drawW / ratio;
+                    if (drawH > 28.0)
+                    {
+                        drawH = 28.0;
+                        drawW = drawH * ratio;
+                    }
+                    double x = (32.0 - drawW) / 2.0;
+                    double y = (32.0 - drawH) / 2.0;
+                    dc.DrawImage(bmp, new Rect(x, y, drawW, drawH));
+                }
+
+                var rtb = new RenderTargetBitmap(32, 32, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(visual);
+                rtb.Freeze();
+                return rtb;
             }
             catch
             {
