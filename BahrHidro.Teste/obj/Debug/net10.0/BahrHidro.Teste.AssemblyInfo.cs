@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BahrHidro.Teste")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e783105d96a8d1435d62b75482422a993b8da5c2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+db862363889e3e0543ddcd605a849c3f62829531")]
 [assembly: System.Reflection.AssemblyProductAttribute("BahrHidro.Teste")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BahrHidro.Teste")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
