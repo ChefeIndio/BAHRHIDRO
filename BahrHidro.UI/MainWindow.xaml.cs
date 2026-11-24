@@ -1976,18 +1976,41 @@ namespace BahrHidro.UI
     }
 
     private void ExecutarAtualizadorWindows_Click(object sender, RoutedEventArgs e)
-    {
-        try
         {
-            string msg = GitHubUpdateService.TriggerWindowsUpdater();
-            UpdateStatusText.Text = msg;
-            MessageBox.Show(msg, "Smart Hidro - Atualizador", MessageBoxButton.OK, MessageBoxImage.Information);
+            try
+            {
+                string asmDir = System.IO.Path.GetDirectoryName(typeof(MainWindow).Assembly.Location) ?? AppDomain.CurrentDomain.BaseDirectory;
+                string exePath = System.IO.Path.Combine(asmDir, "AtualizarSmartHidro.exe");
+                if (!System.IO.File.Exists(exePath))
+                {
+                    string appDataExe = System.IO.Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "Autodesk", "Revit", "Addins", "2026", "SmartHidro", "AtualizarSmartHidro.exe");
+                    if (System.IO.File.Exists(appDataExe)) exePath = appDataExe;
+                }
+
+                if (System.IO.File.Exists(exePath))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = exePath,
+                        UseShellExecute = true
+                    });
+                }
+                else
+                {
+                    System.Windows.MessageBox.Show(
+                        "O executável 'AtualizarSmartHidro.exe' não foi encontrado na pasta do plugin.\nBaixe o pacote SmartHidro_Revit2026.zip no GitHub e execute o AtualizarSmartHidro.exe.",
+                        "Smart Hidro - Atualizador",
+                        System.Windows.MessageBoxButton.OK,
+                        System.Windows.MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Falha ao iniciar atualizador: {ex.Message}", "Smart Hidro");
+            }
         }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Aviso ao iniciar atualizador:\n{ex.Message}", "Smart Hidro", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-    }
 
 
     private async void LimparRedeGerada_Click(object sender, RoutedEventArgs e)

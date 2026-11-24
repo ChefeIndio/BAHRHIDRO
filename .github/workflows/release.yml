@@ -1,0 +1,29 @@
+name: Build & Release Smart Hidro ZIP
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-zip:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet build BahrHidro.Revit/BahrHidro.Revit.csproj -c Release -o dist/bin
+      - run: dotnet publish SmartHidro.Installer/SmartHidro.Installer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o dist/exe
+      - shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path "dist/pacote/bin" -Force | Out-Null
+          Copy-Item "dist/bin/*" "dist/pacote/bin/" -Recurse -Force
+          Copy-Item "dist/exe/AtualizarSmartHidro.exe" "dist/pacote/" -Force
+          Compress-Archive -Path "dist/pacote/*" -DestinationPath "SmartHidro_Revit2026.zip" -Force
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Smart Hidro BIM (Última Versão)"
+          files: SmartHidro_Revit2026.zip
+          make_latest: true
