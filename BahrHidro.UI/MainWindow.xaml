@@ -416,11 +416,27 @@
                                     </Border>
 
                                     <!-- RODAPÉ DE AUTORIA -->
-                                    <Border Background="#FFFFFF" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14,9">
-                                        <DockPanel>
-                                            <TextBlock DockPanel.Dock="Left" Text="Smart Hidro BIM • Engenharia Hidrossanitária &amp; Light Steel Framing" FontSize="11.5" Foreground="#64748B" VerticalAlignment="Center" />
-                                            <TextBlock DockPanel.Dock="Right" Text="Desenvolvido por Frederico Bahr • Produced by Frederico Bahr" FontSize="11.5" FontWeight="SemiBold" Foreground="#C26619" VerticalAlignment="Center" />
-                                        </DockPanel>
+                                    <Border Background="#FFFFFF" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18,11" Margin="0,2,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Border Width="8" Height="8" CornerRadius="4" Background="#F28C38" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="SMART HIDRO BIM" FontSize="11.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                <TextBlock Text="  •  Engenharia Hidrossanitária &amp; Light Steel Framing" FontSize="11.5" Foreground="#64748B" VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <Border Grid.Column="1" Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="12,5" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="Desenvolvido por " FontSize="11.5" Foreground="#9A3412" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Frederico Bahr" FontSize="11.5" FontWeight="Bold" Foreground="#C26619" VerticalAlignment="Center" />
+                                                    <TextBlock Text="  •  Produced by Frederico Bahr" FontSize="11" FontStyle="Italic" Foreground="#9A3412" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
                                     </Border>
                                 </StackPanel>
                             </ScrollViewer>
