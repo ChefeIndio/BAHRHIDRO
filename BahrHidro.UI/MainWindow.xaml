@@ -1,4 +1,4 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:local="clr-namespace:BahrHidro.UI" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="BahrHidro.UI.MainWindow" Title="Smart Hidro - Engenharia Hidráulica e BIM • by Eng. Frederico Bahr" WindowStartupLocation="CenterScreen" Background="#F1F5F9" FontFamily="Segoe UI" ResizeMode="CanResize" MinHeight="460" WindowState="Maximized">
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:local="clr-namespace:BahrHidro.UI" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="BahrHidro.UI.MainWindow" Title="Smart Hidro - Engenharia Hidráulica e BIM • " WindowStartupLocation="CenterScreen" Background="#F1F5F9" FontFamily="Segoe UI" ResizeMode="CanResize" MinHeight="460" WindowState="Maximized">
 
     <Window.Resources>
         <SolidColorBrush x:Key="BhBgCanvas" Color="#F1F5F9" />
@@ -173,7 +173,7 @@
                                 <TextBlock x:Name="ActiveStepBadgeText" Text="Visão Geral do Fluxo" FontSize="11" FontWeight="SemiBold" Foreground="#0369A1" />
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="Copiloto de Engenharia • by Eng. Frederico Bahr Hidrossanitária • ABNT NBR 5626 / 7198 / 8160 / 10844" FontSize="11" Foreground="#64748B" />
+                        <TextBlock Text="Copiloto de Engenharia •  Hidrossanitária • ABNT NBR 5626 / 7198 / 8160 / 10844" FontSize="11" Foreground="#64748B" />
                     </StackPanel>
                 </StackPanel>
 
