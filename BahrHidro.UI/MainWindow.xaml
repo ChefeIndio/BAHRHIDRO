@@ -413,6 +413,9 @@
                                             <Button Style="{StaticResource QuickChipButton}" Click="ExecutarDetalhamentoFino_Click">
                                                     <TextBlock Text="✨ Detalhamento Fino" />
                                                 </Button>
+                                                <Button Style="{StaticResource QuickChipButton}" Click="ExecutarProdutividadeBim_Click">
+                                                    <TextBlock Text="⚡ Produtividade BIM" />
+                                                </Button>
                                                 <Button Style="{StaticResource QuickChipButton}" Margin="0" Click="QuickRibbonSheets_Click">
                                                     <TextBlock Text="📐 Gerar Pranchas [Ctrl+Shift+P]" />
                                                 </Button>
@@ -493,6 +496,40 @@
 </Border>
                                     </StackPanel>
                                 </Border>
+
+                                                <Border x:Name="CardProdutividadeExecutivaBIM" Background="#FFFFFF" BorderBrush="#F28C38" BorderThickness="1.5" CornerRadius="8" Padding="14" Margin="0,0,0,14">
+                                                    <StackPanel>
+                                                        <DockPanel Margin="0,0,0,4">
+                                                            <Border DockPanel.Dock="Right" Background="#FFF3E8" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="4" Padding="8,2">
+                                                                <TextBlock Text="PRODUTIVIDADE &amp; MODELAGEM" FontSize="10" FontWeight="Bold" Foreground="#C26619" />
+                                                            </Border>
+                                                            <TextBlock Text="SUÍTE DE PRODUTIVIDADE EXECUTIVA HIDROSSANITÁRIA" FontSize="12" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center" />
+                                                        </DockPanel>
+                                                        <TextBlock Text="Automatize cortes comerciais, luvas, buchas de latão, numeração de peças/colunas/caixas (CX_), tracejamento e ramais por ambiente:" FontSize="11.5" Foreground="#475569" TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                                                        <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+                                                            <StackPanel>
+                                                                <CheckBox x:Name="ChkProdCortarTubos" Content="Cortar Tubos em Barras Comerciais + Luvas (PVC 6m, Cobre 5m, CPVC/PPR 3m)" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdInverterLuvas" Content="Inverter Luvas Sanitárias de Acordo com o Sentido de Fluxo" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdBuchaLatao" Content="Adicionar / Especificar Bucha de Latão nos Pontos de Utilização" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdNumerarPecas" Content="Numerar Peças e Conexões Automaticamente (P-001, P-002...)" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdNumerarColunas" Content="Numerar Colunas Verticais Automaticamente (CAF, CAQ, TQ, CV, AP)" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdCaixasCX" Content="Numerar e Cotar Caixas e Poços com Prefixo 'CX_' (CT / CF / H)" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdUnificarParams" Content="Unificar Parâmetros de Sistema/Bitola para Tabelas &amp; Imagens" IsChecked="True" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdTracejarTubos" Content="Tracejar Tubos Ocultos na Vista Atual" IsChecked="False" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,5" />
+                                                                <CheckBox x:Name="ChkProdGerarAmbiente" Content="Gerar Ramais Automáticos por Ambiente (Água Fria)" IsChecked="False" FontWeight="SemiBold" Foreground="#1E293B" Margin="0,0,0,0" />
+                                                            </StackPanel>
+                                                        </Border>
+
+                                                        <WrapPanel>
+                                                            <Button x:Name="BtnExecutarProdutividadeBim" Content="Executar Ferramentas de Produtividade" Style="{StaticResource PrimaryButton}" Click="ExecutarProdutividadeBim_Click" />
+                                                        </WrapPanel>
+
+                                                        <Border Background="#FFF7ED" BorderBrush="#FDBA74" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,10,0,0">
+                                                            <TextBlock x:Name="ProdutividadeBimStatusText" Text="Pronto: marque as ferramentas desejadas e clique em 'Executar Ferramentas de Produtividade'." FontSize="11.5" Foreground="#9A3412" TextWrapping="Wrap" />
+                                                        </Border>
+                                                    </StackPanel>
+                                                </Border>
 
                             </StackPanel></ScrollViewer><Border Grid.Column="2" Background="#F8FAFC" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="8" Padding="18" VerticalAlignment="Top">
                                 <StackPanel>

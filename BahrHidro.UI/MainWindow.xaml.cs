@@ -4297,5 +4297,56 @@ VerificarPressaoEstaticaMaximaVrp();
             }
         }
 
+    
+        private void ExecutarProdutividadeBim_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                bool GetChk(string name, bool fallback) =>
+                    (FindName(name) as System.Windows.Controls.CheckBox)?.IsChecked ?? fallback;
+
+                var opcoes = new BahrHidro.Core.Productivity.ProdutividadeBimOpcoes
+                {
+                    CortarTubosComerciais = GetChk("ChkProdCortarTubos", true),
+                    InverterLuvasFluxo = GetChk("ChkProdInverterLuvas", true),
+                    AdicionarBuchaLatao = GetChk("ChkProdBuchaLatao", true),
+                    NumerarPecasEConexoes = GetChk("ChkProdNumerarPecas", true),
+                    NumerarColunasVerticais = GetChk("ChkProdNumerarColunas", true),
+                    NumerarCaixasEPocosCX = GetChk("ChkProdCaixasCX", true),
+                    UnificarParametrosETabelas = GetChk("ChkProdUnificarParams", true),
+                    TracejarTubosVistaAtual = GetChk("ChkProdTracejarTubos", false),
+                    GerarRamaisPorAmbiente = GetChk("ChkProdGerarAmbiente", false)
+                };
+
+                var statusTxt = FindName("ProdutividadeBimStatusText") as System.Windows.Controls.TextBlock;
+
+                if (!opcoes.CortarTubosComerciais && !opcoes.InverterLuvasFluxo && !opcoes.AdicionarBuchaLatao &&
+                    !opcoes.NumerarPecasEConexoes && !opcoes.NumerarColunasVerticais && !opcoes.NumerarCaixasEPocosCX &&
+                    !opcoes.UnificarParametrosETabelas && !opcoes.TracejarTubosVistaAtual && !opcoes.GerarRamaisPorAmbiente)
+                {
+                    string aviso = "Selecione pelo menos uma ferramenta de produtividade antes de executar.";
+                    if (statusTxt != null) statusTxt.Text = aviso;
+                    System.Windows.MessageBox.Show(aviso, "Smart Hidro — Produtividade BIM", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                var callback = BahrHidro.Core.Productivity.ProdutividadeBimPlanner.ExecutarProdutividadeCallback;
+                if (callback == null)
+                {
+                    string erroCb = "O conector Revit 2026 ainda não foi inicializado. Abra o Smart Hidro pela aba do Revit.";
+                    if (statusTxt != null) statusTxt.Text = erroCb;
+                    System.Windows.MessageBox.Show(erroCb, "Smart Hidro — Produtividade BIM", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    return;
+                }
+
+                string msg = callback(opcoes);
+                if (statusTxt != null) statusTxt.Text = msg;
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erro ao executar Produtividade BIM: {ex.Message}", "Smart Hidro BIM");
+            }
+        }
+
     }
 }
