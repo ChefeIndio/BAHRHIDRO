@@ -4222,5 +4222,80 @@ VerificarPressaoEstaticaMaximaVrp();
             System.Windows.MessageBox.Show(resumo, "Smart Hidro BIM", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
 
+    
+        private bool _atualizandoCheckboxesDetFino = false;
+
+        private void ChkDetFinoTudo_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_atualizandoCheckboxesDetFino) return;
+            var chkTudo = FindName("ChkDetFinoTudo") as System.Windows.Controls.CheckBox;
+            var chkCol = FindName("ChkDetFinoAntiColisao") as System.Windows.Controls.CheckBox;
+            var chkCor = FindName("ChkDetFinoCoresABNT") as System.Windows.Controls.CheckBox;
+            var chkElev = FindName("ChkDetFinoElevacoes") as System.Windows.Controls.CheckBox;
+            var chkNotas = FindName("ChkDetFinoNotasBOM") as System.Windows.Controls.CheckBox;
+            if (chkCol == null || chkCor == null || chkElev == null || chkNotas == null) return;
+
+            _atualizandoCheckboxesDetFino = true;
+            try
+            {
+                bool marcar = chkTudo?.IsChecked == true;
+                chkCol.IsChecked = marcar;
+                chkCor.IsChecked = marcar;
+                chkElev.IsChecked = marcar;
+                chkNotas.IsChecked = marcar;
+            }
+            finally
+            {
+                _atualizandoCheckboxesDetFino = false;
+            }
+        }
+
+        private void ExecutarDetalhamentoFino_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var chkCol = FindName("ChkDetFinoAntiColisao") as System.Windows.Controls.CheckBox;
+                var chkCor = FindName("ChkDetFinoCoresABNT") as System.Windows.Controls.CheckBox;
+                var chkElev = FindName("ChkDetFinoElevacoes") as System.Windows.Controls.CheckBox;
+                var chkNotas = FindName("ChkDetFinoNotasBOM") as System.Windows.Controls.CheckBox;
+                var statusTxt = FindName("DetFinoStatusText") as System.Windows.Controls.TextBlock;
+
+                var opcoes = new BahrHidro.Core.Detailing.DetalhamentoFinoOpcoes
+                {
+                    ReorganizarTagsSemSobreposicao = chkCol?.IsChecked ?? true,
+                    AplicarPadraoGraficoABNT = chkCor?.IsChecked ?? true,
+                    GerarElevacoesParedes120 = chkElev?.IsChecked ?? true,
+                    InserirNotasTecnicasEBOM = chkNotas?.IsChecked ?? true
+                };
+
+                if (!opcoes.ReorganizarTagsSemSobreposicao &&
+                    !opcoes.AplicarPadraoGraficoABNT &&
+                    !opcoes.GerarElevacoesParedes120 &&
+                    !opcoes.InserirNotasTecnicasEBOM)
+                {
+                    string aviso = "Selecione pelo menos uma etapa do Detalhamento Fino Executivo antes de executar.";
+                    if (statusTxt != null) statusTxt.Text = aviso;
+                    System.Windows.MessageBox.Show(aviso, "Smart Hidro — Detalhamento Fino", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                    return;
+                }
+
+                var callback = BahrHidro.Core.Detailing.DetalhamentoFinoPlanner.ExecutarDetalhamentoFinoCallback;
+                if (callback == null)
+                {
+                    string erroCb = "O conector Revit 2026 ainda não foi inicializado. Abra o Smart Hidro a partir da aba do Revit.";
+                    if (statusTxt != null) statusTxt.Text = erroCb;
+                    System.Windows.MessageBox.Show(erroCb, "Smart Hidro — Detalhamento Fino", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    return;
+                }
+
+                string msg = callback(opcoes);
+                if (statusTxt != null) statusTxt.Text = msg;
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Erro ao acionar Detalhamento Fino: {ex.Message}", "Smart Hidro BIM");
+            }
+        }
+
     }
 }

@@ -8,6 +8,7 @@ namespace BahrHidro.Revit
     {
         public Result OnStartup(UIControlledApplication application)
         {
+            DetalhamentoFinoRevitService.Inicializar(application);
             try { BahrHidro.UI.UiNavigationController.Initialize(); } catch { }
 
             try
