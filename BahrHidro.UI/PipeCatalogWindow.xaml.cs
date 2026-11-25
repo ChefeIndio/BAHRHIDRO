@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -183,5 +183,28 @@ namespace BahrHidro.UI
                     MessageBoxImage.Error);
             }
         }
+    
+        private void InserirItemCatalogoNoRevit_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Selecionar Família Hidrossanitária do Revit (.rfa)",
+                Filter = "Famílias do Revit (*.rfa)|*.rfa|Todos os arquivos (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                var dto = new BahrHidro.Core.Catalog.CatalogoItemSyncDto
+                {
+                    Nome = System.IO.Path.GetFileNameWithoutExtension(dlg.FileName),
+                    CaminhoRfa = dlg.FileName,
+                    EhTubo = false
+                };
+                string res = BahrHidro.Core.Catalog.CatalogoRevitBridge.InserirNoRevitCallback?.Invoke(dto)
+                             ?? "Família preparada.";
+                System.Windows.MessageBox.Show(res, "Smart Hidro — Catálogo & Famílias");
+            }
+        }
+
     }
 }

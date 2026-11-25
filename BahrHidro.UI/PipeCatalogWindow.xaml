@@ -1,4 +1,4 @@
-﻿<Window x:Class="BahrHidro.UI.PipeCatalogWindow"
+<Window x:Class="BahrHidro.UI.PipeCatalogWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Smart Hidro | Catálogo de Tubulações"
