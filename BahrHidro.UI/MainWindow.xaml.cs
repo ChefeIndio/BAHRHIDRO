@@ -4412,5 +4412,13 @@ VerificarPressaoEstaticaMaximaVrp();
             }
         }
 
+    
+        private void GerarTracadoEsgoto3D_Click(object sender, RoutedEventArgs e)
+        {
+            string msg = BahrHidro.Core.Routing.TracadoEsgotoPlanner.GerarTracadoEsgoto3DCallback?.Invoke()
+                         ?? "Conector de Esgoto 3D não inicializado.";
+            System.Windows.MessageBox.Show(msg, "Smart Hidro — Traçado 3D Esgoto Sanitário");
+        }
+
     }
 }
