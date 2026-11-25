@@ -54,6 +54,9 @@ namespace BahrHidro.Core.Sanitary
 
     public static class TratamentoEsgotoCalculator
     {
+        public static TratamentoEsgotoResultado? UltimoResultadoExportacao { get; set; }
+        public static TratamentoEsgotoInput? UltimoInputExportacao { get; set; }
+
         public static TratamentoEsgotoResultado Calcular(TratamentoEsgotoInput input)
         {
             int n = Math.Max(1, input.NumeroContribuintes);
@@ -111,7 +114,7 @@ namespace BahrHidro.Core.Sanitary
             else
                 alerta = "Manter distância mínima vertical de 1,50 m entre o fundo do sumidouro e o nível máximo do aquífero (NBR 13969).";
 
-            return new TratamentoEsgotoResultado
+            var resultadoFinal = new TratamentoEsgotoResultado
             {
                 ContribuicaoDiariaPessoaL = c,
                 LodoFrescoPessoaL = lf,
@@ -134,6 +137,9 @@ namespace BahrHidro.Core.Sanitary
                 SumidouroAlturaUtilM = hSumidouro,
                 AlertaNormativo = alerta
             };
+            UltimoInputExportacao = input;
+            UltimoResultadoExportacao = resultadoFinal;
+            return resultadoFinal;
         }
 
         private static (double C, double Lf) ObterContribuicoesTabela1(PadraoOcupacaoEsgoto padrao)

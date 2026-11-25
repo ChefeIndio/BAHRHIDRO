@@ -229,6 +229,28 @@ namespace BahrHidro.Core.Reporting
                     bodyElements.Add(BuildAlertCallout("Recomendações Executivas — Tratamento de Esgoto", s.NormativeAlerts));
             }
 
+            // Capítulo Extra: Tratamento Individual de Esgoto (Fossa, Filtro e Sumidouro — NBR 7229 / 13969)
+            var tratIndiv = BahrHidro.Core.Sanitary.TratamentoEsgotoCalculator.UltimoResultadoExportacao;
+            var tratInput = BahrHidro.Core.Sanitary.TratamentoEsgotoCalculator.UltimoInputExportacao;
+            if (tratIndiv != null && tratInput != null)
+            {
+                bodyElements.Add(BuildSectionHeading($"{chapter++}. SISTEMA INDIVIDUAL DE TRATAMENTO E DISPOSIÇÃO DE ESGOTO (NBR 7229 / NBR 13969)"));
+                bodyElements.Add(BuildParagraph(
+                    "Dimensionamento das unidades de tratamento primário (Tanque Séptico), pós-tratamento biológico (Filtro Anaeróbio de Fluxo Ascendente) e disposição final no solo (Sumidouro), conforme os critérios das normas ABNT NBR 7229 e NBR 13969:"));
+                bodyElements.Add(BuildKeyValueTable("Dimensionamento Executivo — Fossa Séptica, Filtro Anaeróbio e Sumidouro", new List<(string, string)>
+                {
+                    ("População e Contribuição Diária", $"{tratInput.NumeroContribuintes} contribuinte(s)  |  C = {tratIndiv.ContribuicaoDiariaPessoaL.ToString("N0", pt)} L/pessoa.dia  |  Q_total = {tratIndiv.VazaoTotalDiariaL.ToString("N0", pt)} L/dia"),
+                    ("Parâmetros Normativos (NBR 7229)", $"Tempo de Detenção Td = {tratIndiv.TempoDetencaoDias:F2} dia  |  Temp. Mês Frio = {tratInput.TemperaturaMesMaisFrioC:F1} °C  |  Taxa Lodo K = {tratIndiv.TaxaAcumulacaoLodoK} dias ({tratInput.IntervaloLimpezaAnos} ano(s))"),
+                    ("Tanque Séptico — Volume Útil", $"Calculado: {tratIndiv.VolumeFossaCalculadoL.ToString("N0", pt)} L  →  Comercial Adotado: {tratIndiv.VolumeFossaAdotadoL.ToString("N0", pt)} L ({tratIndiv.VolumeFossaAdotadoL / 1000.0:F2} m³)"),
+                    ("Tanque Séptico — Dimensões Internas", $"Cilíndrica: Ø {tratIndiv.FossaCilindricaDiametroM:F2} m × H_útil {tratIndiv.FossaCilindricaAlturaUtilM:F2} m  |  Prismática: {tratIndiv.FossaPrismaticaLarguraM:F2} m × {tratIndiv.FossaPrismaticaComprimentoM:F2} m × H_útil {tratIndiv.FossaPrismaticaAlturaUtilM:F2} m"),
+                    ("Filtro Anaeróbio (NBR 13969)", $"Calculado: {tratIndiv.VolumeFiltroCalculadoL.ToString("N0", pt)} L  →  Adotado: {tratIndiv.VolumeFiltroAdotadoL.ToString("N0", pt)} L  |  Ø {tratIndiv.FiltroCilindricoDiametroM:F2} m × H_leito {tratIndiv.FiltroAlturaLeitoM:F2} m (Brita nº 4/5)"),
+                    ("Sumidouro / Infiltração (NBR 13969)", $"Área Infiltração = {tratIndiv.AreaInfiltracaoNecessariaM2:F2} m² (Ci = {tratInput.CoeficienteInfiltracaoSolo:N0} L/m².dia)  |  Ø {tratIndiv.SumidouroDiametroAdotadoM:F2} m × H_útil {tratIndiv.SumidouroAlturaUtilM:F2} m")
+                }));
+
+                if (!string.IsNullOrWhiteSpace(tratIndiv.AlertaNormativo))
+                    bodyElements.Add(BuildAlertCallout("Nota Técnica Executiva — Fossa, Filtro e Sumidouro", new List<string> { tratIndiv.AlertaNormativo }));
+            }
+
             // Capítulo 6: Compatibilização BIM 3D & Síntese Orçamentária SINAPI
             if (data.ClashAndSinapiRows.Count > 0)
             {
