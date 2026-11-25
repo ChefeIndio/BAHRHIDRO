@@ -238,6 +238,51 @@ namespace BahrHidro.Core.Reporting
                 bodyElements.Add(BuildKeyValueTable("Indicadores BIM 3D e Orçamento Estimativo", data.ClashAndSinapiRows));
             }
 
+            
+            // Capítulo Executivo A: Especificações Técnicas de Materiais e Componentes (ABNT)
+            bodyElements.Add(BuildSectionHeading($"{chapter++}. CADERNO DE ESPECIFICAÇÕES TÉCNICAS DE MATERIAIS E COMPONENTES"));
+            bodyElements.Add(BuildParagraph(
+                "Todos os materiais empregados na execução das instalações hidrossanitárias devem ser novos, de primeira qualidade, isentos de defeitos de fabricação e possuir certificação de conformidade com as normas técnicas brasileiras (ABNT / PBQP-H):"));
+
+            bodyElements.Add(BuildKeyValueTable("Especificação Executiva por Subsistema Hidrossanitário", new List<(string, string)>
+            {
+                ("Água Fria — Alimentador, Barrilete, Colunas e Ramais", "Tubos e conexões em PVC rígido soldável marrom (ABNT NBR 5648), classe de pressão PN 750 kPa (75 m.c.a. a 20 °C). Nos pontos de utilização com rosca metálica (chuveiros, lavatórios, torneiras, engates), utilizar obrigatoriamente joelhos ou tês azuis com bucha de latão (LR) para evitar trincas por torque."),
+                ("Água Quente — Barrilete e Ramais", "Tubos e conexões em CPVC (ABNT NBR 15884) ou PPR PN 20/25 termofusão (ABNT NBR 15813), dimensionados para operação contínua a 70 °C e picos de 80 °C. Prever isolamento térmico com espuma elastomérica de células fechadas (espessura mín. 9 mm) em trechos embutidos ou em shafts."),
+                ("Esgoto Sanitário — Ramais de Descarga e Esgoto", "Tubos e conexões em PVC rígido branco ponta e bolsa com anel de borracha elastomérica (ABNT NBR 5688 — Série Normal) para ramais horizontais internos aos pavimentos."),
+                ("Esgoto Sanitário — Tubos de Queda e Subcoletores", "Tubos e conexões em PVC rígido Série Reforçada (ABNT NBR 5688 — cor cinza) para tubos de queda verticais, subcoletores enterrados sob áreas de tráfego e desvios horizontais de prumadas, garantindo resistência mecânica e atenuação acústica."),
+                ("Ventilação Primária e Secundária", "Tubos e conexões em PVC rígido (ABNT NBR 5688), interligados acima do nível de transbordamento dos aparelhos mais elevados e prolongados no mínimo 0,30 m acima da cobertura (ou 2,00 m quando o terraço for utilizável), dotados de terminal de ventilação."),
+                ("Águas Pluviais — Calhas e Condutores", "Calhas em chapa de aço galvanizado nº 24 (espessura 0,65 mm) com pintura anticorrosiva ou PVC específico; condutores verticais e horizontais em PVC rígido Série R / Pluvial (ABNT NBR 10844), com ralos hemisféricos (abacaxi) nas saídas de lajes e calhas."),
+                ("Registros, Válvulas e Metais Sanitários", "Registros de gaveta brutos/acabamento (ABNT NBR 15705) para bloqueio setorial de barriletes, colunas e ambientes molhados; registros de pressão (ABNT NBR 15704) para controle de vazão em chuveiros; válvulas de retenção horizontal/vertical nas saídas de bombas e reservatórios.")
+            }));
+
+            // Capítulo Executivo B: Metodologia de Cálculo & Equações Normativas
+            bodyElements.Add(BuildSectionHeading($"{chapter++}. METODOLOGIA DE CÁLCULO E FORMULAÇÃO NORMATIVA APLICADA"));
+            bodyElements.Add(BuildParagraph(
+                "Os parâmetros hidráulicos, sanitários e térmicos apresentados neste memorial foram obtidos através das formulações consagradas pelas normas brasileiras:"));
+            bodyElements.Add(BuildKeyValueTable("Equações e Critérios Normativos de Dimensionamento", new List<(string, string)>
+            {
+                ("Vazão Provável (ABNT NBR 5626)", "Q = 0,30 × √(ΣP)  [L/s], onde ΣP representa o somatório dos pesos relativos das peças de utilização alimentadas pelo trecho."),
+                ("Perda de Carga Distribuída (Fair-Whipple-Hsiao)", "Plásticos (PVC/CPVC/PPR): J = 8,69 × 10⁶ × Q^1,75 × D^-4,75  [m.c.a./m]. Perdas localizadas convertidas em comprimentos equivalentes de conexões conforme tabela normativa."),
+                ("Limites de Velocidade e Pressão (NBR 5626)", "Velocidade máxima admitida: V ≤ 3,00 m/s (recomendado ≤ 2,00 m/s para controle acústico). Pressão estática máxima: ≤ 40,0 m.c.a. Pressão dinâmica mínima: ≥ 1,00 m.c.a. nos pontos gerais e ≥ 2,00 m.c.a. em chuveiros/aquecedores."),
+                ("Dimensionamento de Recalque (Bresse & Hazen-Williams)", "D_rec = k × √Q_rec (k entre 0,90 e 1,30); D_suc adotado um diâmetro comercial imediatamente superior ao de recalque. Perda de carga pela equação de Hazen-Williams (C = 140 a 150)."),
+                ("Esgoto Sanitário (ABNT NBR 8160)", "Dimensionamento por Unidades Hunter de Contribuição (UHC). Declividade mínima: i = 2,0% para DN ≤ 75 mm e i = 1,0% para DN ≥ 100 mm. Fecho hídrico mínimo de desconectores: 50 mm."),
+                ("Tratamento Individual (NBR 7229 / NBR 13969)", "Tanque Séptico: V = 1000 + N × (C × Td + K × Lf) [Litros]. Filtro Anaeróbio: Vu = 1,6 × N × C × Td [Litros, mín. 1000 L]. Sumidouro: A_inf = (N × C) / Ci [m²]."),
+                ("Drenagem Pluvial (ABNT NBR 10844)", "Vazão de projeto: Q = (I × A) / 60  [L/min], com período de retorno T = 5 anos para coberturas e chuva crítica de 5 minutos. Capacidade de escoamento pela fórmula de Manning-Strickler.")
+            }));
+
+            // Capítulo Executivo C: Diretrizes de Execução, Ensaios e Manutenção Preventiva
+            bodyElements.Add(BuildSectionHeading($"{chapter++}. DIRETRIZES DE EXECUÇÃO EM OBRA, ENSAIOS E RECEBIMENTO"));
+            bodyElements.Add(BuildParagraph(
+                "A execução das instalações deverá obedecer rigorosamente ao projeto executivo compatibilizado (BIM 3D) e às boas práticas de engenharia:"));
+            bodyElements.Add(BuildKeyValueTable("Protocolo Executivo, Alturas Padrão e Ensaios de Estanqueidade", new List<(string, string)>
+            {
+                ("Cotas Padrão de Pontos (Piso Acabado)", "Bacia c/ caixa acoplada: H = 0,20 m (deslocado 0,15 m à esquerda) | Lavatório: AF/AQ H = 0,60 m, Esgoto H = 0,50 m | Chuveiro: Ponto H = 2,10 m, Registro H = 1,10 m | Pia de Cozinha: AF/AQ H = 1,00 m, Esgoto H = 0,50 m | Tanque: H = 0,90 m | Registro de Gaveta Geral: H = 1,80 m."),
+                ("Assentamento e Recobrimento de Tubulações", "Tubulações enterradas devem ser assentadas sobre berço de areia fina isenta de pedras (espessura mín. 10 cm) com recobrimento mínimo de 0,30 m em passeios e 0,60 m sob áreas de veículos. Proibido o embutimento diagonal em alvenaria estrutural."),
+                ("Ensaio de Estanqueidade — Água Fria e Quente", "Antes do fechamento de rasgos, forros ou shafts, pressurizar toda a rede com água limpa a 1,5 vezes a pressão estática máxima prevista (mínimo de 60 m.c.a. / 6,0 kgf/cm²) durante no mínimo 1 hora, sem queda de pressão no manômetro ou vazamentos visuais."),
+                ("Ensaio de Estanqueidade — Esgoto e Pluvial", "Preencher os trechos de esgoto e condutores pluviais com coluna d'água de no mínimo 3,00 m.c.a. acima do ponto mais alto do trecho testado por período mínimo de 15 minutos, inspecionando todas as juntas e bolsas."),
+                ("Manutenção Preventiva e Operação", "1) Limpeza semestral dos reservatórios de água potável com hipoclorito de sódio; 2) Remoção trimestral da crosta de gordura na Caixa de Gordura; 3) Limpeza do lodo digerido do Tanque Séptico conforme intervalo de projeto (mantendo 10% do lodo como inóculo biológico); 4) Limpeza periódica de calhas e ralos de cobertura.")
+            }));
+
             // Bloco Final de Assinatura
             bodyElements.Add(BuildParagraph("", spaceAfter: 240));
             bodyElements.Add(BuildParagraph("____________________________________________________________", alignCenter: true, spaceAfter: 40));
