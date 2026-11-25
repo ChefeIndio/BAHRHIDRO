@@ -8,6 +8,7 @@ namespace BahrHidro.Revit
     {
         public Result OnStartup(UIControlledApplication application)
         {
+            TracadoAutomaticoRevitService.Inicializar(application);
             IsometricoExecutivoService.Inicializar(application);
             ProdutividadeBimRevitService.Inicializar(application);
             DetalhamentoFinoRevitService.Inicializar(application);

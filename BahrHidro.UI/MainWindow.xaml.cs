@@ -281,6 +281,46 @@ namespace BahrHidro.UI
 
         private void BtnIrTracado3D_Click(object sender, RoutedEventArgs e)
         {
+            if (BahrHidro.Core.Routing.TracadoAutomaticoPlanner.GerarTracado3DCallback != null)
+            {
+                var listaPontos = new System.Collections.Generic.List<BahrHidro.Core.Routing.PontoTracadoItem>();
+                System.Collections.IEnumerable? fontePontos = null;
+                foreach (var fi in GetType().GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public))
+                {
+                    if (fi.Name.IndexOf("ponto", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                        fi.Name.IndexOf("tracado", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        if (fi.GetValue(this) is System.Collections.IEnumerable seq && seq is not string)
+                        {
+                            fontePontos = seq;
+                            break;
+                        }
+                    }
+                }
+                if (fontePontos != null)
+                {
+                    foreach (var item in fontePontos)
+                    {
+                        try
+                        {
+                            dynamic d = item;
+                            long idVal = 0;
+                            try { idVal = (long)d.ElementId; } catch { try { idVal = (long)d.Id; } catch { } }
+                            string tipo = "";
+                            try { tipo = (string)d.Tipo; } catch { try { tipo = d.ToString(); } catch { } }
+                            listaPontos.Add(new BahrHidro.Core.Routing.PontoTracadoItem
+                            {
+                                ElementIdValue = idVal,
+                                TipoAparelho = tipo,
+                                AlturaPontoMetros = BahrHidro.Core.Routing.TracadoAutomaticoPlanner.ObterAlturaNormativaMetros(tipo)
+                            });
+                        }
+                        catch { }
+                    }
+                }
+                string msgTracado = BahrHidro.Core.Routing.TracadoAutomaticoPlanner.GerarTracado3DCallback(listaPontos);
+                System.Windows.MessageBox.Show(msgTracado, "Smart Hidro — Traçado Automático 3D");
+            }
             NavTracado3D.IsSelected = true;
             SelecionarPainel("Tracado3D");
         }
